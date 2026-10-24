@@ -121,9 +121,13 @@ const API = {
     if (!guildId || this._prefetchedGuilds.has(String(guildId))) return;
     this._prefetchedGuilds.add(String(guildId));
 
-    // Only preload core config (which already contains channels & roles)
-    // Avoid hammering secondary endpoints until the user actually navigates to those tabs.
+    // Preload core config (which already contains channels, roles and all module configs)
     this.getConfig(guildId).catch(() => null);
+
+    // Pre-warm secondary endpoints in idle background so tab switching is 100% instant
+    if (typeof this.getGiveaways === 'function') this.getGiveaways(guildId).catch(() => {});
+    if (typeof this.getPolls === 'function') this.getPolls(guildId).catch(() => {});
+    if (typeof this.getBackups === 'function') this.getBackups(guildId).catch(() => {});
   },
 
   async prefetchAll(user) {

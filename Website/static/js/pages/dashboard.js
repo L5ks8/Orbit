@@ -26,21 +26,8 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
       existingTabContainer.className = 'p-4 lg:p-6 xl:p-8 max-w-[1200px] mx-auto min-h-[calc(100vh-64px)] bg-neutral-950';
     }
 
-    // Immediately clear previous tab content so old tab never stretches wide
-    existingTabContainer.innerHTML = `
-      <div class="flex items-center justify-center p-12 text-neutral-500 text-sm animate-fade-in">
-        <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        Loading...
-      </div>
-    `;
-
-    const currentGuild = window.__currentDashboardGuildObj || { id: guildId, name: 'Server Dashboard', icon: null };
-    const tabHandlers = Pages._getDashboardTabHandlers(existingTabContainer, guildId, currentGuild);
-    if (tabHandlers[tab]) {
-      Pages._mountDashboardTab(existingTabContainer, tabHandlers[tab], tab, guildId);
-    } else if (DashboardTabs.Modules) {
-      Pages._mountDashboardTab(existingTabContainer, () => DashboardTabs.Modules(existingTabContainer, guildId, tab), tab, guildId);
-    }
+    // Switch pane instantly with 0ms loading (no blanking, no spinner!)
+    Pages._switchDashboardPane(existingTabContainer, tab, guildId);
     return;
   }
 
@@ -479,14 +466,73 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
   const tabContainer = document.getElementById('dash-tab-content');
   if (!tabContainer) return;
 
-  const tabHandlers = Pages._getDashboardTabHandlers(tabContainer, guildId, currentGuild);
+  // Clear initial placeholder and mount active pane
+  tabContainer.innerHTML = '';
+  Pages._switchDashboardPane(tabContainer, tab, guildId);
+
+  // Pre-load on hover for 0ms instant tab transitions
+  const nav = document.getElementById('dash-sidebar-nav');
+  if (nav && !nav._hasHoverPreload) {
+    nav._hasHoverPreload = true;
+    nav.addEventListener('mouseover', (e) => {
+      const link = e.target.closest('a[href]');
+      if (!link) return;
+      const href = link.getAttribute('href') || '';
+      const parts = href.split('/').filter(Boolean);
+      if (parts[0] === 'dashboard' && parts[1] === String(guildId)) {
+        const hoverTab = parts[2] || 'overview';
+        const paneId = `dash-pane-${hoverTab}`;
+        if (!document.getElementById(paneId)) {
+          // Pre-mount idle pane in background
+          const hiddenPane = document.createElement('div');
+          hiddenPane.id = paneId;
+          hiddenPane.className = 'dash-tab-pane w-full';
+          hiddenPane.style.display = 'none';
+          tabContainer.appendChild(hiddenPane);
+          const handlers = Pages._getDashboardTabHandlers(hiddenPane, guildId, currentGuild);
+          if (handlers[hoverTab]) {
+            Pages._mountDashboardTab(hiddenPane, handlers[hoverTab], hoverTab, guildId);
+          } else if (DashboardTabs.Modules) {
+            Pages._mountDashboardTab(hiddenPane, () => DashboardTabs.Modules(hiddenPane, guildId, hoverTab), hoverTab, guildId);
+          }
+        }
+      }
+    }, { passive: true });
+  }
+};
+
+Pages._switchDashboardPane = function(tabContainer, tab, guildId) {
+  if (!tabContainer) return;
+  const targetPaneId = `dash-pane-${tab}`;
+  let targetPane = document.getElementById(targetPaneId);
+
+  // Hide all other panes
+  const allPanes = tabContainer.querySelectorAll('.dash-tab-pane');
+  allPanes.forEach(p => {
+    p.style.display = 'none';
+  });
+
+  if (targetPane) {
+    // Already in memory! 0ms instant display without any loading screen
+    targetPane.style.display = 'block';
+    return;
+  }
+
+  // First time visiting this tab: create pane and mount directly
+  targetPane = document.createElement('div');
+  targetPane.id = targetPaneId;
+  targetPane.className = 'dash-tab-pane w-full';
+  tabContainer.appendChild(targetPane);
+
+  const currentGuild = window.__currentDashboardGuildObj || { id: guildId, name: 'Server Dashboard', icon: null };
+  const tabHandlers = Pages._getDashboardTabHandlers(targetPane, guildId, currentGuild);
 
   if (tabHandlers[tab]) {
-    Pages._mountDashboardTab(tabContainer, tabHandlers[tab], tab, guildId);
+    Pages._mountDashboardTab(targetPane, tabHandlers[tab], tab, guildId);
   } else if (DashboardTabs.Modules) {
-    Pages._mountDashboardTab(tabContainer, () => DashboardTabs.Modules(tabContainer, guildId, tab), tab, guildId);
+    Pages._mountDashboardTab(targetPane, () => DashboardTabs.Modules(targetPane, guildId, tab), tab, guildId);
   } else if (typeof window.renderErrorState === 'function') {
-    window.renderErrorState(tabContainer, {
+    window.renderErrorState(targetPane, {
       title: 'Module Not Found',
       message: `The module "${tab}" does not exist or is currently unavailable.`,
       statusCode: 404,

@@ -260,7 +260,7 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
             log_channel = None
 
     status_text = "Resolved" if final_status == "resolved" else ("Rejected" if final_status == "rejected" else ("Deleted" if final_status == "deleted" else "Closed"))
-    color = discord.Color.green() if final_status == "resolved" else (discord.Color.red() if final_status == "rejected" else discord.Color.dark_red())
+    color = discord.Color(0x5865F2) if final_status == "resolved" else (discord.Color.red() if final_status == "rejected" else discord.Color(0x5865F2))
     
     executor_mention = closed_by.mention if hasattr(closed_by, "mention") else f"@{closed_by}"
     executor_username = f"@{closed_by.name}" if hasattr(closed_by, "name") and closed_by.name else str(closed_by)
@@ -453,7 +453,7 @@ class TicketOpenModal(Modal):
                     except Exception:
                         pass
             return await interaction.followup.send(
-                embed=make_embed(f"Your **{self.category_option}** submission (`#{counter}`) has been sent to the staff team!", discord.Color.green()),
+                embed=make_embed(f"Your **{self.category_option}** submission (`#{counter}`) has been sent to the staff team!", discord.Color(0x5865F2)),
                 ephemeral=True
             )
 
@@ -553,7 +553,7 @@ class TicketOpenModal(Modal):
                 pass
             return
 
-        await interaction.followup.send(embed=make_embed(f"Your support ticket has been created: {ticket_channel.mention}", discord.Color.green()), ephemeral=True)
+        await interaction.followup.send(embed=make_embed(f"Your support ticket has been created: {ticket_channel.mention}", discord.Color(0x5865F2)), ephemeral=True)
 
 class TicketControlLayout(discord.ui.View):
     def __init__(self, claimed_name: str = None):

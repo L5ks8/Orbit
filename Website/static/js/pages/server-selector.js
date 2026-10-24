@@ -282,7 +282,7 @@ Pages.ServerSelector = async function(container) {
     }
 
     return `
-      <a class="group relative bg-white dark:bg-neutral-900 border rounded-2xl p-5 transition-all duration-200 hover:shadow-lg overflow-hidden border-neutral-200 dark:border-neutral-800 hover:border-neutral-400/30 dark:hover:border-white/30 cursor-pointer block select-none" href="/dashboard/${g.id}">
+      <a class="group relative bg-white dark:bg-neutral-900 border rounded-2xl p-5 transition-all duration-200 hover:shadow-lg overflow-hidden border-neutral-200 dark:border-neutral-800 hover:border-neutral-400/30 dark:hover:border-white/30 cursor-pointer block select-none" href="/dashboard/${g.id}" onmouseenter="API.prefetchGuild && API.prefetchGuild('${g.id}')">
         <div class="absolute inset-0 bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
         <div class="relative flex items-center gap-4">
           <div class="relative flex-shrink-0">

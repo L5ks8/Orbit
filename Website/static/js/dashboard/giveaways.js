@@ -1,10 +1,10 @@
 /**
- * Orbit Dashboard - Giveaways Tab (Werbegeschenke)
+ * Orbit Dashboard - Giveaways Tab
  * 1:1 PeakBot UI & Full End-to-End Functionality:
- * - Feature Header (`lucide-gift` + `Werbegeschenke`)
+ * - Feature Header (`lucide-gift` + `Giveaways`)
  * - Filter Tabs (`All`, `Active`, `Scheduled`, `Ended`, `Drafts`)
- * - Active Counter & Progress Bar (`X/999 aktiv`)
- * - `+ Giveaway erstellen` button & dashed creation card
+ * - Active Counter (`X active`)
+ * - `+ Create Giveaway` button & dashed creation card
  * - Giveaway Cards (accent color bar, icon, title, channel, winners count, status badge, 3-dots action menu, participant count, countdown/ended timestamp)
  * - 3-Column `Create Giveaway` Modal with live Discord Embed & Button Preview, Quick Presets, Searchable Channel Selector, Role Requirements, Duration, Winners Stepper, Large Color Tiles
  * - Full `Giveaway Details / Results` Modal with Winner Avatars, Reroll Button, Early End Button, Discord Link & Delete
@@ -52,18 +52,20 @@ DashboardTabs.Giveaways = async function(container, guildId) {
     return `Ends in ${days}d`;
   }
 
-  // Loading state
-  container.innerHTML = `
-    <div class="space-y-6">
-      <div class="flex items-center justify-center p-16 text-neutral-500 text-sm">
-        <svg class="animate-spin mr-3 text-neutral-400 w-5 h-5" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-        Lade Werbegeschenke...
+  // Only show loading placeholder if data is not already cached
+  if (!API.hasCache(`giveaways_${guildId}`) || !API.hasCache(`config_${guildId}`)) {
+    container.innerHTML = `
+      <div class="space-y-6">
+        <div class="flex items-center justify-center p-16 text-neutral-500 text-sm">
+          <svg class="animate-spin mr-3 text-neutral-400 w-5 h-5" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          Loading Giveaways...
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  }
 
   try {
     const [giveawaysRes, cfgRes] = await Promise.all([
@@ -83,7 +85,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
     function getChannelName(channelId) {
       if (!channelId) return 'general';
       const found = textChannels.find(c => String(c.id) === String(channelId));
-      return found ? found.name : 'unbekannt';
+      return found ? found.name : 'unknown';
     }
 
     function getRoleName(roleId) {
@@ -94,7 +96,6 @@ DashboardTabs.Giveaways = async function(container, guildId) {
 
     function renderMainView() {
       const activeCount = giveaways.filter(g => g.status === 'active').length;
-      const activeProgressPct = Math.min(100, (activeCount / 999) * 100);
 
       const filteredGiveaways = giveaways.filter(g => {
         if (currentFilter === 'active') return g.status === 'active';
@@ -105,9 +106,9 @@ DashboardTabs.Giveaways = async function(container, guildId) {
       });
 
       const filterTabs = [
-        { id: 'all', label: 'Alle' },
-        { id: 'active', label: 'Aktiv' },
-        { id: 'scheduled', label: 'Geplant' },
+        { id: 'all', label: 'All' },
+        { id: 'active', label: 'Active' },
+        { id: 'scheduled', label: 'Scheduled' },
         { id: 'ended', label: 'Ended' },
         { id: 'draft', label: 'Drafts' }
       ];
@@ -127,7 +128,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                       <path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path>
                     </svg>
                   </span>
-                  <h1 class="text-base font-medium text-white truncate">Werbegeschenke</h1>
+                  <h1 class="text-base font-medium text-white truncate">Giveaways</h1>
                 </div>
               </div>
             </div>
@@ -153,15 +154,12 @@ DashboardTabs.Giveaways = async function(container, guildId) {
 
                 <!-- Active Counter & Create Button -->
                 <div class="flex flex-wrap items-center gap-3">
-                  <div class="flex items-center gap-3">
-                    <span class="text-xs tabular-nums text-neutral-500">${activeCount}/999 aktiv</span>
-                    <div class="w-16 h-1 rounded-full bg-neutral-800 overflow-hidden">
-                      <div class="h-full rounded-full transition-all bg-white/60" style="width: ${activeProgressPct}%;"></div>
-                    </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold tabular-nums text-neutral-400">${activeCount} active</span>
                   </div>
                   <button type="button" id="create-giveaway-top-btn" data-tour="giveaways-create" class="flex items-center gap-2 h-10 px-5 bg-white text-black font-medium text-sm rounded-xl scroll-mt-24 whitespace-nowrap hover:bg-neutral-200 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-4 h-4"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                    Giveaway erstellen
+                    Create Giveaway
                   </button>
                 </div>
               </div>
@@ -185,16 +183,16 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                   const participantsCount = gw.participants_count || (Array.isArray(gw.participants) ? gw.participants.length : 0);
 
                   let badgeBg = 'bg-emerald-500/10 text-emerald-400';
-                  let badgeText = 'aktiv';
+                  let badgeText = 'active';
                   if (gw.status === 'ended') {
                     badgeBg = 'bg-neutral-800 text-neutral-500';
                     badgeText = 'ended';
                   } else if (gw.status === 'scheduled') {
                     badgeBg = 'bg-sky-500/10 text-sky-400';
-                    badgeText = 'geplant';
+                    badgeText = 'scheduled';
                   } else if (gw.status === 'draft') {
                     badgeBg = 'bg-amber-500/10 text-amber-400';
-                    badgeText = 'entwurf';
+                    badgeText = 'draft';
                   }
 
                   let timeText = '';
@@ -203,16 +201,16 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                   } else if (gw.status === 'ended') {
                     timeText = `Ended ${formatRelativeTime(gw.end_timestamp || gw.created_at)}`;
                   } else if (gw.status === 'draft') {
-                    timeText = 'Entwurf';
+                    timeText = 'Draft';
                   } else {
                     timeText = formatRelativeTime(gw.created_at);
                   }
 
                   return `
-                    <div data-gw-id="${gw.id}" class="orbit-gw-card group bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden hover:border-neutral-700 transition-all cursor-pointer relative flex flex-col justify-between">
+                    <div data-gw-id="${gw.id}" class="orbit-gw-card group bg-neutral-900 rounded-xl border border-neutral-800 ${isMenuOpen ? 'z-50 overflow-visible' : 'z-10 overflow-hidden'} hover:border-neutral-700 transition-all cursor-pointer relative flex flex-col justify-between">
                       <div>
                         <!-- Top Accent Bar -->
-                        <div class="h-[3px]" style="background-color: ${cardColor};"></div>
+                        <div class="h-[3px] rounded-t-xl overflow-hidden" style="background-color: ${cardColor};"></div>
                         <div class="p-4">
                           <div class="flex items-start justify-between gap-3 mb-3">
                             <div class="flex items-start gap-3 min-w-0 flex-1">
@@ -236,25 +234,25 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                             <div class="flex items-center gap-1.5 flex-shrink-0">
                               <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${badgeBg}">${badgeText}</span>
                               <div class="relative">
-                                <button type="button" aria-label="Aktionen" data-menu-toggle="${gw.id}" class="p-2 -m-1 rounded-lg text-neutral-600 hover:text-neutral-300 hover:bg-neutral-800 transition-colors cursor-pointer">
+                                <button type="button" aria-label="Actions" data-menu-toggle="${gw.id}" class="p-2 -m-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer">
                                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-more-horizontal w-4 h-4"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
                                 </button>
                                 ${isMenuOpen ? `
-                                  <div class="absolute right-0 top-full mt-1 w-48 bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl z-30 overflow-hidden py-1">
+                                  <div class="absolute right-0 top-full mt-1 w-48 bg-neutral-800 border border-neutral-700 rounded-xl shadow-2xl z-[100] overflow-hidden py-1">
                                     <button type="button" data-action="details" data-id="${gw.id}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors cursor-pointer">
                                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
-                                      Ergebnisse & Details
+                                      Results & Details
                                     </button>
                                     ${gw.status === 'active' ? `
                                       <button type="button" data-action="end" data-id="${gw.id}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-amber-400 hover:bg-neutral-700 transition-colors cursor-pointer">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><line x1="10" x2="10" y1="15" y2="9"></line><line x1="14" x2="14" y1="15" y2="9"></line></svg>
-                                        Giveaway beenden
+                                        End Giveaway
                                       </button>
                                     ` : ''}
                                     ${gw.status === 'ended' ? `
                                       <button type="button" data-action="reroll" data-id="${gw.id}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-indigo-400 hover:bg-neutral-700 transition-colors cursor-pointer">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
-                                        Neu auslosen (Reroll)
+                                        Reroll
                                       </button>
                                     ` : ''}
                                     ${gw.jump_url ? `
@@ -280,7 +278,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                       <div class="flex items-center justify-between text-xs text-neutral-400 px-4 py-3 border-t border-neutral-800/60 bg-neutral-900/50">
                         <span class="flex items-center gap-1.5 text-neutral-400">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users w-3.5 h-3.5 text-neutral-500"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                          <span>${participantsCount} Teilnehmer</span>
+                          <span>${participantsCount} participants</span>
                         </span>
                         <span class="text-neutral-500">${timeText}</span>
                       </div>
@@ -447,13 +445,13 @@ DashboardTabs.Giveaways = async function(container, guildId) {
       const participants = Array.isArray(gw.participants) ? gw.participants : [];
 
       let badgeBg = 'bg-emerald-500/10 text-emerald-400';
-      let badgeText = 'aktiv';
+      let badgeText = 'active';
       if (gw.status === 'ended') {
         badgeBg = 'bg-neutral-800 text-neutral-500';
         badgeText = 'ended';
       } else if (gw.status === 'draft') {
         badgeBg = 'bg-amber-500/10 text-amber-400';
-        badgeText = 'entwurf';
+        badgeText = 'draft';
       }
 
       modal.innerHTML = `
@@ -483,7 +481,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
             <!-- Stats Grid -->
             <div class="grid grid-cols-2 gap-2.5">
               <div class="p-3 rounded-xl bg-neutral-800/40 border border-neutral-800">
-                <span class="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">Teilnehmer</span>
+                <span class="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">Participants</span>
                 <div class="flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-neutral-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                   <span class="text-base font-bold text-white tabular-nums">${gw.participants_count || participants.length}</span>
@@ -515,7 +513,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 text-amber-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   Winners
                 </label>
-                <span class="text-[11px] text-neutral-500">${winners.length} ermittelt</span>
+                <span class="text-[11px] text-neutral-500">${winners.length} drawn</span>
               </div>
 
               ${winners.length > 0 ? `
@@ -527,7 +525,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                           ${w.avatar ? `<img src="${w.avatar}" alt="" class="w-full h-full object-cover">` : (w.name || '?')[0].toUpperCase()}
                         </div>
                         <div class="min-w-0">
-                          <p class="text-sm font-semibold text-white truncate">${escapeHtml(w.name || w.id || 'Benutzer')}</p>
+                          <p class="text-sm font-semibold text-white truncate">${escapeHtml(w.name || w.id || 'User')}</p>
                           <p class="text-[10px] text-neutral-500 tabular-nums">ID: ${escapeHtml(w.id || '')}</p>
                         </div>
                       </div>
@@ -547,8 +545,8 @@ DashboardTabs.Giveaways = async function(container, guildId) {
             <!-- Participants Preview -->
             <div>
               <div class="flex items-center justify-between mb-2">
-                <label class="text-xs font-semibold text-neutral-300 uppercase tracking-wider">Teilnehmerliste</label>
-                <span class="text-[11px] text-neutral-500">${participants.length} gesamt</span>
+                <label class="text-xs font-semibold text-neutral-300 uppercase tracking-wider">Participants List</label>
+                <span class="text-[11px] text-neutral-500">${participants.length} total</span>
               </div>
               ${participants.length > 0 ? `
                 <div class="max-h-36 overflow-y-auto space-y-1.5 p-2 rounded-xl bg-neutral-800/30 border border-neutral-800/80 scrollbar-thin" data-lenis-prevent>
@@ -563,7 +561,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                 </div>
               ` : `
                 <div class="p-3 rounded-xl bg-neutral-800/20 border border-neutral-800/60 text-center">
-                  <p class="text-xs text-neutral-500">Noch keine Teilnehmer.</p>
+                  <p class="text-xs text-neutral-500">No participants yet.</p>
                 </div>
               `}
             </div>
@@ -686,7 +684,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
       modal.className = 'fixed inset-0 lg:left-64 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in';
 
       modal.innerHTML = `
-        <div role="dialog" aria-modal="true" aria-label="Giveaway erstellen" class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-[1040px] max-h-[90vh] flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden">
+        <div role="dialog" aria-modal="true" aria-label="Create Giveaway" class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-[1040px] max-h-[90vh] flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden">
           <!-- Top Bar -->
           <div id="gw-preview-top-accent" class="h-[3px] flex-shrink-0" style="background-color: ${state.color};"></div>
 
@@ -694,7 +692,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
           <div class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-neutral-800 flex-shrink-0">
             <div>
               <h2 class="text-base sm:text-lg font-semibold text-white">Create Giveaway</h2>
-              <p class="text-xs text-neutral-500 mt-0.5 hidden sm:block">Konfiguriere Preis, Gewinner, Dauer und Berechtigungen</p>
+              <p class="text-xs text-neutral-500 mt-0.5 hidden sm:block">Configure prize, winners, duration and requirements</p>
             </div>
             <button type="button" id="gw-modal-close" aria-label="Close" class="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-5 h-5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
@@ -731,8 +729,8 @@ DashboardTabs.Giveaways = async function(container, guildId) {
 
                 <!-- Prize Input -->
                 <div>
-                  <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Preis / Gewinn *</label>
-                  <input id="gw-prize-input" placeholder="z. B. Discord Nitro, 10€ Gutschein..." maxlength="100" class="w-full px-3.5 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500 transition-all" type="text" value="${escapeHtml(state.prize)}">
+                  <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Prize *</label>
+                  <input id="gw-prize-input" placeholder="e.g. Discord Nitro, $10 Gift Card..." maxlength="100" class="w-full px-3.5 py-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500 transition-all" type="text" value="${escapeHtml(state.prize)}">
                   <div class="flex justify-end mt-1">
                     <span id="gw-prize-counter" class="text-[10px] tabular-nums text-neutral-600">${state.prize.length}/100</span>
                   </div>
@@ -740,15 +738,15 @@ DashboardTabs.Giveaways = async function(container, guildId) {
 
                 <!-- Description / Details -->
                 <div>
-                  <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Beschreibung / Hinweise (Optional)</label>
-                  <textarea id="gw-description-input" rows="2" placeholder="z. B. Gesponsert von Orbit. Gewinner werden per DM benachrichtigt." class="w-full px-3.5 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500 transition-all resize-none">${escapeHtml(state.description)}</textarea>
+                  <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Description (Optional)</label>
+                  <textarea id="gw-description-input" rows="2" placeholder="e.g. Sponsored by Orbit. Winners will be notified via DM." class="w-full px-3.5 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500 transition-all resize-none">${escapeHtml(state.description)}</textarea>
                 </div>
 
-                <!-- Zielkanal & Rollen-Voraussetzung zusammen in einer Zeile -->
+                <!-- Target Channel & Required Role -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <!-- Target Channel Dropdown -->
                   <div>
-                    <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Zielkanal *</label>
+                    <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Target Channel *</label>
                     <div class="relative" id="gw-channel-dd-wrap">
                       <button type="button" id="gw-channel-dd-btn" class="w-full flex items-center justify-between px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 cursor-pointer">
                         <span id="gw-channel-dd-label" class="truncate flex items-center gap-1.5 text-xs sm:text-sm">
@@ -763,7 +761,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                         <div class="p-2 border-b border-neutral-700">
                           <div class="relative">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                            <input id="gw-channel-search-input" placeholder="Kanal suchen..." class="w-full pl-8 pr-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none">
+                            <input id="gw-channel-search-input" placeholder="Search channel..." class="w-full pl-8 pr-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none">
                           </div>
                         </div>
                         <div id="gw-channel-dd-list" class="max-h-48 overflow-y-auto p-1 space-y-0.5" data-lenis-prevent>
@@ -780,10 +778,10 @@ DashboardTabs.Giveaways = async function(container, guildId) {
 
                   <!-- Required Role Dropdown -->
                   <div>
-                    <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Rollen-Voraussetzung (Optional)</label>
+                    <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Required Role (Optional)</label>
                     <div class="relative" id="gw-role-dd-wrap">
                       <button type="button" id="gw-role-dd-btn" class="w-full flex items-center justify-between px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500 cursor-pointer">
-                        <span id="gw-role-dd-label" class="truncate text-xs sm:text-sm text-neutral-400">Keine Rolle erforderlich</span>
+                        <span id="gw-role-dd-label" class="truncate text-xs sm:text-sm text-neutral-400">No role required</span>
                         <svg class="w-4 h-4 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
                       </button>
 
@@ -792,12 +790,12 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                         <div class="p-2 border-b border-neutral-700">
                           <div class="relative">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                            <input id="gw-role-search-input" placeholder="Rolle suchen..." class="w-full pl-8 pr-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none">
+                            <input id="gw-role-search-input" placeholder="Search role..." class="w-full pl-8 pr-3 py-1.5 bg-neutral-900 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none">
                           </div>
                         </div>
                         <div id="gw-role-dd-list" class="max-h-48 overflow-y-auto p-1 space-y-0.5" data-lenis-prevent>
                           <button type="button" data-role-id="" data-role-name="" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors cursor-pointer">
-                            <span>Keine Rolle erforderlich</span>
+                            <span>No role required</span>
                           </button>
                           ${roles.map(r => `
                             <button type="button" data-role-id="${r.id}" data-role-name="${escapeHtml(r.name)}" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left text-neutral-300 hover:text-white hover:bg-neutral-700 transition-colors cursor-pointer">
@@ -811,13 +809,13 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                   </div>
                 </div>
 
-                <!-- Winners Stepper & Duration in einer Zeile -->
+                <!-- Winners Stepper & Duration -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <!-- Winners Stepper -->
                   <div>
                     <div class="flex items-center justify-between mb-1.5">
-                      <label class="text-xs font-medium text-neutral-400">Anzahl der Gewinner</label>
-                      <span id="gw-winners-display" class="text-xs font-semibold text-white tabular-nums">${state.winners_count} Gewinner</span>
+                      <label class="text-xs font-medium text-neutral-400">Number of Winners</label>
+                      <span id="gw-winners-display" class="text-xs font-semibold text-white tabular-nums">${state.winners_count} ${state.winners_count === 1 ? 'Winner' : 'Winners'}</span>
                     </div>
                     <div class="flex items-center gap-2">
                       <button type="button" id="gw-winners-minus" class="w-9 h-9 rounded-xl bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-700 flex items-center justify-center font-bold text-base transition-colors cursor-pointer">-</button>
@@ -828,14 +826,14 @@ DashboardTabs.Giveaways = async function(container, guildId) {
 
                   <!-- Duration -->
                   <div>
-                    <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Dauer</label>
+                    <label class="text-xs font-medium text-neutral-400 mb-1.5 block">Duration</label>
                     <div class="grid grid-cols-[1fr,110px] gap-2">
                       <input id="gw-duration-value" type="number" min="1" max="365" value="${state.duration_value}" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
                       <select id="gw-duration-unit" class="w-full h-9 px-2 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500 cursor-pointer">
-                        <option value="minutes">Minuten</option>
-                        <option value="hours">Stunden</option>
-                        <option value="days" selected>Tage</option>
-                        <option value="weeks">Wochen</option>
+                        <option value="minutes">Minutes</option>
+                        <option value="hours">Hours</option>
+                        <option value="days" selected>Days</option>
+                        <option value="weeks">Weeks</option>
                       </select>
                     </div>
                   </div>
@@ -848,8 +846,8 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                 
                 <div class="flex items-start gap-3 w-full justify-center">
                   <!-- Compact Color Strip on the left of embed -->
-                  <div class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-neutral-900/70 border border-neutral-800 shadow-sm shrink-0" title="Akzentfarbe">
-                    <span class="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider mb-0.5">Farbe</span>
+                  <div class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-neutral-900/70 border border-neutral-800 shadow-sm shrink-0" title="Accent color">
+                    <span class="text-[9px] font-semibold text-neutral-400 uppercase tracking-wider mb-0.5">Color</span>
                     <div class="flex flex-col gap-1.5" id="gw-color-tiles">
                       ${colorPalette.map(hex => `
                         <button type="button" data-color="${hex}" class="gw-color-tile w-6 h-6 rounded-lg flex items-center justify-center transition-all cursor-pointer ${state.color.toLowerCase() === hex.toLowerCase() ? 'ring-2 ring-white scale-110 shadow-md' : 'hover:scale-105 opacity-80 hover:opacity-100'}" style="background-color: ${hex};" title="${hex}">
@@ -904,15 +902,15 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                               </div>
                               <div class="flex items-center gap-1.5 text-neutral-400">
                                 <span>⏱️</span>
-                                <span>Endet: <strong id="gw-preview-duration" class="font-semibold text-neutral-200">in 1 Tag</strong></span>
+                                <span>Ends: <strong id="gw-preview-duration" class="font-semibold text-neutral-200">in 1 Day</strong></span>
                               </div>
                               <div class="flex items-center gap-1.5 text-neutral-400">
                                 <span>🏆</span>
-                                <span>Gewinner: <strong id="gw-preview-winners" class="font-semibold text-neutral-200">1</strong></span>
+                                <span>Winners: <strong id="gw-preview-winners" class="font-semibold text-neutral-200">1</strong></span>
                               </div>
                               <div id="gw-preview-role-row" class="flex items-center gap-1.5 text-neutral-400 hidden">
                                 <span>🔒</span>
-                                <span>Rolle erforderlich: <strong id="gw-preview-role" class="font-semibold text-indigo-300">@VIP</strong></span>
+                                <span>Required Role: <strong id="gw-preview-role" class="font-semibold text-indigo-300">@VIP</strong></span>
                               </div>
                             </div>
                           </div>
@@ -938,7 +936,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
 
           <!-- Footer -->
           <div class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-t border-neutral-800 bg-neutral-900/95 flex-shrink-0">
-            <button type="button" id="gw-cancel-btn" class="px-4 py-2 text-xs font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer">Abbrechen</button>
+            <button type="button" id="gw-cancel-btn" class="px-4 py-2 text-xs font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer">Cancel</button>
             <div class="flex items-center gap-2.5">
               <button type="button" id="gw-save-draft-btn" class="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold border border-neutral-700 transition-colors cursor-pointer">Save as Draft</button>
               <button type="button" id="gw-submit-btn" class="px-5 py-2 rounded-xl bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">Create Giveaway</button>
