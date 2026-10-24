@@ -46,6 +46,7 @@ DashboardTabs.Welcome = async function(container, guildId) {
     }
   };
 
+  let isInitialLoading = true;
   let saveTimer = null;
   let lastFocusedWelcomeInput = 'w-desc';
   let lastFocusedGoodbyeInput = 'g-desc';
@@ -126,6 +127,7 @@ DashboardTabs.Welcome = async function(container, guildId) {
   }
 
   function scheduleSave() {
+    if (isInitialLoading) return;
     const statusEl = document.getElementById('welcome-save-status');
     if (statusEl) {
       statusEl.textContent = 'Saving...';
@@ -1316,12 +1318,15 @@ DashboardTabs.Welcome = async function(container, guildId) {
     }
   }
 
-  // Initial render + load data from API
+  // Initial render with loading state
   renderPage();
 
   try {
     const [configData, chData, guildsData] = await Promise.all([
-      API.getConfig(guildId).catch(() => ({})),
+      API.getConfig(guildId).catch((err) => {
+        console.warn('[Welcome] API.getConfig failed:', err);
+        return {};
+      }),
       API.getChannels(guildId).catch(() => ([])),
       API.getGuilds().catch(() => ([]))
     ]);
@@ -1347,12 +1352,19 @@ DashboardTabs.Welcome = async function(container, guildId) {
     if (cfg.welcome) {
       const w = cfg.welcome;
       const defaultWMsg = 'Welcome {user} to **{server}**! We are happy to have you as member #{count}.';
-      const desc = w.embed_description || (w.message && w.message !== defaultWMsg ? w.message : '');
+      let desc = '';
+      if (w.embed_description !== undefined && w.embed_description !== null && w.embed_description !== '') {
+        desc = w.embed_description;
+      } else if (w.message && w.message !== defaultWMsg) {
+        desc = w.message;
+      } else if (w.message) {
+        desc = w.message;
+      }
       state.welcome = {
         enabled: Boolean(w.enabled),
         channel_id: w.channel_id ? String(w.channel_id) : '',
-        embed: w.msg_mode !== 'text',
-        show_avatar: w.show_avatar !== false,
+        embed: w.msg_mode ? (w.msg_mode !== 'text') : true,
+        show_avatar: w.show_avatar !== undefined ? Boolean(w.show_avatar) : true,
         invite_vars: Boolean(w.invite_vars),
         embed_color: w.embed_color || '#5865F2',
         embed_title: w.embed_title || '',
@@ -1366,11 +1378,18 @@ DashboardTabs.Welcome = async function(container, guildId) {
     if (cfg.goodbye) {
       const g = cfg.goodbye;
       const defaultGMsg = "We're sad to see you go, {user}! We hope you enjoyed your time in **{server}**.";
-      const desc = g.embed_description || (g.message && g.message !== defaultGMsg ? g.message : '');
+      let desc = '';
+      if (g.embed_description !== undefined && g.embed_description !== null && g.embed_description !== '') {
+        desc = g.embed_description;
+      } else if (g.message && g.message !== defaultGMsg) {
+        desc = g.message;
+      } else if (g.message) {
+        desc = g.message;
+      }
       state.goodbye = {
         enabled: Boolean(g.enabled),
         channel_id: g.channel_id ? String(g.channel_id) : '',
-        embed: g.msg_mode !== 'text',
+        embed: g.msg_mode ? (g.msg_mode !== 'text') : true,
         embed_color: g.embed_color || '#5865F2',
         embed_title: g.embed_title || '',
         embed_description: desc,
@@ -1379,10 +1398,11 @@ DashboardTabs.Welcome = async function(container, guildId) {
         dm_message: g.dm_message || ''
       };
     }
-
-    renderPage();
   } catch (err) {
     console.warn('[Welcome] Failed to load config:', err);
+  } finally {
+    isInitialLoading = false;
+    renderPage();
   }
 };
 

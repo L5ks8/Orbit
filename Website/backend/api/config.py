@@ -139,14 +139,18 @@ class ConfigMixin:
         for uid_str in immune_user_ids:
             try:
                 uid = int(uid_str)
-                user_obj = self.bot.get_user(uid)
-                if not user_obj:
-                    user_obj = await self.bot.fetch_user(uid)
+                user_obj = guild.get_member(uid) or self.bot.get_user(uid)
                 if user_obj:
                     resolved_immune_users.append({
                         "id": str(user_obj.id),
-                        "name": user_obj.name,
-                        "avatar": user_obj.avatar.url if user_obj.avatar else user_obj.default_avatar.url
+                        "name": getattr(user_obj, "display_name", user_obj.name),
+                        "avatar": user_obj.display_avatar.with_size(64).url if getattr(user_obj, "display_avatar", None) else "/img/logo.png"
+                    })
+                else:
+                    resolved_immune_users.append({
+                        "id": str(uid),
+                        "name": f"User {uid}",
+                        "avatar": "/img/logo.png"
                     })
             except Exception:
                 pass
@@ -166,7 +170,7 @@ class ConfigMixin:
                 db = get_db()
                 if db is not None:
                     for coll_name in ["InviteConfig", "invites", "Invite", "InviteSettings"]:
-                        doc = db[coll_name].find_one({"$or": [{"_id": str(guild_id)}, {"_id": int(guild_id)}, {"guild_id": str(guild_id)}, {"guild_id": int(guild_id)}]})
+                        doc = db[coll_name].find_one({"_id": str(guild_id)}) or (db[coll_name].find_one({"_id": int(guild_id)}) if str(guild_id).isdigit() else None)
                         if doc and isinstance(doc, dict):
                             doc.pop("_id", None)
                             invites_cfg = doc
@@ -179,36 +183,27 @@ class ConfigMixin:
 
         live_invites_by_code = {}
         try:
-            guild_invites = await guild.invites()
+            guild_invites = await asyncio.wait_for(guild.invites(), timeout=1.2)
             for ginv in guild_invites:
                 live_invites_by_code[ginv.code] = ginv
         except Exception:
             pass
 
-        # 1. Resolve Leaderboard
+        # 1. Resolve Leaderboard (fast in-memory resolution without Discord REST rate-limits)
         try:
             from Components.Commands.Invite.storage import get_leaderboard
             invite_lb = get_leaderboard(guild_id, limit=25)
             for entry in invite_lb:
                 uid = entry.get("user_id")
-                user_name = "Vanity URL" if str(uid) == "0" else "Unknown"
+                user_name = "Vanity URL" if str(uid) == "0" else f"User {uid}"
                 avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"
                 try:
                     if uid and str(uid).isdigit() and str(uid) != "0":
-                        mem = guild.get_member(int(uid))
+                        mem = guild.get_member(int(uid)) or self.bot.get_user(int(uid))
                         if mem:
-                            user_name = mem.display_name
-                            avatar_url = mem.display_avatar.with_format("png").with_size(64).url
-                        else:
-                            u = self.bot.get_user(int(uid))
-                            if not u:
-                                try:
-                                    u = await self.bot.fetch_user(int(uid))
-                                except Exception:
-                                    pass
-                            if u:
-                                user_name = u.name
-                                avatar_url = u.display_avatar.with_format("png").with_size(64).url
+                            user_name = getattr(mem, "display_name", mem.name)
+                            if getattr(mem, "display_avatar", None):
+                                avatar_url = mem.display_avatar.with_format("png").with_size(64).url
                     elif str(uid) == "0" and guild.icon:
                         avatar_url = guild.icon.with_size(64).url
                 except Exception:
@@ -246,7 +241,7 @@ class ConfigMixin:
         except Exception as e:
             logger.error(f"Invite leaderboard resolution error: {e}")
 
-        # 2. Resolve Tracked Sources
+        # 2. Resolve Tracked Sources (Single batch query for ultra-fast performance)
         try:
             from Components.Commands.Invite.storage import _collection
             inv_col = _collection()
@@ -254,24 +249,38 @@ class ConfigMixin:
             if not isinstance(raw_sources, list):
                 raw_sources = []
 
+            codes = [str(src.get("code", "")).strip() for src in raw_sources if isinstance(src, dict) and src.get("code")]
+            counts_by_code = {}
+            if codes and inv_col is not None:
+                try:
+                    q_gids = [str(guild_id)]
+                    if str(guild_id).isdigit():
+                        q_gids.append(int(guild_id))
+                    docs = list(inv_col.find({
+                        "guild_id": {"$in": q_gids},
+                        "code": {"$in": codes}
+                    }))
+                    for d in docs:
+                        c = str(d.get("code", ""))
+                        if c not in counts_by_code:
+                            counts_by_code[c] = {"active": 0, "left": 0}
+                        if d.get("left", False):
+                            counts_by_code[c]["left"] += 1
+                        else:
+                            counts_by_code[c]["active"] += 1
+                except Exception:
+                    pass
+
             for src in raw_sources:
                 if not isinstance(src, dict):
                     continue
                 code = str(src.get("code", "")).strip()
                 live_inv = live_invites_by_code.get(code)
                 live_uses = (live_inv.uses or 0) if live_inv else int(src.get("uses", 0) or 0)
-                active_cnt = 0
-                left_cnt = 0
-                if code:
-                    try:
-                        docs = list(inv_col.find({"guild_id": {"$in": [str(guild_id), int(guild_id)]}, "code": code}))
-                        for d in docs:
-                            if d.get("left", False):
-                                left_cnt += 1
-                            else:
-                                active_cnt += 1
-                    except Exception:
-                        pass
+                code_counts = counts_by_code.get(code, {"active": 0, "left": 0})
+                active_cnt = code_counts["active"]
+                left_cnt = code_counts["left"]
+
                 total_joins = max(live_uses, active_cnt + left_cnt, int(src.get("uses", 0) or 0))
                 if active_cnt == 0 and total_joins > left_cnt:
                     active_cnt = total_joins - left_cnt
@@ -696,8 +705,13 @@ class ConfigMixin:
             from Components.Database.mongodb import get_config
             data = await request.json()
 
+            can_admin = bool(user_perms.get("is_admin"))
+            can_channels = can_admin or bool(user_perms.get("can_channels"))
+            can_messages = can_admin or bool(user_perms.get("can_messages"))
+            can_roles = can_admin or bool(user_perms.get("can_roles"))
+
             settings_payload = data.get("settings") or data.get("Settings")
-            if user_perms.get("is_admin") and isinstance(settings_payload, dict):
+            if can_admin and isinstance(settings_payload, dict):
                 from Components.Systems.WebDashboard._storage import save_settings_config, load_settings_config
                 s_cfg = load_settings_config(guild_id)
                 new_s = settings_payload
@@ -718,7 +732,7 @@ class ConfigMixin:
                     s_cfg["messages_enabled"] = bool(new_s["messages_enabled"])
                 save_settings_config(guild_id, s_cfg)
 
-            if user_perms.get("is_admin") and "extra_settings" in data:
+            if can_admin and "extra_settings" in data:
                 ext = data["extra_settings"]
                 
                 from Components.Database.mongodb import get_config, set_config
@@ -726,11 +740,11 @@ class ConfigMixin:
                 g_cfg["ai_enabled"] = bool(ext.get("ai_enabled", True))
                 set_config("Settings", guild_id, g_cfg)
 
-            if user_perms.get("can_channels") and "appeals" in data:
+            if (can_admin or can_channels) and "appeals" in data:
                 from Components.Systems.BanAppeals._storage import save_appeals_config
                 save_appeals_config(guild_id, data["appeals"])
 
-            if user_perms.get("can_channels") and "serverstats" in data:
+            if (can_admin or can_channels) and "serverstats" in data:
                 s_data = data.get("serverstats", {})
                 ss_cfg = load_serverstats_config(guild_id)
                 if "enabled" in s_data:
@@ -757,7 +771,7 @@ class ConfigMixin:
                     import asyncio
                     asyncio.create_task(asyncio.to_thread(delete_image_by_url, old_url))
 
-            if user_perms.get("can_channels") and "welcome" in data:
+            if (can_admin or can_channels or can_messages) and "welcome" in data:
                 welcome_cfg = load_welcome_config(guild_id)
                 w_data = data.get("welcome", {})
                 
@@ -792,7 +806,7 @@ class ConfigMixin:
                 
                 save_welcome_config(guild_id, welcome_cfg)
 
-            if user_perms.get("can_channels") and "goodbye" in data:
+            if (can_admin or can_channels or can_messages) and "goodbye" in data:
                 goodbye_cfg = load_goodbye_config(guild_id)
                 g_data = data.get("goodbye", {})
 
@@ -823,7 +837,7 @@ class ConfigMixin:
                     
                 save_goodbye_config(guild_id, goodbye_cfg)
 
-            if user_perms.get("can_channels") and "boost" in data:
+            if (can_admin or can_channels or can_messages) and "boost" in data:
                 boost_cfg = load_boost_config(guild_id)
                 b_data = data.get("boost", {})
 
@@ -853,7 +867,7 @@ class ConfigMixin:
                     
                 save_boost_config(guild_id, boost_cfg)
 
-            if user_perms.get("can_messages") and "automod" in data:
+            if (can_admin or can_messages) and "automod" in data:
                 automod_cfg = get_config("AutoMod", guild_id)
                 if not isinstance(automod_cfg, dict):
                     automod_cfg = {}
@@ -929,7 +943,7 @@ class ConfigMixin:
 
                 save_automod_config(guild_id, automod_cfg)
 
-            if user_perms.get("can_channels") and "security" in data:
+            if (can_admin or can_channels) and "security" in data:
                 from Components.Systems.Security._storage import load_security_config, save_security_config
                 sec_cfg = load_security_config(guild_id)
                 new_sec = data["security"]
