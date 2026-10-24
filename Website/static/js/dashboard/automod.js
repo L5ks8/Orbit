@@ -1,28 +1,6 @@
 /**
  * Orbit Dashboard - Auto-Moderation Tab
- * 1:1 Pixel-Perfect Recreation of PeakBot Auto-Moderation UI & Complete End-to-End Functionality:
- *
- * Left Column:
- * - AI Moderation (Pro / Beta): Switch toggle, threat categories, upgrade trigger
- * - AI Image Moderation (Pro): Switch toggle, lock icon, Pro badge
- * - Content Filter: Switch toggle, 4 level step-bars (Relaxed, Moderate, Strict, Maximum),
- *   5 action pills (Delete, Warn, Timeout, Kick, Ban), expandable word list editor with tag chips & word counts,
- *   Always-allowed words tag input with Add button
- * - Spam Protection: Switch toggle, dynamic live info banner ("Catches a member sending X messages in Ys"),
- *   3 sensitivity presets (Relaxed, Normal, Strict), numeric message limit input (2-20 msgs) & time window (1-60s),
- *   5 action pills (Delete, Warn, Timeout, Kick, Ban)
- * - Link Filter: Switch toggle, 3 sub-toggles (Block Discord invites, Allow Discord media, Allow GIFs),
- *   5 action pills, domain tag inputs (Always allowed, Always blocked)
- *
- * Right Column:
- * - Recent Actions card: Gavel icon, live total counter, scrollable list of recent mod logs (member tag, mod action badge: warn/timeout/kick/ban, reason, relative timestamp)
- * - Warnings (Verwarnungen) card: Search input for Discord user ID + Search button, user warnings query, warning history display, empty state, inline warning deletion
- *
- * Bottom Grid & Extended Modules:
- * - General Settings: Log channel dropdown, Caps filter (toggle switch + % threshold input), Max mentions (numeric input per msg)
- * - Exemptions: Role exemptions & Channel exemptions with progress bars ("X/25 Roles", "Y/25 Channels") and multi-select dropdowns
- * - Logging System: 4 log categories (Message logs, Member logs, Voice logs, Mod action logs) + Ignored channels multi-select
- * - Messages members get (DM notifications): 4 action DM cards (Warn DM, Timeout DM, Kick DM, Ban DM) with individual on/off switches, live preview text, and Customize redirect buttons
+ * 1:1 Pixel-Perfect Recreation of PeakBot Auto-Moderation UI with Full Custom Dropdowns & Custom Toggles
  */
 
 (function () {
@@ -88,10 +66,12 @@
     doorOpen: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-door-open w-4 h-4"><path d="M13 4h3a2 2 0 0 1 2 2v14"></path><path d="M2 20h3"></path><path d="M13 20h9"></path><path d="M10 12v.01"></path><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"></path></svg>`,
     ban: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ban w-4 h-4"><circle cx="12" cy="12" r="10"></circle><path d="m4.9 4.9 14.2 14.2"></path></svg>`,
     chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right w-3.5 h-3.5"><path d="m9 18 6-6-6-6"></path></svg>`,
-    x: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>`
+    x: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>`,
+    check: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><polyline points="20 6 9 17 4 12"></polyline></svg>`
   };
 
-  function renderSwitchToggle(id, checked, label = '') {
+  // Orbit Custom Toggle Switch
+  function renderCustomToggle(id, checked, label = '') {
     const isChecked = Boolean(checked);
     return `
       <button 
@@ -100,9 +80,9 @@
         id="${escapeHtml(id)}"
         aria-checked="${isChecked ? 'true' : 'false'}" 
         ${label ? `aria-label="${escapeHtml(label)}"` : ''}
-        class="relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1 ${isChecked ? 'bg-neutral-800 dark:bg-white' : 'bg-neutral-200 dark:bg-neutral-700'}"
+        class="orbit-custom-toggle relative w-[40px] h-[22px] flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 ${isChecked ? 'bg-white' : 'bg-neutral-700'}"
       >
-        <span class="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out will-change-transform ${isChecked ? 'translate-x-[21px] bg-white dark:bg-black' : 'translate-x-[3px] bg-white dark:bg-neutral-900'}"></span>
+        <span class="pointer-events-none absolute top-1/2 left-0 -translate-y-1/2 w-[16px] h-[16px] rounded-full shadow-sm transition-transform duration-200 ease-in-out ${isChecked ? 'translate-x-[21px] bg-black' : 'translate-x-[3px] bg-neutral-900'}"></span>
       </button>
     `;
   }
@@ -168,10 +148,8 @@
       console.warn('[AutoMod] Fetch error:', e);
     }
 
-    // Filter text channels
     const textChannels = channels.filter(c => !c.type || c.type === 'text' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
 
-    // State object initialized from server config
     const automodCfg = rawConfig.automod || {};
     const logsCfg = rawConfig.logs || {};
 
@@ -182,7 +160,7 @@
 
       // Content Filter
       content_filter_enabled: Boolean(automodCfg.banned_words?.enabled),
-      filter_level: automodCfg.banned_words?.filter_level || 'relaxed', // relaxed, moderate, strict, maximum
+      filter_level: automodCfg.banned_words?.filter_level || 'relaxed',
       content_action: automodCfg.banned_words?.action || 'delete',
       banned_words: Array.isArray(automodCfg.banned_words?.words) ? [...automodCfg.banned_words.words] : [],
       allowed_words: Array.isArray(automodCfg.banned_words?.allowed_words) ? [...automodCfg.banned_words.allowed_words] : [],
@@ -193,7 +171,7 @@
       spam_messages: Number(automodCfg.anti_spam?.max_messages) || 5,
       spam_time_sec: Number(automodCfg.anti_spam?.time_window_sec) || 5,
       spam_action: automodCfg.anti_spam?.action || 'delete',
-      spam_sensitivity: 'normal', // relaxed (8/6s), normal (5/5s), strict (3/3s)
+      spam_sensitivity: 'normal',
 
       // Link Filter
       links_enabled: Boolean(automodCfg.anti_link?.enabled),
@@ -245,10 +223,158 @@
       isSearchingWarnings: false
     };
 
-    // Determine initial sensitivity based on messages / time
     if (state.spam_messages >= 8) state.spam_sensitivity = 'relaxed';
     else if (state.spam_messages <= 3) state.spam_sensitivity = 'strict';
     else state.spam_sensitivity = 'normal';
+
+    // Helper: Build Custom Single Channel Selector Dropdown
+    function renderCustomChannelSelect(ddId, selectedId, placeholder = 'Select channel') {
+      const selectedCh = textChannels.find(c => String(c.id) === String(selectedId));
+      const hasVal = Boolean(selectedCh);
+      const label = selectedCh ? selectedCh.name : placeholder;
+
+      return `
+        <div class="relative w-full custom-channel-dd" data-dd-id="${escapeHtml(ddId)}">
+          <button 
+            type="button" 
+            id="${escapeHtml(ddId)}-trigger"
+            class="custom-channel-trigger w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer"
+          >
+            <span class="truncate flex items-center gap-1.5 text-sm ${hasVal ? 'text-white font-medium' : 'text-neutral-500'}">
+              <span class="text-neutral-500">#</span>
+              <span class="dd-display-label">${escapeHtml(label)}</span>
+            </span>
+            <div class="flex items-center gap-1 text-neutral-400">
+              ${SVGS.chevronDown}
+            </div>
+          </button>
+
+          <div 
+            id="${escapeHtml(ddId)}-menu"
+            class="orbit-dropdown-menu custom-channel-menu hidden absolute left-0 right-0 top-full mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] overflow-hidden max-h-60 flex flex-col"
+            data-lenis-prevent
+          >
+            <div class="p-2 border-b border-neutral-800 shrink-0">
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">${SVGS.search}</span>
+                <input 
+                  type="text" 
+                  placeholder="Search channel..." 
+                  class="channel-search-input w-full pl-8 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" 
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+            <div class="overflow-y-auto p-1 space-y-0.5 scrollbar-thin channel-options-list">
+              <button 
+                type="button" 
+                data-val="" 
+                class="channel-option-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-left text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <span>None / Disabled</span>
+                ${!hasVal ? `<span class="text-emerald-400 shrink-0">${SVGS.check}</span>` : ''}
+              </button>
+              ${textChannels.map(c => {
+                const isSelected = String(c.id) === String(selectedId);
+                return `
+                  <button 
+                    type="button" 
+                    data-val="${c.id}" 
+                    data-name="${escapeHtml(c.name)}"
+                    class="channel-option-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-left transition-colors cursor-pointer ${isSelected ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:text-white hover:bg-neutral-800'}"
+                  >
+                    <span class="flex items-center gap-1.5 truncate">
+                      <span class="text-neutral-500">#</span>
+                      <span class="truncate">${escapeHtml(c.name)}</span>
+                    </span>
+                    ${isSelected ? `<span class="text-emerald-400 shrink-0">${SVGS.check}</span>` : ''}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Helper: Build Custom Multi-Select Dropdown (Roles or Channels)
+    function renderCustomMultiSelect(ddId, type, selectedIds, placeholder = 'Select...') {
+      const isRole = type === 'role';
+      const allItems = isRole ? roles : textChannels;
+      const selectedItems = selectedIds.map(id => {
+        const found = allItems.find(it => String(it.id) === String(id));
+        return {
+          id: String(id),
+          name: found ? found.name : `${type}-${id}`,
+          color: isRole && found && found.color && found.color !== 0 ? '#' + found.color.toString(16).padStart(6, '0') : null
+        };
+      });
+
+      return `
+        <div class="relative w-full custom-multi-dd" data-dd-id="${escapeHtml(ddId)}" data-type="${type}">
+          <button 
+            type="button" 
+            id="${escapeHtml(ddId)}-trigger"
+            class="custom-multi-trigger w-full flex items-center justify-between gap-2 min-h-[44px] px-3 py-1.5 bg-neutral-800 border rounded-xl text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer"
+          >
+            <div class="flex-1 flex flex-wrap gap-1.5 py-0.5">
+              ${selectedItems.map(item => `
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-neutral-200">
+                  <span class="text-neutral-500">${isRole ? '@' : '#'}</span>
+                  ${item.color ? `<span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${item.color}"></span>` : ''}
+                  <span class="truncate max-w-[120px]">${escapeHtml(item.name)}</span>
+                  <span class="remove-chip-btn text-neutral-400 hover:text-red-400 p-0.5 cursor-pointer" data-val="${item.id}">${SVGS.x}</span>
+                </span>
+              `).join('')}
+              ${selectedItems.length === 0 ? `<span class="text-neutral-500 text-sm py-0.5">${escapeHtml(placeholder)}</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1 text-neutral-400 flex-shrink-0">
+              ${SVGS.chevronDown}
+            </div>
+          </button>
+
+          <div 
+            id="${escapeHtml(ddId)}-menu"
+            class="orbit-dropdown-menu custom-multi-menu hidden absolute left-0 right-0 top-full mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] overflow-hidden max-h-60 flex flex-col"
+            data-lenis-prevent
+          >
+            <div class="p-2 border-b border-neutral-800 shrink-0">
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">${SVGS.search}</span>
+                <input 
+                  type="text" 
+                  placeholder="Search ${isRole ? 'roles' : 'channels'}..." 
+                  class="multi-search-input w-full pl-8 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" 
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+            <div class="overflow-y-auto p-1 space-y-0.5 scrollbar-thin multi-options-list">
+              ${allItems.map(it => {
+                const isSelected = selectedIds.includes(String(it.id));
+                const itemColor = isRole && it.color && it.color !== 0 ? '#' + it.color.toString(16).padStart(6, '0') : null;
+                return `
+                  <button 
+                    type="button" 
+                    data-val="${it.id}" 
+                    data-name="${escapeHtml(it.name)}"
+                    class="multi-option-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-left transition-colors cursor-pointer ${isSelected ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:text-white hover:bg-neutral-800'}"
+                  >
+                    <span class="flex items-center gap-2 truncate">
+                      <span class="text-neutral-500">${isRole ? '@' : '#'}</span>
+                      ${itemColor ? `<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${itemColor}"></span>` : ''}
+                      <span class="truncate">${escapeHtml(it.name)}</span>
+                    </span>
+                    ${isSelected ? `<span class="text-emerald-400 shrink-0">${SVGS.check}</span>` : ''}
+                  </button>
+                `;
+              }).join('')}
+              ${allItems.length === 0 ? `<div class="p-3 text-xs text-neutral-500 text-center">No ${isRole ? 'roles' : 'channels'} available</div>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     function renderUI() {
       const serverName = escapeHtml(currentGuild.name || 'Server');
@@ -270,7 +396,6 @@
         { id: 'strict', label: 'Strict', msgs: 3, sec: 3, bars: [true, true, true] }
       ];
 
-      // Format recent actions
       const actionsCount = modActivity.length;
 
       container.innerHTML = `
@@ -318,7 +443,7 @@
                             <span class="text-[10px] px-1.5 py-0.5 bg-white/10 text-neutral-300 rounded font-semibold uppercase tracking-[0.08em]">Beta</span>
                           </div>
                           <div class="flex items-center gap-2.5 flex-shrink-0">
-                            ${renderSwitchToggle('toggle-ai-mod', state.ai_moderation_enabled, 'Toggle AI Moderation')}
+                            ${renderCustomToggle('toggle-ai-mod', state.ai_moderation_enabled, 'Toggle AI Moderation')}
                           </div>
                         </div>
                         <div class="w-full px-5 py-9 text-center group rounded-2xl transition-[background-color] hover:bg-white/[0.015]">
@@ -359,7 +484,7 @@
                             </div>
                           </div>
                           <div class="flex items-center gap-3">
-                            ${renderSwitchToggle('toggle-ai-image', state.ai_image_enabled, 'Toggle AI Image Moderation')}
+                            ${renderCustomToggle('toggle-ai-image', state.ai_image_enabled, 'Toggle AI Image Moderation')}
                           </div>
                         </div>
                       </div>
@@ -377,7 +502,7 @@
                           <span class="text-sm font-medium text-white truncate">Content Filter</span>
                         </div>
                         <div class="flex items-center gap-2.5 flex-shrink-0">
-                          ${renderSwitchToggle('toggle-content-filter', state.content_filter_enabled, 'Toggle Content Filter')}
+                          ${renderCustomToggle('toggle-content-filter', state.content_filter_enabled, 'Toggle Content Filter')}
                         </div>
                       </div>
 
@@ -429,7 +554,7 @@
                           <button 
                             type="button" 
                             id="toggle-word-list-accordion" 
-                            class="flex items-center justify-between w-full min-h-[44px] py-2 text-left group rounded-lg transition-[scale] duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                            class="flex items-center justify-between w-full min-h-[44px] py-2 text-left group rounded-lg transition-[scale] duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer"
                           >
                             <span class="text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">Edit word list</span>
                             <span class="flex items-center gap-2 text-xs text-neutral-500">
@@ -451,7 +576,7 @@
                               <button 
                                 type="button" 
                                 id="add-banned-word-btn" 
-                                class="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-xl hover:bg-neutral-600 transition-all active:scale-[0.96] flex-shrink-0"
+                                class="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-xl hover:bg-neutral-600 transition-all active:scale-[0.96] flex-shrink-0 cursor-pointer"
                               >Add</button>
                             </div>
                             <div class="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-2 bg-neutral-950/50 rounded-xl border border-neutral-800" id="banned-words-chips">
@@ -485,14 +610,14 @@
                               <button 
                                 type="button" 
                                 id="add-allowed-word-btn" 
-                                class="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-xl hover:bg-neutral-600 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0"
+                                class="h-10 px-4 bg-neutral-700 text-neutral-200 text-sm font-medium rounded-xl hover:bg-neutral-600 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0 cursor-pointer"
                               >Add</button>
                             </div>
                             <div class="flex flex-wrap gap-1.5" id="allowed-words-chips">
                               ${state.allowed_words.map((w, i) => `
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-xs text-neutral-200">
                                   ${escapeHtml(w)}
-                                  <button type="button" class="remove-allowed-word-btn text-neutral-400 hover:text-red-400" data-idx="${i}">
+                                  <button type="button" class="remove-allowed-word-btn text-neutral-400 hover:text-red-400 cursor-pointer" data-idx="${i}">
                                     ${SVGS.x}
                                   </button>
                                 </span>
@@ -516,7 +641,7 @@
                           <span class="text-sm font-medium text-white truncate">Spam Protection</span>
                         </div>
                         <div class="flex items-center gap-2.5 flex-shrink-0">
-                          ${renderSwitchToggle('toggle-spam', state.spam_enabled, 'Toggle Spam Protection')}
+                          ${renderCustomToggle('toggle-spam', state.spam_enabled, 'Toggle Spam Protection')}
                         </div>
                       </div>
 
@@ -540,7 +665,7 @@
                               return `
                                 <button 
                                   type="button" 
-                                  class="spam-sensitivity-btn rounded-xl border px-2 py-3 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 ${isSensActive ? 'border-blue-500/50 bg-blue-500/10' : 'border-neutral-800 bg-neutral-800/40 hover:border-neutral-700'}"
+                                  class="spam-sensitivity-btn rounded-xl border px-2 py-3 flex flex-col items-center gap-2 transition-[color,background-color,border-color,scale] duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/15 cursor-pointer ${isSensActive ? 'border-blue-500/50 bg-blue-500/10' : 'border-neutral-800 bg-neutral-800/40 hover:border-neutral-700'}"
                                   data-sens="${s.id}"
                                   data-msgs="${s.msgs}"
                                   data-sec="${s.sec}"
@@ -620,7 +745,7 @@
                           <span class="text-sm font-medium text-white truncate">Link Filter</span>
                         </div>
                         <div class="flex items-center gap-2.5 flex-shrink-0">
-                          ${renderSwitchToggle('toggle-links', state.links_enabled, 'Toggle Link Filter')}
+                          ${renderCustomToggle('toggle-links', state.links_enabled, 'Toggle Link Filter')}
                         </div>
                       </div>
 
@@ -632,7 +757,7 @@
                             <p class="text-xs text-neutral-600 mt-0.5 leading-relaxed">Removes discord.gg / discord.com invite links</p>
                           </div>
                           <div class="flex-shrink-0">
-                            ${renderSwitchToggle('toggle-block-invites', state.block_invites, 'Block Discord invites')}
+                            ${renderCustomToggle('toggle-block-invites', state.block_invites, 'Block Discord invites')}
                           </div>
                         </div>
 
@@ -643,7 +768,7 @@
                             <p class="text-xs text-neutral-600 mt-0.5 leading-relaxed">Let Discord CDN images &amp; attachments through</p>
                           </div>
                           <div class="flex-shrink-0">
-                            ${renderSwitchToggle('toggle-allow-media', state.allow_media, 'Allow Discord media')}
+                            ${renderCustomToggle('toggle-allow-media', state.allow_media, 'Allow Discord media')}
                           </div>
                         </div>
 
@@ -654,7 +779,7 @@
                             <p class="text-xs text-neutral-600 mt-0.5 leading-relaxed">Let Tenor &amp; Giphy GIF links through</p>
                           </div>
                           <div class="flex-shrink-0">
-                            ${renderSwitchToggle('toggle-allow-gifs', state.allow_gifs, 'Allow GIFs')}
+                            ${renderCustomToggle('toggle-allow-gifs', state.allow_gifs, 'Allow GIFs')}
                           </div>
                         </div>
                       </div>
@@ -679,7 +804,7 @@
                               ${state.allowed_domains.map((d, i) => `
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-900 border border-neutral-700 text-xs text-neutral-300">
                                   ${escapeHtml(d)}
-                                  <button type="button" class="remove-allowed-domain-btn text-neutral-500 hover:text-red-400" data-idx="${i}">${SVGS.x}</button>
+                                  <button type="button" class="remove-allowed-domain-btn text-neutral-500 hover:text-red-400 cursor-pointer" data-idx="${i}">${SVGS.x}</button>
                                 </span>
                               `).join('')}
                               <input 
@@ -698,7 +823,7 @@
                               ${state.blocked_domains.map((d, i) => `
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-900 border border-neutral-700 text-xs text-neutral-300">
                                   ${escapeHtml(d)}
-                                  <button type="button" class="remove-blocked-domain-btn text-neutral-500 hover:text-red-400" data-idx="${i}">${SVGS.x}</button>
+                                  <button type="button" class="remove-blocked-domain-btn text-neutral-500 hover:text-red-400 cursor-pointer" data-idx="${i}">${SVGS.x}</button>
                                 </span>
                               `).join('')}
                               <input 
@@ -735,46 +860,21 @@
                           ${actionsCount > 0 ? modActivity.map(act => {
                             const actType = (act.action || 'warn').toLowerCase();
                             let badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-                            let iconBoxClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
                             let iconSvg = SVGS.alertTriangle;
-
-                            if (actType.includes('unban')) {
-                              badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-                              iconBoxClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-                              iconSvg = SVGS.shield;
-                            } else if (actType.includes('ban')) {
+                            if (actType.includes('ban')) {
                               badgeClass = 'bg-red-500/10 text-red-400 border-red-500/20';
-                              iconBoxClass = 'bg-red-500/10 text-red-400 border border-red-500/20';
                               iconSvg = SVGS.ban;
                             } else if (actType.includes('kick')) {
                               badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-                              iconBoxClass = 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
                               iconSvg = SVGS.doorOpen;
-                            } else if (actType.includes('unmute') || actType.includes('untimeout')) {
-                              badgeClass = 'bg-teal-500/10 text-teal-400 border-teal-500/20';
-                              iconBoxClass = 'bg-teal-500/10 text-teal-400 border border-teal-500/20';
-                              iconSvg = SVGS.shield;
                             } else if (actType.includes('timeout') || actType.includes('mute')) {
                               badgeClass = 'bg-orange-500/10 text-orange-400 border-orange-500/20';
-                              iconBoxClass = 'bg-orange-500/10 text-orange-400 border border-orange-500/20';
                               iconSvg = SVGS.timer;
-                            } else if (actType.includes('purge') || actType.includes('delete') || actType.includes('clear')) {
-                              badgeClass = 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-                              iconBoxClass = 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
-                              iconSvg = SVGS.trash2;
-                            } else if (actType.includes('jail') || actType.includes('lock')) {
-                              badgeClass = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-                              iconBoxClass = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
-                              iconSvg = SVGS.lock;
-                            } else if (!actType.includes('warn')) {
-                              badgeClass = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
-                              iconBoxClass = 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
-                              iconSvg = SVGS.gavel;
                             }
 
                             return `
                               <div class="flex items-start gap-3 px-4 sm:px-5 py-3 hover:bg-neutral-800/20 transition-[background-color] duration-150 ease-out">
-                                <div class="grid place-items-center w-8 h-8 rounded-lg ${iconBoxClass} flex-shrink-0 mt-0.5">
+                                <div class="grid place-items-center w-8 h-8 rounded-lg bg-amber-500/10 flex-shrink-0 mt-0.5">
                                   ${iconSvg}
                                 </div>
                                 <div class="flex-1 min-w-0">
@@ -824,7 +924,7 @@
                           <button 
                             type="button" 
                             id="warning-search-btn"
-                            class="inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out enabled:active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-neutral-800 text-black dark:text-white border border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 focus:ring-neutral-400/20 px-3.5 py-2 text-xs"
+                            class="inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out enabled:active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-neutral-800 text-black dark:text-white border border-neutral-200 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 focus:ring-neutral-400/20 px-3.5 py-2 text-xs cursor-pointer"
                           >Search</button>
                         </div>
                       </div>
@@ -850,17 +950,10 @@
                     <span class="text-sm font-medium text-white">General settings</span>
                   </div>
                   <div class="divide-y divide-neutral-800/60">
-                    <!-- Log Channel -->
+                    <!-- Log Channel (Custom Dropdown) -->
                     <div class="px-4 sm:px-5 py-3">
                       <label class="text-sm text-neutral-200 block mb-2">Log Channel</label>
-                      <div class="w-full relative">
-                        <select id="select-log-channel" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-sm text-neutral-200 outline-none cursor-pointer">
-                          <option value=""># Select channel</option>
-                          ${textChannels.map(c => `
-                            <option value="${c.id}" ${String(state.log_channel) === String(c.id) ? 'selected' : ''}># ${escapeHtml(c.name)}</option>
-                          `).join('')}
-                        </select>
-                      </div>
+                      ${renderCustomChannelSelect('select-log-channel', state.log_channel, 'Select log channel')}
                     </div>
 
                     <!-- Caps Filter -->
@@ -868,7 +961,7 @@
                       <div class="flex items-center justify-between">
                         <label class="text-sm text-neutral-200">Caps filter</label>
                         <div class="flex items-center gap-3">
-                          ${renderSwitchToggle('toggle-caps-filter', state.caps_filter_enabled, 'Toggle Caps filter')}
+                          ${renderCustomToggle('toggle-caps-filter', state.caps_filter_enabled, 'Toggle Caps filter')}
                         </div>
                       </div>
                       <div class="mt-3 ${state.caps_filter_enabled ? '' : 'pointer-events-none opacity-50'}">
@@ -931,54 +1024,16 @@
                   </div>
 
                   <div class="p-4 sm:p-5 space-y-4">
-                    <!-- Exempt Roles -->
+                    <!-- Exempt Roles (Custom Multi-Select) -->
                     <div>
                       <label class="text-sm text-neutral-200 block mb-2">Exempt Roles</label>
-                      <div class="w-full relative">
-                        <div class="flex flex-wrap items-center gap-1.5 p-2 bg-neutral-800 border border-neutral-700 rounded-xl min-h-[44px]">
-                          ${state.exempt_roles.map((rId, idx) => {
-                            const rObj = roles.find(r => String(r.id) === String(rId));
-                            const rName = rObj ? rObj.name : `Role ${rId}`;
-                            return `
-                              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-neutral-200">
-                                @${escapeHtml(rName)}
-                                <button type="button" class="remove-exempt-role-btn text-neutral-400 hover:text-red-400" data-idx="${idx}">${SVGS.x}</button>
-                              </span>
-                            `;
-                          }).join('')}
-                          <select id="add-exempt-role-select" class="flex-1 min-w-[140px] bg-transparent text-sm text-neutral-400 outline-none border-none py-1 cursor-pointer">
-                            <option value="">+ Add exempt role...</option>
-                            ${roles.filter(r => !state.exempt_roles.includes(String(r.id))).map(r => `
-                              <option value="${r.id}">@ ${escapeHtml(r.name)}</option>
-                            `).join('')}
-                          </select>
-                        </div>
-                      </div>
+                      ${renderCustomMultiSelect('exempt-roles-dd', 'role', state.exempt_roles, 'Select roles...')}
                     </div>
 
-                    <!-- Exempt Channels -->
+                    <!-- Exempt Channels (Custom Multi-Select) -->
                     <div>
                       <label class="text-sm text-neutral-200 block mb-2">Exempt Channels</label>
-                      <div class="w-full relative">
-                        <div class="flex flex-wrap items-center gap-1.5 p-2 bg-neutral-800 border border-neutral-700 rounded-xl min-h-[44px]">
-                          ${state.exempt_channels.map((cId, idx) => {
-                            const cObj = channels.find(c => String(c.id) === String(cId));
-                            const cName = cObj ? cObj.name : `channel-${cId}`;
-                            return `
-                              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-neutral-200">
-                                #${escapeHtml(cName)}
-                                <button type="button" class="remove-exempt-ch-btn text-neutral-400 hover:text-red-400" data-idx="${idx}">${SVGS.x}</button>
-                              </span>
-                            `;
-                          }).join('')}
-                          <select id="add-exempt-channel-select" class="flex-1 min-w-[140px] bg-transparent text-sm text-neutral-400 outline-none border-none py-1 cursor-pointer">
-                            <option value="">+ Add exempt channel...</option>
-                            ${textChannels.filter(c => !state.exempt_channels.includes(String(c.id))).map(c => `
-                              <option value="${c.id}"># ${escapeHtml(c.name)}</option>
-                            `).join('')}
-                          </select>
-                        </div>
-                      </div>
+                      ${renderCustomMultiSelect('exempt-channels-dd', 'channel', state.exempt_channels, 'Select channels...')}
                     </div>
                   </div>
                 </div>
@@ -993,29 +1048,24 @@
                 </div>
 
                 <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <!-- Category 1: Message Logs -->
+                  <!-- Category 1: Message Logs (Custom Dropdown) -->
                   <div class="space-y-3">
                     <div class="flex items-center gap-2">
                       <span class="text-blue-400">${SVGS.messageSquare}</span>
                       <span class="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Message Logs</span>
                     </div>
                     <div>
-                      <select id="select-log-msg-ch" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-neutral-200 outline-none">
-                        <option value=""># Select channel</option>
-                        ${textChannels.map(c => `
-                          <option value="${c.id}" ${String(state.logging.msg_channel) === String(c.id) ? 'selected' : ''}># ${escapeHtml(c.name)}</option>
-                        `).join('')}
-                      </select>
+                      ${renderCustomChannelSelect('select-log-msg-ch', state.logging.msg_channel, 'Select channel')}
                     </div>
                     <div class="flex gap-5">
                       <label class="flex items-center gap-2 cursor-pointer">
-                        ${renderSwitchToggle('toggle-log-msg-edits', state.logging.msg_edits, 'Message edits')}
+                        ${renderCustomToggle('toggle-log-msg-edits', state.logging.msg_edits, 'Message edits')}
                         <span class="flex items-center gap-1.5 text-xs text-neutral-400">
                           <span class="text-neutral-500">${SVGS.pencil}</span>Edits
                         </span>
                       </label>
                       <label class="flex items-center gap-2 cursor-pointer">
-                        ${renderSwitchToggle('toggle-log-msg-deletes', state.logging.msg_deletes, 'Message deletes')}
+                        ${renderCustomToggle('toggle-log-msg-deletes', state.logging.msg_deletes, 'Message deletes')}
                         <span class="flex items-center gap-1.5 text-xs text-neutral-400">
                           <span class="text-neutral-500">${SVGS.trash2}</span>Deletes
                         </span>
@@ -1023,29 +1073,24 @@
                     </div>
                   </div>
 
-                  <!-- Category 2: Member Logs -->
+                  <!-- Category 2: Member Logs (Custom Dropdown) -->
                   <div class="space-y-3">
                     <div class="flex items-center gap-2">
                       ${SVGS.users}
                       <span class="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Member Logs</span>
                     </div>
                     <div>
-                      <select id="select-log-member-ch" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-neutral-200 outline-none">
-                        <option value=""># Select channel</option>
-                        ${textChannels.map(c => `
-                          <option value="${c.id}" ${String(state.logging.member_channel) === String(c.id) ? 'selected' : ''}># ${escapeHtml(c.name)}</option>
-                        `).join('')}
-                      </select>
+                      ${renderCustomChannelSelect('select-log-member-ch', state.logging.member_channel, 'Select channel')}
                     </div>
                     <div class="flex gap-5">
                       <label class="flex items-center gap-2 cursor-pointer">
-                        ${renderSwitchToggle('toggle-log-member-joins', state.logging.member_joins, 'Member joins')}
+                        ${renderCustomToggle('toggle-log-member-joins', state.logging.member_joins, 'Member joins')}
                         <span class="flex items-center gap-1.5 text-xs text-neutral-400">
                           ${SVGS.logIn}Joins
                         </span>
                       </label>
                       <label class="flex items-center gap-2 cursor-pointer">
-                        ${renderSwitchToggle('toggle-log-member-leaves', state.logging.member_leaves, 'Member leaves')}
+                        ${renderCustomToggle('toggle-log-member-leaves', state.logging.member_leaves, 'Member leaves')}
                         <span class="flex items-center gap-1.5 text-xs text-neutral-400">
                           ${SVGS.logOut}Leaves
                         </span>
@@ -1053,7 +1098,7 @@
                     </div>
                   </div>
 
-                  <!-- Category 3: Voice Logs -->
+                  <!-- Category 3: Voice Logs (Custom Dropdown) -->
                   <div class="space-y-3">
                     <div class="flex items-center gap-2">
                       ${SVGS.mic}
@@ -1063,62 +1108,35 @@
                       </span>
                     </div>
                     <div>
-                      <select id="select-log-voice-ch" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-neutral-200 outline-none">
-                        <option value=""># Select channel</option>
-                        ${textChannels.map(c => `
-                          <option value="${c.id}" ${String(state.logging.voice_channel) === String(c.id) ? 'selected' : ''}># ${escapeHtml(c.name)}</option>
-                        `).join('')}
-                      </select>
+                      ${renderCustomChannelSelect('select-log-voice-ch', state.logging.voice_channel, 'Select channel')}
                     </div>
                     <label class="flex items-center gap-2 cursor-pointer">
-                      ${renderSwitchToggle('toggle-log-voice-act', state.logging.voice_activity, 'Log voice activity')}
+                      ${renderCustomToggle('toggle-log-voice-act', state.logging.voice_activity, 'Log voice activity')}
                       <span class="text-xs text-neutral-400">Log voice activity</span>
                     </label>
                   </div>
 
-                  <!-- Category 4: Mod Action Logs -->
+                  <!-- Category 4: Mod Action Logs (Custom Dropdown) -->
                   <div class="space-y-3">
                     <div class="flex items-center gap-2">
                       <span class="text-red-400">${SVGS.gavel}</span>
                       <span class="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Mod Action Logs</span>
                     </div>
                     <div>
-                      <select id="select-log-mod-ch" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-neutral-200 outline-none">
-                        <option value=""># Select channel</option>
-                        ${textChannels.map(c => `
-                          <option value="${c.id}" ${String(state.logging.mod_channel) === String(c.id) ? 'selected' : ''}># ${escapeHtml(c.name)}</option>
-                        `).join('')}
-                      </select>
+                      ${renderCustomChannelSelect('select-log-mod-ch', state.logging.mod_channel, 'Select channel')}
                     </div>
                     <p class="text-xs text-neutral-600 leading-relaxed text-pretty">Warnings, bans, kicks, timeouts &amp; unbans</p>
                   </div>
                 </div>
 
-                <!-- Ignored Channels -->
+                <!-- Ignored Channels (Custom Multi-Select) -->
                 <div class="px-4 sm:px-5 py-4 border-t border-neutral-800/60">
                   <div class="flex items-center gap-2">
                     <span class="text-neutral-500">${SVGS.eyeOff}</span>
                     <span class="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Ignored Channels</span>
                   </div>
                   <div class="mt-3">
-                    <div class="flex flex-wrap items-center gap-1.5 p-2 bg-neutral-800 border border-neutral-700 rounded-xl min-h-[44px]">
-                      ${state.logging.ignored_channels.map((cId, idx) => {
-                        const cObj = channels.find(c => String(c.id) === String(cId));
-                        const cName = cObj ? cObj.name : `channel-${cId}`;
-                        return `
-                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-700 text-xs text-neutral-200">
-                            #${escapeHtml(cName)}
-                            <button type="button" class="remove-ignored-ch-btn text-neutral-400 hover:text-red-400" data-idx="${idx}">${SVGS.x}</button>
-                          </span>
-                        `;
-                      }).join('')}
-                      <select id="add-ignored-channel-select" class="flex-1 min-w-[160px] bg-transparent text-sm text-neutral-400 outline-none border-none py-1 cursor-pointer">
-                        <option value="">+ Add channel to exclude...</option>
-                        ${channels.filter(c => !state.logging.ignored_channels.includes(String(c.id))).map(c => `
-                          <option value="${c.id}"># ${escapeHtml(c.name)}</option>
-                        `).join('')}
-                      </select>
-                    </div>
+                    ${renderCustomMultiSelect('ignored-channels-dd', 'channel', state.logging.ignored_channels, 'Select channels to exclude...')}
                   </div>
                 </div>
 
@@ -1153,7 +1171,7 @@
                       </p>
                     </div>
                     <span class="flex-shrink-0 w-11 flex justify-center">
-                      ${renderSwitchToggle('toggle-warn-dm', state.dm_notifications.warn_dm, 'Warn DM on or off')}
+                      ${renderCustomToggle('toggle-warn-dm', state.dm_notifications.warn_dm, 'Warn DM on or off')}
                     </span>
                     <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/messages?slot=moderation.warn_dm&from=moderation">Customize</a>
                   </div>
@@ -1172,7 +1190,7 @@
                       </p>
                     </div>
                     <span class="flex-shrink-0 w-11 flex justify-center">
-                      ${renderSwitchToggle('toggle-timeout-dm', state.dm_notifications.timeout_dm, 'Timeout DM on or off')}
+                      ${renderCustomToggle('toggle-timeout-dm', state.dm_notifications.timeout_dm, 'Timeout DM on or off')}
                     </span>
                     <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/messages?slot=moderation.mute_dm&from=moderation">Customize</a>
                   </div>
@@ -1191,7 +1209,7 @@
                       </p>
                     </div>
                     <span class="flex-shrink-0 w-11 flex justify-center">
-                      ${renderSwitchToggle('toggle-kick-dm', state.dm_notifications.kick_dm, 'Kick DM on or off')}
+                      ${renderCustomToggle('toggle-kick-dm', state.dm_notifications.kick_dm, 'Kick DM on or off')}
                     </span>
                     <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/messages?slot=moderation.kick_dm&from=moderation">Customize</a>
                   </div>
@@ -1210,7 +1228,7 @@
                       </p>
                     </div>
                     <span class="flex-shrink-0 w-11 flex justify-center">
-                      ${renderSwitchToggle('toggle-ban-dm', state.dm_notifications.ban_dm, 'Ban DM on or off')}
+                      ${renderCustomToggle('toggle-ban-dm', state.dm_notifications.ban_dm, 'Ban DM on or off')}
                     </span>
                     <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/messages?slot=moderation.ban_dm&from=moderation">Customize</a>
                   </div>
@@ -1261,7 +1279,7 @@
         <div class="divide-y divide-neutral-800/40 p-2 space-y-1">
           <div class="flex items-center justify-between px-3 py-1.5 text-xs text-neutral-400">
             <span>${state.warningResults.length} warning(s) found</span>
-            <button type="button" id="clear-all-warnings-btn" class="text-red-400 hover:text-red-300 font-medium text-[11px]">Clear all</button>
+            <button type="button" id="clear-all-warnings-btn" class="text-red-400 hover:text-red-300 font-medium text-[11px] cursor-pointer">Clear all</button>
           </div>
           ${state.warningResults.map(w => `
             <div class="p-3 bg-neutral-800/30 rounded-xl border border-neutral-800/60 flex items-start justify-between gap-3">
@@ -1275,7 +1293,7 @@
               </div>
               <button 
                 type="button" 
-                class="delete-single-warn-btn text-neutral-500 hover:text-red-400 p-1 rounded-lg hover:bg-neutral-800" 
+                class="delete-single-warn-btn text-neutral-500 hover:text-red-400 p-1 rounded-lg hover:bg-neutral-800 cursor-pointer" 
                 data-warn-id="${escapeHtml(w.id)}"
                 title="Delete this warning"
               >
@@ -1287,7 +1305,27 @@
       `;
     }
 
+    function closeAllCustomDropdowns() {
+      document.querySelectorAll('.custom-channel-menu, .custom-multi-menu').forEach(m => {
+        if (!m.classList.contains('hidden')) {
+          m.classList.add('hidden');
+        }
+      });
+      document.querySelectorAll('.custom-channel-trigger, .custom-multi-trigger').forEach(btn => {
+        const arrow = btn.querySelector('.lucide-chevron-down');
+        if (arrow) arrow.classList.remove('rotate-180');
+      });
+    }
+
     function attachEventHandlers() {
+      // Global outside-click closes all dropdowns
+      document.removeEventListener('click', closeAllCustomDropdowns);
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.custom-channel-dd') && !e.target.closest('.custom-multi-dd')) {
+          closeAllCustomDropdowns();
+        }
+      });
+
       // Top Save Button
       const saveBtn = document.getElementById('save-automod-top-btn');
       if (saveBtn) {
@@ -1307,7 +1345,7 @@
       }
 
       // Switches toggles
-      function wireSwitch(id, stateKey, subKey = null, cb = null) {
+      function wireCustomToggle(id, stateKey, subKey = null, cb = null) {
         const btn = document.getElementById(id);
         if (!btn) return;
         btn.onclick = () => {
@@ -1321,26 +1359,26 @@
         };
       }
 
-      wireSwitch('toggle-ai-mod', 'ai_moderation_enabled');
-      wireSwitch('toggle-ai-image', 'ai_image_enabled');
-      wireSwitch('toggle-content-filter', 'content_filter_enabled');
-      wireSwitch('toggle-spam', 'spam_enabled');
-      wireSwitch('toggle-links', 'links_enabled');
-      wireSwitch('toggle-block-invites', 'block_invites');
-      wireSwitch('toggle-allow-media', 'allow_media');
-      wireSwitch('toggle-allow-gifs', 'allow_gifs');
-      wireSwitch('toggle-caps-filter', 'caps_filter_enabled');
+      wireCustomToggle('toggle-ai-mod', 'ai_moderation_enabled');
+      wireCustomToggle('toggle-ai-image', 'ai_image_enabled');
+      wireCustomToggle('toggle-content-filter', 'content_filter_enabled');
+      wireCustomToggle('toggle-spam', 'spam_enabled');
+      wireCustomToggle('toggle-links', 'links_enabled');
+      wireCustomToggle('toggle-block-invites', 'block_invites');
+      wireCustomToggle('toggle-allow-media', 'allow_media');
+      wireCustomToggle('toggle-allow-gifs', 'allow_gifs');
+      wireCustomToggle('toggle-caps-filter', 'caps_filter_enabled');
 
-      wireSwitch('toggle-log-msg-edits', 'logging', 'msg_edits');
-      wireSwitch('toggle-log-msg-deletes', 'logging', 'msg_deletes');
-      wireSwitch('toggle-log-member-joins', 'logging', 'member_joins');
-      wireSwitch('toggle-log-member-leaves', 'logging', 'member_leaves');
-      wireSwitch('toggle-log-voice-act', 'logging', 'voice_activity');
+      wireCustomToggle('toggle-log-msg-edits', 'logging', 'msg_edits');
+      wireCustomToggle('toggle-log-msg-deletes', 'logging', 'msg_deletes');
+      wireCustomToggle('toggle-log-member-joins', 'logging', 'member_joins');
+      wireCustomToggle('toggle-log-member-leaves', 'logging', 'member_leaves');
+      wireCustomToggle('toggle-log-voice-act', 'logging', 'voice_activity');
 
-      wireSwitch('toggle-warn-dm', 'dm_notifications', 'warn_dm');
-      wireSwitch('toggle-timeout-dm', 'dm_notifications', 'timeout_dm');
-      wireSwitch('toggle-kick-dm', 'dm_notifications', 'kick_dm');
-      wireSwitch('toggle-ban-dm', 'dm_notifications', 'ban_dm');
+      wireCustomToggle('toggle-warn-dm', 'dm_notifications', 'warn_dm');
+      wireCustomToggle('toggle-timeout-dm', 'dm_notifications', 'timeout_dm');
+      wireCustomToggle('toggle-kick-dm', 'dm_notifications', 'kick_dm');
+      wireCustomToggle('toggle-ban-dm', 'dm_notifications', 'ban_dm');
 
       // Filter level buttons
       document.querySelectorAll('.filter-level-btn').forEach(btn => {
@@ -1543,11 +1581,7 @@
       }
       wireWarningActions();
 
-      // General settings selects & inputs
-      const logChSel = document.getElementById('select-log-channel');
-      if (logChSel) {
-        logChSel.onchange = () => { state.log_channel = logChSel.value; };
-      }
+      // Numeric inputs
       const capsInp = document.getElementById('input-caps-percent');
       if (capsInp) {
         capsInp.oninput = () => { state.caps_percent = Math.max(50, Math.min(100, Number(capsInp.value) || 70)); };
@@ -1557,71 +1591,153 @@
         maxMentionsInp.oninput = () => { state.max_mentions = Math.max(0, Math.min(50, Number(maxMentionsInp.value) || 5)); };
       }
 
-      // Exempt Roles select
-      const addRoleSel = document.getElementById('add-exempt-role-select');
-      if (addRoleSel) {
-        addRoleSel.onchange = () => {
-          if (addRoleSel.value && !state.exempt_roles.includes(addRoleSel.value)) {
-            state.exempt_roles.push(addRoleSel.value);
-            renderUI();
+      // -------------------------------------------------------------
+      // WIRE CUSTOM SINGLE-CHANNEL DROPDOWNS
+      // -------------------------------------------------------------
+      document.querySelectorAll('.custom-channel-dd').forEach(wrap => {
+        const ddId = wrap.getAttribute('data-dd-id');
+        const trigger = wrap.querySelector('.custom-channel-trigger');
+        const menu = wrap.querySelector('.custom-channel-menu');
+        const searchInput = wrap.querySelector('.channel-search-input');
+        const arrow = trigger?.querySelector('.lucide-chevron-down');
+
+        if (!trigger || !menu) return;
+
+        trigger.onclick = (e) => {
+          e.stopPropagation();
+          const isHidden = menu.classList.contains('hidden');
+          closeAllCustomDropdowns();
+          if (isHidden) {
+            menu.classList.remove('hidden');
+            if (arrow) arrow.classList.add('rotate-180');
+            if (searchInput) {
+              searchInput.value = '';
+              filterChannels('');
+              setTimeout(() => searchInput.focus(), 50);
+            }
           }
         };
-      }
-      document.querySelectorAll('.remove-exempt-role-btn').forEach(btn => {
-        btn.onclick = () => {
-          const idx = parseInt(btn.getAttribute('data-idx'));
-          state.exempt_roles.splice(idx, 1);
-          renderUI();
+
+        const filterChannels = (query) => {
+          const q = (query || '').toLowerCase().trim();
+          menu.querySelectorAll('.channel-option-btn').forEach(btn => {
+            const name = (btn.getAttribute('data-name') || '').toLowerCase();
+            const val = btn.getAttribute('data-val');
+            if (!val) {
+              btn.style.display = q ? 'none' : 'flex';
+            } else {
+              btn.style.display = name.includes(q) ? 'flex' : 'none';
+            }
+          });
         };
+
+        if (searchInput) {
+          searchInput.onclick = (e) => e.stopPropagation();
+          searchInput.oninput = (e) => filterChannels(e.target.value);
+        }
+
+        menu.querySelectorAll('.channel-option-btn').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const val = btn.getAttribute('data-val') || '';
+            if (ddId === 'select-log-channel') state.log_channel = val;
+            else if (ddId === 'select-log-msg-ch') state.logging.msg_channel = val;
+            else if (ddId === 'select-log-member-ch') state.logging.member_channel = val;
+            else if (ddId === 'select-log-voice-ch') state.logging.voice_channel = val;
+            else if (ddId === 'select-log-mod-ch') state.logging.mod_channel = val;
+            closeAllCustomDropdowns();
+            renderUI();
+          };
+        });
       });
 
-      // Exempt Channels select
-      const addChSel = document.getElementById('add-exempt-channel-select');
-      if (addChSel) {
-        addChSel.onchange = () => {
-          if (addChSel.value && !state.exempt_channels.includes(addChSel.value)) {
-            state.exempt_channels.push(addChSel.value);
-            renderUI();
+      // -------------------------------------------------------------
+      // WIRE CUSTOM MULTI-SELECT DROPDOWNS (Roles & Channels)
+      // -------------------------------------------------------------
+      document.querySelectorAll('.custom-multi-dd').forEach(wrap => {
+        const ddId = wrap.getAttribute('data-dd-id');
+        const trigger = wrap.querySelector('.custom-multi-trigger');
+        const menu = wrap.querySelector('.custom-multi-menu');
+        const searchInput = wrap.querySelector('.multi-search-input');
+        const arrow = trigger?.querySelector('.lucide-chevron-down');
+
+        if (!trigger || !menu) return;
+
+        trigger.onclick = (e) => {
+          // If clicked a chip's remove button, don't open
+          if (e.target.closest('.remove-chip-btn')) return;
+          e.stopPropagation();
+          const isHidden = menu.classList.contains('hidden');
+          closeAllCustomDropdowns();
+          if (isHidden) {
+            menu.classList.remove('hidden');
+            if (arrow) arrow.classList.add('rotate-180');
+            if (searchInput) {
+              searchInput.value = '';
+              filterMulti('');
+              setTimeout(() => searchInput.focus(), 50);
+            }
           }
         };
-      }
-      document.querySelectorAll('.remove-exempt-ch-btn').forEach(btn => {
-        btn.onclick = () => {
-          const idx = parseInt(btn.getAttribute('data-idx'));
-          state.exempt_channels.splice(idx, 1);
-          renderUI();
+
+        const filterMulti = (query) => {
+          const q = (query || '').toLowerCase().trim();
+          menu.querySelectorAll('.multi-option-btn').forEach(btn => {
+            const name = (btn.getAttribute('data-name') || '').toLowerCase();
+            btn.style.display = name.includes(q) ? 'flex' : 'none';
+          });
         };
-      });
 
-      // Logging channels
-      const msgChSel = document.getElementById('select-log-msg-ch');
-      if (msgChSel) msgChSel.onchange = () => { state.logging.msg_channel = msgChSel.value; };
+        if (searchInput) {
+          searchInput.onclick = (e) => e.stopPropagation();
+          searchInput.oninput = (e) => filterMulti(e.target.value);
+        }
 
-      const memberChSel = document.getElementById('select-log-member-ch');
-      if (memberChSel) memberChSel.onchange = () => { state.logging.member_channel = memberChSel.value; };
+        // Toggle item selection
+        menu.querySelectorAll('.multi-option-btn').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const val = btn.getAttribute('data-val');
+            if (!val) return;
 
-      const voiceChSel = document.getElementById('select-log-voice-ch');
-      if (voiceChSel) voiceChSel.onchange = () => { state.logging.voice_channel = voiceChSel.value; };
+            let targetArr = null;
+            if (ddId === 'exempt-roles-dd') targetArr = state.exempt_roles;
+            else if (ddId === 'exempt-channels-dd') targetArr = state.exempt_channels;
+            else if (ddId === 'ignored-channels-dd') targetArr = state.logging.ignored_channels;
 
-      const modChSel = document.getElementById('select-log-mod-ch');
-      if (modChSel) modChSel.onchange = () => { state.logging.mod_channel = modChSel.value; };
-
-      // Ignored Channels
-      const addIgnoredChSel = document.getElementById('add-ignored-channel-select');
-      if (addIgnoredChSel) {
-        addIgnoredChSel.onchange = () => {
-          if (addIgnoredChSel.value && !state.logging.ignored_channels.includes(addIgnoredChSel.value)) {
-            state.logging.ignored_channels.push(addIgnoredChSel.value);
+            if (targetArr) {
+              const idx = targetArr.indexOf(String(val));
+              if (idx > -1) {
+                targetArr.splice(idx, 1);
+              } else {
+                targetArr.push(String(val));
+              }
+            }
             renderUI();
-          }
-        };
-      }
-      document.querySelectorAll('.remove-ignored-ch-btn').forEach(btn => {
-        btn.onclick = () => {
-          const idx = parseInt(btn.getAttribute('data-idx'));
-          state.logging.ignored_channels.splice(idx, 1);
-          renderUI();
-        };
+          };
+        });
+
+        // Remove item chip click
+        wrap.querySelectorAll('.remove-chip-btn').forEach(xBtn => {
+          xBtn.onclick = (e) => {
+            e.stopPropagation();
+            const val = xBtn.getAttribute('data-val');
+            if (!val) return;
+
+            let targetArr = null;
+            if (ddId === 'exempt-roles-dd') targetArr = state.exempt_roles;
+            else if (ddId === 'exempt-channels-dd') targetArr = state.exempt_channels;
+            else if (ddId === 'ignored-channels-dd') targetArr = state.logging.ignored_channels;
+
+            if (targetArr) {
+              const idx = targetArr.indexOf(String(val));
+              if (idx > -1) {
+                targetArr.splice(idx, 1);
+                renderUI();
+              }
+            }
+          };
+        });
       });
     }
 
@@ -1668,7 +1784,6 @@
     }
 
     async function saveAutomodConfig() {
-      // Build full automod and logs payloads
       const automodPayload = {
         enabled: state.content_filter_enabled || state.spam_enabled || state.links_enabled || state.ai_moderation_enabled,
         exempt_channels: state.exempt_channels,
@@ -1729,7 +1844,6 @@
         dm_notifications: state.dm_notifications
       };
 
-      // Logging payload
       const logsPayload = {
         enabled: true,
         global_exempt_channels: state.logging.ignored_channels,
