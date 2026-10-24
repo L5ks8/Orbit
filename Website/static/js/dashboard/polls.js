@@ -20,14 +20,14 @@ DashboardTabs.Polls = async function(container, guildId) {
   }
 
   function formatRelativeTime(unixSeconds) {
-    if (!unixSeconds) return 'just now';
+    if (!unixSeconds) return 'Vor wenigen Sekunden';
     const nowSec = Math.floor(Date.now() / 1000);
     const diff = Math.max(0, nowSec - Number(unixSeconds));
-    if (diff < 60) return '1m ago';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 60) return 'Vor 1m';
+    if (diff < 3600) return `Vor ${Math.floor(diff / 60)}m`;
+    if (diff < 86400) return `Vor ${Math.floor(diff / 3600)}h`;
     const days = Math.floor(diff / 86400);
-    if (days < 30) return `${days}d ago`;
+    if (days < 30) return `Vor ${days}d`;
     return new Date(Number(unixSeconds) * 1000).toLocaleDateString('de-DE');
   }
 
@@ -155,15 +155,18 @@ DashboardTabs.Polls = async function(container, guildId) {
       const totalVotes = Number(poll.total_votes || 0);
       const maxVote = optVotes.length > 0 ? Math.max(...optVotes) : 0;
       const accentColor = poll.color || '#5865F2';
+      const accentBg = accentColor.startsWith('#')
+        ? accentColor + '1A'
+        : (accentColor.includes('rgb') ? accentColor.replace('rgb(', 'rgba(').replace(')', ', 0.1)') : 'rgba(88, 101, 242, 0.1)');
 
       let badgeClass = 'bg-emerald-500/10 text-emerald-400';
-      let badgeText = 'active';
+      let badgeText = 'aktiv';
       if (poll.status === 'ended') {
         badgeClass = 'bg-neutral-700/40 text-neutral-400';
-        badgeText = 'ended';
+        badgeText = 'beendet';
       } else if (poll.status === 'draft') {
         badgeClass = 'bg-amber-500/10 text-amber-400';
-        badgeText = 'draft';
+        badgeText = 'entwurf';
       }
 
       const visibleOptions = options.slice(0, 4);
@@ -175,43 +178,35 @@ DashboardTabs.Polls = async function(container, guildId) {
           <div class="p-4">
             <div class="flex items-start justify-between gap-3 mb-3">
               <div class="flex items-start gap-3 min-w-0 flex-1">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 bg-[#5865F2]/10">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart3 w-4 h-4 text-[#5865F2]"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 bg-[#5865F2]/10" style="background-color: ${accentBg};">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart3 w-4 h-4 text-[#5865F2]" style="color: ${escapeHtml(accentColor)};"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
                 </div>
-                <h3 class="text-sm font-semibold text-white line-clamp-2 pt-1">${escapeHtml(poll.question || 'Untitled Poll')}</h3>
+                <h3 class="text-sm font-semibold text-white line-clamp-2 pt-1">${escapeHtml(poll.question || 'rgdgrd')}</h3>
               </div>
               <div class="flex items-center gap-1.5 flex-shrink-0">
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${badgeClass}">${badgeText}</span>
                 <div class="relative" data-poll-menu-wrap="${escapeHtml(poll.id)}">
-                  <button type="button" data-poll-menu-btn="${escapeHtml(poll.id)}" aria-label="Poll actions" aria-haspopup="menu" aria-expanded="${openMenuPollId === poll.id ? 'true' : 'false'}" class="p-2 -m-1 rounded-lg text-neutral-600 hover:text-neutral-300 hover:bg-neutral-800 transition-colors">
+                  <button type="button" aria-label="Umfrageaktionen" aria-haspopup="menu" aria-expanded="${openMenuPollId === poll.id ? 'true' : 'false'}" data-poll-menu-btn="${escapeHtml(poll.id)}" class="p-2 -m-1 rounded-lg text-neutral-600 hover:text-neutral-300 hover:bg-neutral-800 transition-colors cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-more-horizontal w-4 h-4"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
                   </button>
-                  <div data-poll-menu="${escapeHtml(poll.id)}" class="orbit-dropdown-menu ${openMenuPollId === poll.id ? '' : 'hidden'} absolute right-0 top-full mt-1.5 w-44 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl py-1.5 z-30">
-                    ${poll.status === 'draft' ? `
-                      <button type="button" data-poll-action="edit" data-poll-id="${escapeHtml(poll.id)}" class="w-full px-3.5 py-2 text-left text-xs font-medium text-neutral-200 hover:bg-neutral-800 flex items-center gap-2 transition-colors">
-                        <svg class="w-3.5 h-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
-                        Edit &amp; Publish
-                      </button>
-                    ` : ''}
+                  <div data-poll-menu="${escapeHtml(poll.id)}" class="orbit-dropdown-menu absolute right-0 top-full mt-1 w-40 bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl z-20 overflow-hidden py-1 ${openMenuPollId === poll.id ? '' : 'hidden'}" style="opacity: 1; transform: none;">
+                    <button type="button" data-poll-action="results" data-poll-id="${escapeHtml(poll.id)}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-700 transition-colors cursor-pointer">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart3 w-3.5 h-3.5"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+                      Ergebnisse anzeigen
+                    </button>
                     ${poll.status === 'active' ? `
-                      <button type="button" data-poll-action="edit" data-poll-id="${escapeHtml(poll.id)}" class="w-full px-3.5 py-2 text-left text-xs font-medium text-neutral-200 hover:bg-neutral-800 flex items-center gap-2 transition-colors">
-                        <svg class="w-3.5 h-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
-                        Edit Poll
-                      </button>
-                      <button type="button" data-poll-action="end" data-poll-id="${escapeHtml(poll.id)}" class="w-full px-3.5 py-2 text-left text-xs font-medium text-amber-400 hover:bg-amber-500/10 flex items-center gap-2 transition-colors">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"></rect></svg>
-                        End Poll
+                      <button type="button" data-poll-action="end" data-poll-id="${escapeHtml(poll.id)}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-amber-400 hover:bg-neutral-700 transition-colors cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-stop-circle w-3.5 h-3.5"><circle cx="12" cy="12" r="10"></circle><rect width="6" height="6" x="9" y="9"></rect></svg>
+                        Frühes Ende
                       </button>
                     ` : ''}
-                    ${poll.status === 'ended' ? `
-                      <button type="button" data-poll-action="duplicate" data-poll-id="${escapeHtml(poll.id)}" class="w-full px-3.5 py-2 text-left text-xs font-medium text-neutral-200 hover:bg-neutral-800 flex items-center gap-2 transition-colors">
-                        <svg class="w-3.5 h-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
-                        Duplicate Poll
-                      </button>
-                    ` : ''}
-                    <button type="button" data-poll-action="delete" data-poll-id="${escapeHtml(poll.id)}" class="w-full px-3.5 py-2 text-left text-xs font-medium text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                      Delete
+                    <button type="button" data-poll-action="duplicate" data-poll-id="${escapeHtml(poll.id)}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-700 transition-colors cursor-pointer">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy w-3.5 h-3.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                      Duplikat
+                    </button>
+                    <button type="button" data-poll-action="delete" data-poll-id="${escapeHtml(poll.id)}" class="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-400 hover:bg-neutral-700 transition-colors cursor-pointer">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2 w-3.5 h-3.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                      Löschen
                     </button>
                   </div>
                 </div>
@@ -230,7 +225,7 @@ DashboardTabs.Polls = async function(container, guildId) {
                         <div class="absolute inset-y-0 left-0 rounded-md transition-all duration-500 ${isWinner ? 'bg-[#5865F2]/30' : 'bg-neutral-700/40'}" style="width: ${pct}%;"></div>
                         <div class="relative flex items-center justify-between h-full px-2">
                           <span class="text-[11px] font-medium text-neutral-300 truncate">${escapeHtml(opt)}</span>
-                          ${totalVotes > 0 ? `<span class="text-[10px] font-semibold tabular-nums ${isWinner ? 'text-white' : 'text-neutral-400'} ml-2 flex-shrink-0">${pct}%</span>` : ''}
+                          <span class="text-[10px] text-neutral-500 tabular-nums flex-shrink-0 ml-2">${pct}%</span>
                         </div>
                       </div>
                     </div>
@@ -243,10 +238,10 @@ DashboardTabs.Polls = async function(container, guildId) {
             <div class="flex items-center gap-3 text-[11px] text-neutral-500">
               <div class="flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users w-3 h-3"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                <span>${totalVotes} ${totalVotes === 1 ? 'vote' : 'votes'}</span>
+                <span>${totalVotes} Abstimmung${totalVotes === 1 ? '' : 'en'}</span>
               </div>
               <span class="text-neutral-700">·</span>
-              <span>Created ${formatRelativeTime(poll.created_at)}</span>
+              <span>Erstellt ${formatRelativeTime(poll.created_at)}</span>
             </div>
           </div>
         </div>
@@ -299,8 +294,8 @@ DashboardTabs.Polls = async function(container, guildId) {
           const poll = polls.find(p => String(p.id) === String(pid));
           if (!poll) return;
 
-          if (action === 'edit') {
-            openCreatePollModal(poll);
+          if (action === 'results' || action === 'edit') {
+            openPollDetailsModal(poll);
           } else if (action === 'duplicate') {
             openCreatePollModal({
               ...poll,
@@ -319,19 +314,24 @@ DashboardTabs.Polls = async function(container, guildId) {
                 poll.status = 'ended';
                 poll.closed = true;
               }
-              Toast.success('Umfrage wurde beendet.');
+              if (window.Toast && typeof Toast.success === 'function') Toast.success('Umfrage wurde beendet.');
+              else if (window.Notifications) Notifications.show('Umfrage wurde beendet.', 'success');
               renderMainView();
             } catch (err) {
-              Toast.error(err.message || 'Fehler beim Beenden der Umfrage.');
+              if (window.Toast && typeof Toast.error === 'function') Toast.error(err.message || 'Fehler beim Beenden der Umfrage.');
+              else if (window.Notifications) Notifications.show(err.message || 'Fehler beim Beenden der Umfrage.', 'error');
             }
           } else if (action === 'delete') {
+            if (!confirm(`Möchten Sie die Umfrage "${poll.question || 'Umfrage'}" wirklich löschen?`)) return;
             try {
               await API.deletePoll(guildId, poll.id);
               polls = polls.filter(p => String(p.id) !== String(poll.id));
-              Toast.success('Umfrage gelöscht.');
+              if (window.Toast && typeof Toast.success === 'function') Toast.success('Umfrage gelöscht.');
+              else if (window.Notifications) Notifications.show('Umfrage gelöscht.', 'info');
               renderMainView();
             } catch (err) {
-              Toast.error(err.message || 'Fehler beim Löschen der Umfrage.');
+              if (window.Toast && typeof Toast.error === 'function') Toast.error(err.message || 'Fehler beim Löschen der Umfrage.');
+              else if (window.Notifications) Notifications.show(err.message || 'Fehler beim Löschen der Umfrage.', 'error');
             }
           }
         };
@@ -340,7 +340,7 @@ DashboardTabs.Polls = async function(container, guildId) {
       // Card click -> open Edit modal for drafts, or Poll Details modal for active/ended
       container.querySelectorAll('[data-poll-card]').forEach(card => {
         card.onclick = (e) => {
-          if (e.target.closest('[data-poll-menu-wrap]')) return;
+          if (e.target.closest('[data-poll-menu-wrap]') || e.target.closest('[data-poll-menu]') || e.target.closest('[data-poll-action]')) return;
           const pid = card.getAttribute('data-poll-card');
           const poll = polls.find(p => String(p.id) === String(pid));
           if (!poll) return;
@@ -380,10 +380,10 @@ DashboardTabs.Polls = async function(container, guildId) {
       const chName = poll.channel_name || getChannelName(poll.channel_id);
 
       let badgeClass = 'bg-emerald-500/10 text-emerald-400';
-      let badgeText = 'active';
+      let badgeText = 'aktiv';
       if (poll.status === 'ended') {
         badgeClass = 'bg-neutral-700/40 text-neutral-400';
-        badgeText = 'ended';
+        badgeText = 'beendet';
       }
 
       modal.innerHTML = `
@@ -399,7 +399,7 @@ DashboardTabs.Polls = async function(container, guildId) {
                   <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${badgeClass}">${badgeText}</span>
                   <span class="text-xs text-neutral-500 truncate">#${escapeHtml(chName)}</span>
                 </div>
-                <p class="text-[11px] text-neutral-500 mt-0.5">Created ${formatRelativeTime(poll.created_at)} · ID: ${escapeHtml(poll.id)}</p>
+                <p class="text-[11px] text-neutral-500 mt-0.5">Erstellt ${formatRelativeTime(poll.created_at)} · ID: ${escapeHtml(poll.id)}</p>
               </div>
             </div>
             <button type="button" id="poll-details-close" class="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors">
@@ -428,20 +428,20 @@ DashboardTabs.Polls = async function(container, guildId) {
             </div>
 
             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-neutral-800 text-xs text-neutral-400">
-              <span>Total Votes: <strong class="text-white">${totalVotes}</strong></span>
-              <span>${poll.no_time_limit ? 'No time limit' : (poll.status === 'ended' ? 'Voting ended' : `Duration: ${poll.duration_value || 1} ${poll.duration_unit || 'days'}`)}</span>
+              <span>Gesamte Stimmen: <strong class="text-white">${totalVotes}</strong></span>
+              <span>${poll.no_time_limit ? 'Kein Zeitlimit' : (poll.status === 'ended' ? 'Abstimmung beendet' : `Dauer: ${poll.duration_value || 1} ${poll.duration_unit || 'Tage'}`)}</span>
             </div>
           </div>
 
           <div class="flex items-center justify-between gap-2 px-5 py-3.5 border-t border-neutral-800 bg-neutral-900/60">
-            <button type="button" id="poll-details-delete" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors">Delete Poll</button>
+            <button type="button" id="poll-details-delete" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">Löschen</button>
             <div class="flex items-center gap-2">
-              <button type="button" id="poll-details-edit" class="px-4 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-xs font-semibold text-neutral-200 transition-colors">
-                ${poll.status === 'ended' ? 'Duplicate' : 'Edit Poll'}
+              <button type="button" id="poll-details-edit" class="px-4 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-xs font-semibold text-neutral-200 transition-colors cursor-pointer">
+                Duplizieren
               </button>
               ${poll.status === 'active' ? `
-                <button type="button" id="poll-details-end" class="px-4 py-2 rounded-lg bg-white hover:bg-neutral-200 text-xs font-semibold text-black transition-colors">
-                  End Poll
+                <button type="button" id="poll-details-end" class="px-4 py-2 rounded-lg bg-white hover:bg-neutral-200 text-xs font-semibold text-black transition-colors cursor-pointer">
+                  Frühes Ende
                 </button>
               ` : ''}
             </div>
