@@ -895,20 +895,20 @@ DashboardTabs.Builder = async function(container, guildId) {
                 <div class="mt-2 text-center text-[11px] text-neutral-500">You are chatting with Peak, an AI assistant. AI can make mistakes – review changes before applying them.</div>
 
                 <div class="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-[680px]">
-                  <button type="button" data-prompt-chip="Analyze my server overview and activity analytics, and tell me what needs improvement." class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-900 border border-neutral-700/70 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all cursor-pointer">
-                    <span>📊</span> Analyze Server &amp; Analytics
+                  <button type="button" data-prompt-chip="Analyze my server overview and activity analytics, and tell me what needs improvement." class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-all cursor-pointer active:scale-95">
+                    Analyze Server &amp; Analytics
                   </button>
-                  <button type="button" data-prompt-chip="Create a Discord Nitro giveaway with 1 winner for 24 hours in the giveaways channel." class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-900 border border-neutral-700/70 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all cursor-pointer">
-                    <span>🎉</span> Create a Giveaway
+                  <button type="button" data-prompt-chip="Create a Discord Nitro giveaway with 1 winner for 24 hours in the giveaways channel." class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-all cursor-pointer active:scale-95">
+                    Create a Giveaway
                   </button>
-                  <button type="button" data-prompt-chip="Setup and deploy an interactive support ticket panel with categories." class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-900 border border-neutral-700/70 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all cursor-pointer">
-                    <span>🎫</span> Setup Ticket Panel
+                  <button type="button" data-prompt-chip="Setup and deploy an interactive support ticket panel with categories." class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-all cursor-pointer active:scale-95">
+                    Setup Ticket Panel
                   </button>
-                  <button type="button" data-prompt-chip="Setup a verification system with captcha and verified role." class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-900 border border-neutral-700/70 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all cursor-pointer">
-                    <span>🛡️</span> Setup Verification
+                  <button type="button" data-prompt-chip="Setup a verification system with captcha and verified role." class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-all cursor-pointer active:scale-95">
+                    Setup Verification
                   </button>
-                  <button type="button" data-prompt-chip="Audit our security settings: Anti-Raid, Anti-Nuke and AutoMod protection." class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-900 border border-neutral-700/70 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all cursor-pointer">
-                    <span>🔒</span> Audit Security
+                  <button type="button" data-prompt-chip="Audit our security settings: Anti-Raid, Anti-Nuke and AutoMod protection." class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-all cursor-pointer active:scale-95">
+                    Audit Security
                   </button>
                 </div>
               </div>
