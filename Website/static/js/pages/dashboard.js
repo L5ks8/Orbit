@@ -191,7 +191,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
           name: 'Voice Channels',
           id: 'tempvoice',
           path: `/dashboard/${guildId}/tempvoice`,
-          svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-headphones w-4 h-4"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>`
+          svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume2 w-4 h-4"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`
         }
       ]
     },
@@ -283,7 +283,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                   <p class="px-3 mb-1.5 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">${sec.title}</p>
                   <div class="space-y-0.5">
                     ${sec.links.map(l => {
-                      const isActive = tab === l.id || (l.id === 'settings' && tab === 'server-settings') || (l.id === 'welcomegoodbye' && tab === 'welcome') || (l.id === 'builder' && tab === 'ai-helper') || (l.id === 'verify' && tab === 'verification');
+                      const isActive = tab === l.id || (l.id === 'settings' && tab === 'server-settings') || (l.id === 'welcomegoodbye' && tab === 'welcome') || (l.id === 'builder' && tab === 'ai-helper') || (l.id === 'verify' && tab === 'verification') || (l.id === 'tempvoice' && (tab === 'tempvoice' || tab === 'jtc'));
                       return `
                         <a 
                           href="${l.path}" 
@@ -492,7 +492,8 @@ Pages._updateDashboardSidebarNav = function(currentTab) {
       (linkTab === 'settings' && (currentTab === 'server-settings' || currentTab === 'settings')) ||
       (linkTab === 'welcome' && (currentTab === 'welcomegoodbye' || currentTab === 'welcome')) ||
       (linkTab === 'builder' && (currentTab === 'ai-helper' || currentTab === 'builder')) ||
-      (linkTab === 'verify' && (currentTab === 'verification' || currentTab === 'verify'));
+      (linkTab === 'verify' && (currentTab === 'verification' || currentTab === 'verify')) ||
+      (linkTab === 'tempvoice' && (currentTab === 'tempvoice' || currentTab === 'jtc'));
 
     if (isActive) {
       a.className = 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition-all w-full bg-white text-black shadow-sm';
@@ -527,6 +528,7 @@ Pages._getDashboardTabHandlers = function(tabContainer, guildId, currentGuild) {
     'giveaways': () => DashboardTabs.Giveaways && DashboardTabs.Giveaways(tabContainer, guildId),
     'tickets': () => DashboardTabs.Tickets && DashboardTabs.Tickets(tabContainer, guildId),
     'tempvoice': () => DashboardTabs.TempVoice && DashboardTabs.TempVoice(tabContainer, guildId),
+    'jtc': () => DashboardTabs.TempVoice && DashboardTabs.TempVoice(tabContainer, guildId),
     'automod': () => DashboardTabs.AutoMod && DashboardTabs.AutoMod(tabContainer, guildId),
     'security': () => DashboardTabs.Security && DashboardTabs.Security(tabContainer, guildId),
     'backups': () => DashboardTabs.Backups && DashboardTabs.Backups(tabContainer, guildId),

@@ -26,13 +26,35 @@ class JTCListenerCog(commands.Cog):
                     break
             
             if joined_hub:
+                # Check required role if configured
+                req_role_id = joined_hub.get("required_role_id")
+                if req_role_id:
+                    has_role = any(str(r.id) == str(req_role_id) for r in member.roles)
+                    is_admin = member.guild_permissions.administrator or member.id == guild.owner_id
+                    if not (has_role or is_admin):
+                        try:
+                            await member.move_to(None, reason="Missing required role for Join-to-Create")
+                        except Exception:
+                            pass
+                        return
+
                 category_id = joined_hub.get("category_id")
                 category = guild.get_channel(category_id) if category_id else after.channel.category
                 if not category and after.channel.category:
                     category = after.channel.category
 
                 clean_name = member.display_name[:20]
-                channel_name = f"{clean_name}'s Channel"
+                template = str(joined_hub.get("name_template") or "{user}'s Channel")
+                game_name = "Gaming"
+                if member.activities:
+                    for act in member.activities:
+                        if act.type == discord.ActivityType.playing and act.name:
+                            game_name = act.name[:20]
+                            break
+                        elif act.name:
+                            game_name = act.name[:20]
+                channel_name = template.replace("{user}", clean_name).replace("{game}", game_name)
+                channel_name = channel_name[:32] if channel_name else f"{clean_name}'s Channel"
                 default_limit = joined_hub.get("default_user_limit", 0)
 
                 overwrites = {

@@ -773,9 +773,14 @@ class GuildsMixin:
             return web.json_response({"error": "Unauthorized or not found"}, status=403)
             
         channels = [
-            {"id": str(c.id), "name": c.name, "type": "text"}
+            {
+                "id": str(c.id),
+                "name": c.name,
+                "type": "category" if isinstance(c, discord.CategoryChannel) else ("voice" if isinstance(c, (discord.VoiceChannel, discord.StageChannel)) else "text"),
+                "category_id": str(c.category_id) if getattr(c, "category_id", None) else None,
+                "position": getattr(c, "position", 0)
+            }
             for c in sorted(guild.channels, key=lambda x: getattr(x, "position", 0))
-            if isinstance(c, discord.TextChannel) or (hasattr(c, "send") and not isinstance(c, (discord.VoiceChannel, discord.StageChannel, discord.CategoryChannel)))
         ]
         return web.json_response(channels)
 

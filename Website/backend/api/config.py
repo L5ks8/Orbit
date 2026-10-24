@@ -688,6 +688,7 @@ class ConfigMixin:
             for hub in tempvoice_cfg["hubs"]:
                 if hub.get("hub_channel_id"): hub["hub_channel_id"] = str(hub["hub_channel_id"])
                 if hub.get("category_id"): hub["category_id"] = str(hub["category_id"])
+                if hub.get("required_role_id"): hub["required_role_id"] = str(hub["required_role_id"])
         
         return web.json_response({
             "permissions": user_perms,
@@ -1373,13 +1374,32 @@ class ConfigMixin:
                     hid = hub.get("hub_channel_id")
                     cid = hub.get("category_id")
                     limit = hub.get("default_user_limit", 0)
-                    if hid:
+                    name_template = str(hub.get("name_template") or "{user}'s Channel")
+                    req_role = hub.get("required_role_id")
+                    
+                    if (str(hid) == "new" or hub.get("create_new")) and guild:
+                        try:
+                            cat = guild.get_channel(int(cid)) if cid and str(cid).isdigit() else None
+                            new_vc = await guild.create_voice_channel(
+                                name="Join to Create",
+                                category=cat,
+                                reason="Orbit Join-to-Create trigger channel"
+                            )
+                            hid = new_vc.id
+                            if not cid and new_vc.category_id:
+                                cid = new_vc.category_id
+                        except Exception as e:
+                            print(f"[JoinToCreate] Failed to auto-create trigger voice channel: {e}")
+                            
+                    if hid and str(hid).isdigit():
                         parsed_hubs.append({
-                            "hub_channel_id": int(hid) if str(hid).isdigit() else None,
+                            "hub_channel_id": int(hid),
                             "category_id": int(cid) if cid and str(cid).isdigit() else None,
-                            "default_user_limit": int(limit) if str(limit).isdigit() else 0
+                            "default_user_limit": int(limit) if str(limit).isdigit() else 0,
+                            "name_template": name_template,
+                            "required_role_id": int(req_role) if req_role and str(req_role).isdigit() else None
                         })
-                jtc_cfg["hubs"] = [h for h in parsed_hubs if h["hub_channel_id"]]
+                jtc_cfg["hubs"] = parsed_hubs
                 save_jtc_config(guild_id, jtc_cfg)
 
             if "level" in data:
