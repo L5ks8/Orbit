@@ -715,14 +715,14 @@ window.Pages = window.Pages || {};
 
     // Build the complete Fumadocs Notebook Layout Shell
     container.innerHTML = `
-      <div id="nd-notebook-layout" class="volt-docs-grid min-h-screen bg-[#09090b] text-[#f4f4f5] antialiased">
+      <div id="nd-notebook-layout" class="nd-notebook-wrapper">
         
-        <!-- ================= HEADER (nd-subnav) ================= -->
-        <header data-transparent="false" id="nd-subnav" class="sticky top-0 z-30 flex flex-col w-full backdrop-blur-md bg-[#09090b]/90 border-b border-white/[0.08]">
-          <div data-header-body="" class="flex items-center justify-between border-b border-white/[0.06] px-4 md:px-6 h-14 w-full">
+        <!-- ================= TOP HEADER (nd-subnav) ================= -->
+        <header id="nd-subnav">
+          <div class="nd-header-top">
             <!-- Brand & Mobile Toggle -->
             <div class="flex items-center gap-3">
-              <button id="nd-mobile-sidebar-toggle" class="md:hidden text-neutral-400 hover:text-white p-1 rounded-lg transition-colors" aria-label="Toggle Navigation">
+              <button id="nd-mobile-sidebar-toggle" class="md:hidden text-neutral-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer" aria-label="Toggle Navigation">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>
               </button>
               <a href="/" class="inline-flex items-center gap-2.5 font-bold text-white text-base hover:opacity-90 transition-opacity">
@@ -735,8 +735,8 @@ window.Pages = window.Pages || {};
             </div>
 
             <!-- Center Search Bar Trigger -->
-            <div class="flex-1 max-w-md mx-4 hidden sm:block">
-              <button type="button" id="nd-search-btn" data-search-full="" class="w-full flex items-center justify-between text-xs text-neutral-400 bg-neutral-900/80 hover:bg-neutral-800/80 border border-neutral-800 hover:border-neutral-700 rounded-xl px-3 py-2 transition-all group cursor-pointer shadow-sm">
+            <div class="flex-1 max-w-md mx-6 hidden sm:block">
+              <button type="button" id="nd-search-btn" class="w-full flex items-center justify-between text-xs text-neutral-400 bg-neutral-900/80 hover:bg-neutral-800/80 border border-neutral-800 hover:border-neutral-700 rounded-xl px-3.5 py-2 transition-all group cursor-pointer shadow-sm">
                 <div class="flex items-center gap-2">
                   <svg class="w-3.5 h-3.5 text-neutral-500 group-hover:text-neutral-300 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
                   <span>Search Orbit docs, commands, variables...</span>
@@ -747,7 +747,7 @@ window.Pages = window.Pages || {};
 
             <!-- Right Links & CTA -->
             <div class="flex items-center gap-2">
-              <button type="button" id="nd-search-btn-mobile" class="sm:hidden p-2 text-neutral-400 hover:text-white rounded-lg">
+              <button type="button" id="nd-search-btn-mobile" class="sm:hidden p-2 text-neutral-400 hover:text-white rounded-lg cursor-pointer">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
               </button>
               <a href="https://discord.gg/orbit" target="_blank" class="p-2 text-neutral-400 hover:text-white hover:bg-white/[0.06] rounded-xl transition-colors" title="Join Discord Community">
@@ -760,120 +760,98 @@ window.Pages = window.Pages || {};
             </div>
           </div>
 
-          <!-- Header Tabs -->
-          <div data-header-tabs="" class="flex items-center gap-1 px-4 md:px-6 h-10 overflow-x-auto text-xs font-medium scrollbar-none">
-            <a href="/docs/overview" data-active="${currentSlug !== 'commands' && currentSlug !== 'variables' ? 'true' : 'false'}" class="px-3 py-1.5 rounded-lg text-neutral-300 hover:text-white transition-colors">Documentation</a>
-            <a href="/docs/commands" data-active="${currentSlug === 'commands' ? 'true' : 'false'}" class="px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white transition-colors">Slash Commands</a>
-            <a href="/docs/variables" data-active="${currentSlug === 'variables' ? 'true' : 'false'}" class="px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white transition-colors">Variables Reference</a>
-            <a href="/guides" data-active="false" class="px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white transition-colors">Guides & Tutorials</a>
-            <a href="/dashboard" data-active="false" class="px-3 py-1.5 rounded-lg text-neutral-400 hover:text-white transition-colors">Web Dashboard</a>
+          <!-- Header Tabs Row -->
+          <div class="nd-header-tabs-row" data-header-tabs="">
+            <a href="/docs/overview" class="nd-header-tab" data-active="${currentSlug !== 'commands' && currentSlug !== 'variables' ? 'true' : 'false'}">Documentation</a>
+            <a href="/docs/commands" class="nd-header-tab" data-active="${currentSlug === 'commands' ? 'true' : 'false'}">Slash Commands</a>
+            <a href="/docs/variables" class="nd-header-tab" data-active="${currentSlug === 'variables' ? 'true' : 'false'}">Variables Reference</a>
+            <a href="/guides" class="nd-header-tab" data-active="false">Guides & Tutorials</a>
+            <a href="/dashboard" class="nd-header-tab" data-active="false">Web Dashboard</a>
           </div>
         </header>
 
-        <!-- ================= MOBILE SIDEBAR BACKDROP & DRAWER ================= -->
-        <div id="nd-mobile-drawer" class="fixed inset-0 z-40 hidden md:hidden">
-          <div id="nd-mobile-drawer-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm"></div>
-          <div class="fixed inset-y-0 start-0 w-[280px] bg-[#0c0c10] border-e border-white/[0.08] p-4 flex flex-col gap-4 overflow-y-auto">
+        <!-- ================= MOBILE SIDEBAR DRAWER ================= -->
+        <div id="nd-mobile-drawer" class="fixed inset-0 z-50 hidden md:hidden">
+          <div id="nd-mobile-drawer-backdrop" class="fixed inset-0 bg-black/75 backdrop-blur-sm"></div>
+          <div class="fixed inset-y-0 start-0 w-[280px] bg-[#0c0c10] border-e border-white/[0.08] p-4 flex flex-col gap-4 overflow-y-auto z-10 shadow-2xl">
             <div class="flex items-center justify-between pb-3 border-b border-white/[0.08]">
               <span class="text-sm font-bold text-white flex items-center gap-2">
                 <img src="/img/logo.png" class="w-5 h-5 rounded"> Orbit Wiki
               </span>
-              <button id="nd-mobile-drawer-close" class="text-neutral-400 hover:text-white p-1">
+              <button id="nd-mobile-drawer-close" class="text-neutral-400 hover:text-white p-1 cursor-pointer">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
             </div>
-            <div class="flex flex-col gap-4" id="nd-mobile-sidebar-content">
-              <!-- Rendered items -->
-            </div>
+            <div class="flex flex-col gap-4" id="nd-mobile-sidebar-content"></div>
           </div>
         </div>
 
-        <!-- ================= DESKTOP STICKY SIDEBAR (nd-sidebar) ================= -->
-        <div data-sidebar-placeholder="" class="sticky z-20 [grid-area:sidebar] pointer-events-none *:pointer-events-auto top-[96px] h-[calc(100vh-96px)] max-md:hidden">
-          <aside id="nd-sidebar" class="w-[272px] h-full flex flex-col border-e border-white/[0.08] bg-[#09090b]/80 text-sm overflow-y-auto px-3 py-4 gap-4">
-            <!-- Root Button -->
+        <!-- ================= 3-COLUMN DOCS CONTAINER ================= -->
+        <div class="nd-docs-container">
+          <!-- Left Sticky Sidebar -->
+          <aside id="nd-sidebar">
             <div class="px-1">
               <a href="/docs/overview" class="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white font-semibold text-xs hover:bg-white/[0.08] transition-colors">
                 <svg class="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
                 <span>Orbit Documentation</span>
               </a>
             </div>
+            <div class="flex flex-col gap-5 flex-1" id="nd-sidebar-tree"></div>
+          </aside>
 
-            <!-- Categories Tree -->
-            <div class="flex flex-col gap-5 flex-1" id="nd-sidebar-tree">
-              <!-- Rendered via JS -->
+          <!-- Center Main Article Content -->
+          <main id="nd-main-content">
+            <!-- Breadcrumb -->
+            <div class="flex items-center gap-2 text-xs text-neutral-500 font-medium">
+              <a href="/docs/overview" class="hover:text-neutral-300 transition-colors">Docs</a>
+              <span>/</span>
+              <span class="text-neutral-400" id="nd-crumb-category">${article.category}</span>
+              <span>/</span>
+              <span class="text-[#818cf8] font-semibold" id="nd-crumb-title">${article.title}</span>
+            </div>
+
+            <!-- Title & Meta Header -->
+            <header class="flex flex-col gap-2 pb-5 border-b border-white/[0.08]">
+              <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight" id="nd-page-title">${article.title}</h1>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#5865F2]/15 text-[#818cf8] border border-[#5865F2]/30" id="nd-page-badge">${article.badge || 'Official Docs'}</span>
+              </div>
+              <p class="text-sm text-neutral-400 leading-relaxed max-w-2xl" id="nd-page-desc">${article.desc}</p>
+            </header>
+
+            <!-- Article Body -->
+            <article id="nd-page-body" class="text-neutral-300 text-sm leading-relaxed space-y-6">
+              ${article.content}
+            </article>
+
+            <!-- Previous / Next Pagination Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-8 border-t border-white/[0.08]" id="nd-pagination"></div>
+          </main>
+
+          <!-- Right Sticky TOC -->
+          <aside id="nd-toc">
+            <h3 class="inline-flex items-center gap-2 font-semibold text-neutral-400 tracking-wide uppercase text-[11px] mb-3">
+              <svg class="w-3.5 h-3.5 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H3"></path><path d="M17 6H3"></path><path d="M21 12H3"></path></svg>
+              <span>On this page</span>
+            </h3>
+
+            <div class="relative overflow-y-auto scrollbar-none flex-1 py-1">
+              <div id="nd-toc-links" class="flex flex-col border-s border-white/[0.08] ps-1 gap-1"></div>
+            </div>
+
+            <!-- Community Help Box -->
+            <div class="mt-auto p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex flex-col gap-2">
+              <span class="text-xs font-semibold text-white flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Need setup help?
+              </span>
+              <p class="text-[11px] text-neutral-400 leading-normal">Join our Discord community for instant configuration support.</p>
+              <a href="https://discord.gg/orbit" target="_blank" class="inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold bg-[#5865F2]/20 hover:bg-[#5865F2]/30 text-[#818cf8] border border-[#5865F2]/30 transition-colors">
+                Join Discord Server
+              </a>
             </div>
           </aside>
         </div>
-
-        <!-- ================= MOBILE TOC POPOVER ================= -->
-        <div data-toc-popover="" class="sticky top-[96px] z-10 [grid-area:toc-popover] xl:hidden border-b border-white/[0.08] bg-[#09090b]/95 backdrop-blur px-4 py-2.5 flex items-center justify-between text-xs text-neutral-400">
-          <button id="nd-toc-mobile-btn" class="flex items-center gap-2 font-medium hover:text-white transition-colors">
-            <svg class="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H3"></path><path d="M17 6H3"></path><path d="M21 12H3"></path></svg>
-            <span>On this page: <strong id="nd-toc-current-label" class="text-white font-semibold">Overview</strong></span>
-            <svg class="w-3.5 h-3.5 transition-transform" id="nd-toc-mobile-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          </button>
-          <div id="nd-toc-mobile-dropdown" class="hidden absolute left-0 right-0 top-full bg-[#111115] border-b border-neutral-800 p-4 shadow-2xl flex flex-col gap-2 z-30">
-            <!-- Mobile TOC Links -->
-          </div>
-        </div>
-
-        <!-- ================= MAIN ARTICLE (nd-page) ================= -->
-        <main class="[grid-area:main] min-w-0 px-4 py-6 md:px-8 xl:px-12 md:py-8 flex flex-col gap-8 max-w-[940px] w-full mx-auto">
-          <!-- Breadcrumb -->
-          <div class="flex items-center gap-2 text-xs text-neutral-500 font-medium">
-            <a href="/docs/overview" class="hover:text-neutral-300 transition-colors">Docs</a>
-            <span>/</span>
-            <span class="text-neutral-400" id="nd-crumb-category">${article.category}</span>
-            <span>/</span>
-            <span class="text-[#818cf8] font-semibold" id="nd-crumb-title">${article.title}</span>
-          </div>
-
-          <!-- Title & Meta Header -->
-          <header class="flex flex-col gap-2 pb-5 border-b border-white/[0.08]">
-            <div class="flex items-center gap-3 flex-wrap">
-              <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight" id="nd-page-title">${article.title}</h1>
-              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#5865F2]/15 text-[#818cf8] border border-[#5865F2]/30" id="nd-page-badge">${article.badge || 'Official Docs'}</span>
-            </div>
-            <p class="text-sm text-neutral-400 leading-relaxed max-w-2xl" id="nd-page-desc">${article.desc}</p>
-          </header>
-
-          <!-- Article Body -->
-          <article id="nd-page-body" class="text-neutral-300 text-sm leading-relaxed space-y-6">
-            ${article.content}
-          </article>
-
-          <!-- Previous / Next Pagination Cards -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-8 border-t border-white/[0.08]" id="nd-pagination">
-            <!-- Rendered via JS -->
-          </div>
-        </main>
-
-        <!-- ================= RIGHT STICKY TOC (nd-toc) ================= -->
-        <aside id="nd-toc" class="sticky top-[96px] [grid-area:toc] h-[calc(100vh-96px)] flex flex-col w-[260px] pt-8 pe-4 pb-4 max-xl:hidden text-xs">
-          <h3 class="inline-flex items-center gap-2 font-semibold text-neutral-400 tracking-wide uppercase text-[11px] mb-3">
-            <svg class="w-3.5 h-3.5 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H3"></path><path d="M17 6H3"></path><path d="M21 12H3"></path></svg>
-            <span>On this page</span>
-          </h3>
-
-          <div class="relative overflow-y-auto scrollbar-none flex-1 py-1">
-            <div id="nd-toc-links" class="flex flex-col border-s border-white/[0.08] ps-1 gap-1">
-              <!-- Rendered via JS -->
-            </div>
-          </div>
-
-          <!-- Community Help Box -->
-          <div class="mt-auto p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex flex-col gap-2">
-            <span class="text-xs font-semibold text-white flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-              Need setup help?
-            </span>
-            <p class="text-[11px] text-neutral-400 leading-normal">Join our Discord community for instant configuration support.</p>
-            <a href="https://discord.gg/orbit" target="_blank" class="inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold bg-[#5865F2]/20 hover:bg-[#5865F2]/30 text-[#818cf8] border border-[#5865F2]/30 transition-colors">
-              Join Discord Server
-            </a>
-          </div>
-        </aside>
 
         <!-- ================= SEARCH MODAL (Ctrl + K) ================= -->
         <div id="nd-search-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
@@ -885,9 +863,7 @@ window.Pages = window.Pages || {};
               <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-neutral-800 text-neutral-400 rounded border border-neutral-700">ESC</kbd>
             </div>
             <!-- Search Results List -->
-            <div id="nd-search-results" class="max-h-96 overflow-y-auto p-2 flex flex-col gap-1">
-              <!-- Dynamically populated -->
-            </div>
+            <div id="nd-search-results" class="max-h-96 overflow-y-auto p-2 flex flex-col gap-1"></div>
           </div>
         </div>
 
