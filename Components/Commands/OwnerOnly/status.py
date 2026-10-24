@@ -6,32 +6,58 @@ from discord.ui import View, Select, Modal, TextInput, Button
 
 def _save_status(act_type: str, text: str, status_str: str = "online"):
     try:
-        from Components.Database.mongodb import get_db
+        from Components.Database.mongodb import get_db, _client
         db = get_db()
+        payload = {
+            "_id": "GLOBAL",
+            "type": act_type,
+            "text": text,
+            "status": status_str
+        }
         if db is not None:
-            db["OwnerOnly_BotStatus"].update_one(
-                {"_id": "GLOBAL"},
-                {"$set": {
-                    "type": act_type,
-                    "text": text,
-                    "status": status_str
-                }},
-                upsert=True
-            )
-    except Exception:
-        pass
+            for col in ["OwnerOnly_BotStatus", "BotStatus"]:
+                try:
+                    db[col].replace_one({"_id": "GLOBAL"}, payload, upsert=True)
+                except Exception:
+                    pass
+        if _client is not None:
+            for cand in ["OrbitBot", "orbit"]:
+                if db is not None and db.name == cand:
+                    continue
+                try:
+                    _client[cand]["OwnerOnly_BotStatus"].replace_one({"_id": "GLOBAL"}, payload, upsert=True)
+                except Exception:
+                    pass
+        print(f"[BotStatus] Saved status: type={act_type}, text='{text}', status={status_str}")
+    except Exception as e:
+        print(f"[BotStatus] Save status error: {e}")
 
 def _load_status() -> dict | None:
     try:
-        from Components.Database.mongodb import get_db
-        from Components.Commands._utils import make_embed, ORBIT_COLOR
+        from Components.Database.mongodb import get_db, _client
         db = get_db()
-        if db is not None:
-            doc = db["OwnerOnly_BotStatus"].find_one({"_id": "GLOBAL"})
-            if doc:
-                return doc
-    except Exception:
-        pass
+        dbs_to_check = [db] if db is not None else []
+        if _client is not None:
+            for c_name in ["OrbitBot", "orbit", "Orbit"]:
+                if db is None or db.name != c_name:
+                    try:
+                        dbs_to_check.append(_client[c_name])
+                    except Exception:
+                        pass
+
+        for target_db in dbs_to_check:
+            for col_name in ["OwnerOnly_BotStatus", "BotStatus", "bot_status", "status"]:
+                try:
+                    doc = target_db[col_name].find_one({"_id": {"$in": ["GLOBAL", "global"]}})
+                    if not doc:
+                        doc = target_db[col_name].find_one({})
+                    if doc and (doc.get("type") or doc.get("status") or doc.get("text")):
+                        print(f"[BotStatus] Found status in '{target_db.name}.{col_name}': {doc}")
+                        return doc
+                except Exception:
+                    pass
+    except Exception as e:
+        print(f"[BotStatus] Error loading status: {e}")
     return None
 
 def _parse_discord_status(status_str: str) -> discord.Status:

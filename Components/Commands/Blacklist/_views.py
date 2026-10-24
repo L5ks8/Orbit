@@ -100,14 +100,17 @@ class BlacklistListLayout(discord.ui.View):
         self.data = data
 
     def get_kwargs(self):
-        count = len(self.data)
         lines = []
-        if count > 0:
-            for i, (uid_str, info) in enumerate(list(self.data.items())[:15], 1):
+        if self.data and isinstance(self.data, dict):
+            for uid_str, info in self.data.items():
+                if not str(uid_str).isdigit() or not isinstance(info, dict):
+                    continue
                 reason = info.get("reason", "No reason")
                 user = self.guild.get_member(int(uid_str)) or self.bot.get_user(int(uid_str))
                 mention_display = f"<@{uid_str}>" + (f" (`@{user.name}`)" if user and hasattr(user, "name") else "")
-                lines.append(f"**{i}.** {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
+                lines.append(f"**{len(lines) + 1}.** {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
+                if len(lines) >= 15:
+                    break
 
         embed = build_embed(
             guild=self.guild,

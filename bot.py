@@ -457,6 +457,16 @@ class OrbitBot(commands.Bot):
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print(f"Loaded cogs: {len(self.cogs)}")
+        try:
+            from Components.Commands.OwnerOnly.status import _load_status, _build_activity, _parse_discord_status
+            status_data = _load_status()
+            if status_data:
+                act = _build_activity(status_data.get("type", "clear"), status_data.get("text", ""))
+                discord_status = _parse_discord_status(status_data.get("status", "online"))
+                await self.change_presence(activity=act, status=discord_status)
+                print(f"[BotStatus] Applied presence on_ready: type={status_data.get('type')}, status={status_data.get('status')}, text='{status_data.get('text')}'")
+        except Exception as e:
+            print(f"[BotStatus] Error applying presence on_ready: {e}")
 
     async def on_message(self, message: discord.Message):
         if not message.author.bot:

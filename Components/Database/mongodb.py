@@ -36,25 +36,32 @@ def get_db():
             default_db = _client.get_default_database()
             if default_db is not None and default_db.name not in ("admin", "local", "test", ""):
                 _db = default_db
-            else:
-                names = _client.list_database_names()
-                if "orbit" in names:
-                    _db = _client["orbit"]
-                elif "OrbitBot" in names:
-                    _db = _client["OrbitBot"]
-                else:
-                    _db = _client["orbit"]
+                print(f"[MongoDB] Using default URI database: '{_db.name}'")
         except Exception:
-            try:
-                names = _client.list_database_names()
-                if "orbit" in names:
-                    _db = _client["orbit"]
-                elif "OrbitBot" in names:
-                    _db = _client["OrbitBot"]
-                else:
-                    _db = _client["orbit"]
-            except Exception:
-                _db = _client["orbit"]
+            _db = None
+
+        if _db is None:
+            cand_names = ["OrbitBot", "orbit", "Orbit"]
+            best_db = None
+            max_cols = -1
+            for cand in cand_names:
+                try:
+                    c_db = _client[cand]
+                    c_list = c_db.list_collection_names()
+                    col_count = len(c_list)
+                    print(f"[MongoDB] Database candidate '{cand}' has {col_count} collections: {c_list[:6]}")
+                    if col_count > max_cols:
+                        max_cols = col_count
+                        best_db = c_db
+                except Exception as e:
+                    print(f"[MongoDB] Candidate '{cand}' check error: {e}")
+
+            if best_db is not None and max_cols > 0:
+                _db = best_db
+                print(f"[MongoDB] Selected active database: '{_db.name}' (with {max_cols} collections)")
+            else:
+                _db = _client["OrbitBot"]
+                print(f"[MongoDB] Fallback active database: '{_db.name}'")
     return _db
 
 def _query_collection_doc(collection, guild_id):
@@ -101,6 +108,24 @@ def get_config(collection_name: str, guild_id: Any, default_config: Dict[str, An
                 doc = _query_collection_doc(db[collection_name.lower()], guild_id)
             if not doc and collection_name.capitalize() != collection_name and collection_name.capitalize() != collection_name.lower():
                 doc = _query_collection_doc(db[collection_name.capitalize()], guild_id)
+
+            # 3. Candidate database fallback (check OrbitBot, orbit, Orbit)
+            if not doc and _client is not None:
+                for cand_name in ["OrbitBot", "orbit", "Orbit"]:
+                    if db.name == cand_name:
+                        continue
+                    try:
+                        cand_db = _client[cand_name]
+                        doc = _query_collection_doc(cand_db[collection_name], guild_id)
+                        if not doc and collection_name.lower() != collection_name:
+                            doc = _query_collection_doc(cand_db[collection_name.lower()], guild_id)
+                        if not doc and collection_name.capitalize() != collection_name and collection_name.capitalize() != collection_name.lower():
+                            doc = _query_collection_doc(cand_db[collection_name.capitalize()], guild_id)
+                        if doc:
+                            print(f"[MongoDB] Found {collection_name}:{guild_id} in candidate database '{cand_name}'")
+                            break
+                    except Exception:
+                        pass
     except Exception as e:
         print(f"[MongoDB] Query error for {collection_name}:{guild_id}: {e}")
         doc = None
@@ -140,6 +165,8 @@ def get_config(collection_name: str, guild_id: Any, default_config: Dict[str, An
         return res
     
     doc.pop("_id", None)
+    if collection_name.lower() in ["blacklist", "whitelist"]:
+        doc.pop("guild_id", None)
     with _cache_lock:
         _config_cache[cache_key] = (now, doc.copy())
     

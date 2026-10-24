@@ -92,20 +92,20 @@ class WhitelistListLayout(discord.ui.View):
             self.add_item(comp)
 
     def get_kwargs(self, guild_id: int):
-        count = len(self.data)
-        if count == 0:
-            content_text = "The moderation whitelist is currently empty for this server."
-        else:
-            lines = []
-            for uid_str, info in list(self.data.items())[:15]:
+        lines = []
+        if self.data and isinstance(self.data, dict):
+            for uid_str, info in self.data.items():
+                if not str(uid_str).isdigit() or not isinstance(info, dict):
+                    continue
                 reason = info.get("reason", "No reason")
                 user = self.guild.get_member(int(uid_str)) or self.bot.get_user(int(uid_str))
                 mention_display = f"<@{uid_str}>" + (f" (`@{user.name}`)" if user and hasattr(user, "name") else "")
                 lines.append(f"• {mention_display} (`ID: {uid_str}`) - **Reason:** {reason}")
-            content_text = "\n".join(lines)
-            if count > 15:
-                content_text += f"\n\n*And {count - 15} more users...*"
+                if len(lines) >= 15:
+                    break
 
+        count = len(lines)
+        content_text = "\n".join(lines) if lines else "The moderation whitelist is currently empty for this server."
         embed = discord.Embed(
             title=f"Whitelist Overview ({count} Users)",
             description=content_text,

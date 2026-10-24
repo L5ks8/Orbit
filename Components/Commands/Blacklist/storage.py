@@ -18,14 +18,15 @@ def load_blacklist(guild_id: int) -> Dict[str, Dict[str, Any]]:
     with _blacklist_lock:
         if guild_id in _blacklist_cache:
             return _blacklist_cache[guild_id]
-        path = _get_file_path(guild_id)
         try:
             data = get_config("Blacklist", guild_id)
-            if not data:
+            if not data or not isinstance(data, dict):
                 data = {}
-            _blacklist_cache[guild_id] = data
-            return data
-        except Exception:
+            clean = {str(k): v for k, v in data.items() if str(k).isdigit() and isinstance(v, dict)}
+            _blacklist_cache[guild_id] = clean
+            return clean
+        except Exception as e:
+            print(f"[Blacklist] Load error for guild {guild_id}: {e}")
             _blacklist_cache[guild_id] = {}
             return _blacklist_cache[guild_id]
 

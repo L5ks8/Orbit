@@ -24,14 +24,15 @@ def load_whitelist(guild_id: int) -> Dict[str, Any]:
     with _whitelist_lock:
         if guild_id in _whitelist_cache:
             return _whitelist_cache[guild_id]
-        path = _get_file_path(guild_id)
         try:
             data = get_config("Whitelist", guild_id)
-            if not data:
+            if not data or not isinstance(data, dict):
                 data = {}
-            _whitelist_cache[guild_id] = data
-            return data
-        except Exception:
+            clean = {str(k): v for k, v in data.items() if str(k).isdigit() and isinstance(v, dict)}
+            _whitelist_cache[guild_id] = clean
+            return clean
+        except Exception as e:
+            print(f"[Whitelist] Load error for guild {guild_id}: {e}")
             _whitelist_cache[guild_id] = {}
             return _whitelist_cache[guild_id]
 
