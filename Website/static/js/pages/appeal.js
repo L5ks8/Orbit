@@ -73,14 +73,14 @@
           ];
 
       content.innerHTML = `
-        <div class="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6">
+        <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_20px_40px_-20px_rgba(0,0,0,0.95)] flex flex-col gap-6">
           <!-- Server Header -->
           <div class="flex items-center gap-4 pb-6 border-b border-neutral-800">
             <div class="relative shrink-0">
               <img 
                 src="${escapeHtml(iconSrc)}" 
                 alt="${escapeHtml(guildName)}" 
-                class="w-14 h-14 rounded-2xl object-cover bg-neutral-950 border border-neutral-800 shadow-md"
+                class="w-14 h-14 rounded-2xl object-cover bg-neutral-800 border border-neutral-700 shadow-md"
                 onerror="this.onerror=null; this.src='/img/logo.png';"
               >
               <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-neutral-900 flex items-center justify-center" title="Verified Portal">
@@ -89,10 +89,10 @@
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
-                <h1 class="text-lg sm:text-xl font-bold text-white truncate tracking-tight">${escapeHtml(guildName)}</h1>
+                <h1 class="text-xl sm:text-2xl font-bold text-white truncate tracking-tight">${escapeHtml(guildName)}</h1>
               </div>
-              <p class="text-xs text-neutral-400 mt-0.5 flex items-center gap-1.5">
-                <span class="text-[#5865F2] font-medium">Official Sanction Appeal Portal</span>
+              <p class="text-xs sm:text-sm text-neutral-400 mt-1 flex items-center gap-1.5">
+                <span class="text-[#5865F2] font-semibold">Official Sanction Appeal Portal</span>
               </p>
             </div>
           </div>
@@ -100,19 +100,19 @@
           ${!user ? `
             <!-- Unauthenticated State -->
             <div class="flex flex-col items-center text-center py-6 px-2 gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-[#5865F2]/10 text-[#5865F2] border border-[#5865F2]/20 flex items-center justify-center">
+              <div class="w-14 h-14 rounded-2xl bg-[#5865F2]/10 text-[#5865F2] border border-[#5865F2]/20 flex items-center justify-center">
                 ${SVGS.scale}
               </div>
               <div>
-                <h2 class="text-base font-semibold text-white tracking-tight">Discord Identity Verification Required</h2>
-                <p class="text-xs text-neutral-400 max-w-md mt-1 leading-relaxed">
+                <h2 class="text-lg font-semibold text-white tracking-tight">Discord Identity Verification Required</h2>
+                <p class="text-sm text-neutral-300 max-w-md mt-1.5 leading-relaxed">
                   To ensure appeals are securely tied to your Discord account, please authorize with Discord. We only check your account ID and active sanctions.
                 </p>
               </div>
               <button 
                 type="button" 
                 id="btn-appeal-login"
-                class="w-full mt-2 flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold text-xs transition-all shadow-lg shadow-[#5865F2]/20 active:scale-[0.98] cursor-pointer"
+                class="w-full mt-2 flex items-center justify-center gap-2.5 px-6 py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold text-sm transition-all shadow-lg shadow-[#5865F2]/25 active:scale-[0.98] cursor-pointer"
               >
                 ${SVGS.discord}
                 <span>Login with Discord to Continue</span>
@@ -120,54 +120,54 @@
             </div>
           ` : `
             <!-- Authenticated Appeal Form -->
-            <form id="appeal-form" class="flex flex-col gap-5">
+            <form id="appeal-form" class="flex flex-col gap-5 sm:gap-6">
               <!-- User Identity Pill -->
-              <div class="flex items-center justify-between p-3.5 rounded-xl bg-neutral-950 border border-neutral-800">
-                <div class="flex items-center gap-3 min-w-0">
+              <div class="flex items-center justify-between p-4 rounded-2xl bg-neutral-800/60 border border-neutral-700/80">
+                <div class="flex items-center gap-3.5 min-w-0">
                   <img 
-                    src="${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=96` : '/img/logo.png'}" 
-                    class="w-9 h-9 rounded-xl object-cover bg-neutral-900 border border-neutral-800 shrink-0" 
+                    src="${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128` : '/img/logo.png'}" 
+                    class="w-11 h-11 rounded-xl object-cover bg-neutral-800 border border-neutral-700 shrink-0 shadow-sm" 
                     alt="${escapeHtml(user.username)}"
                     onerror="this.onerror=null; this.src='/img/logo.png';"
                   >
                   <div class="flex flex-col min-w-0">
-                    <div class="flex items-center gap-1.5">
-                      <span class="text-xs font-semibold text-white truncate">${escapeHtml(user.global_name || user.username)}</span>
-                      <span class="text-[10px] text-neutral-500 font-mono">@${escapeHtml(user.username)}</span>
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-semibold text-white truncate">${escapeHtml(user.global_name || user.username)}</span>
+                      <span class="text-xs text-neutral-400 font-mono">@${escapeHtml(user.username)}</span>
                     </div>
-                    <span class="text-[10px] text-neutral-500 font-mono truncate">ID: ${escapeHtml(user.id)}</span>
+                    <span class="text-xs text-neutral-400 font-mono truncate mt-0.5">ID: ${escapeHtml(user.id)}</span>
                   </div>
                 </div>
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold shrink-0">
+                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold shrink-0">
                   ${SVGS.shieldCheck}
                   <span>Verified</span>
                 </div>
               </div>
 
               <!-- Questionnaire Fields -->
-              <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-4 sm:gap-5">
                 ${questions.map((q, idx) => `
-                  <div class="flex flex-col gap-1.5">
-                    <label for="q-inp-${idx}" class="text-xs font-semibold text-neutral-300 flex items-center justify-between">
+                  <div class="flex flex-col gap-2">
+                    <label for="q-inp-${idx}" class="text-sm font-semibold text-white flex items-center justify-between">
                       <span>${escapeHtml(q.label)}</span>
-                      ${q.required ? '<span class="text-[10px] text-amber-400 font-normal">Required</span>' : '<span class="text-[10px] text-neutral-500 font-normal">Optional</span>'}
+                      ${q.required ? '<span class="text-xs text-amber-400 font-medium">Required</span>' : '<span class="text-xs text-neutral-400 font-normal">Optional</span>'}
                     </label>
                     <textarea 
                       id="q-inp-${idx}" 
                       data-qid="${escapeHtml(q.id || `q_${idx}`)}"
                       data-qlabel="${escapeHtml(q.label)}"
-                      rows="3" 
+                      rows="4" 
                       ${q.required ? 'required' : ''}
                       placeholder="${escapeHtml(q.placeholder || 'Write your response here...')}" 
-                      class="appeal-question-input w-full resize-none px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-neutral-700 text-white text-xs leading-relaxed placeholder:text-neutral-600 focus:outline-none focus:border-[#5865F2] focus:ring-1 focus:ring-[#5865F2] transition-colors" style="resize: none !important;"
+                      class="appeal-question-input w-full resize-none px-4 py-3 rounded-xl bg-neutral-800 border border-neutral-700 hover:border-neutral-600 text-white text-sm leading-relaxed placeholder:text-neutral-400 focus:outline-none focus:border-[#5865F2] focus:bg-neutral-800/90 focus:ring-2 focus:ring-[#5865F2]/25 transition-all shadow-sm" style="resize: none !important;"
                     ></textarea>
                   </div>
                 `).join('')}
               </div>
 
               <!-- Privacy Notice -->
-              <div class="flex items-start gap-2.5 p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80 text-[11px] text-neutral-400">
-                <span class="text-neutral-500 shrink-0 mt-0.5">${SVGS.clock}</span>
+              <div class="flex items-start gap-3 p-4 rounded-xl bg-neutral-800/40 border border-neutral-700/60 text-xs sm:text-[13px] text-neutral-300">
+                <span class="text-neutral-400 shrink-0 mt-0.5">${SVGS.clock}</span>
                 <p class="leading-relaxed">
                   Your submission will be routed directly to the server's staff review channel. Decisions are typically made within a few days. Submitting false information will result in a permanent blacklist.
                 </p>
@@ -177,7 +177,7 @@
               <button 
                 type="submit" 
                 id="submit-appeal-btn" 
-                class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold text-xs transition-all shadow-md shadow-[#5865F2]/20 active:scale-[0.98] cursor-pointer"
+                class="w-full flex items-center justify-center gap-2.5 py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold text-sm transition-all shadow-lg shadow-[#5865F2]/25 active:scale-[0.98] cursor-pointer"
               >
                 ${SVGS.send}
                 <span>Submit Appeal Request</span>
@@ -246,11 +246,11 @@
                   ${SVGS.check}
                 </div>
                 <h2 class="text-xl font-bold text-white tracking-tight">Appeal Successfully Submitted</h2>
-                <p class="text-xs text-neutral-400 max-w-md leading-relaxed">
+                <p class="text-sm text-neutral-300 max-w-md leading-relaxed">
                   Your appeal has been safely delivered to the <span class="text-white font-semibold">${escapeHtml(guildName)}</span> moderation team. If the moderators accept your appeal, your sanction will be lifted immediately.
                 </p>
                 <div class="flex items-center gap-3 mt-4">
-                  <a href="/" class="px-5 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-semibold transition-colors">
+                  <a href="/" class="px-6 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold transition-colors border border-neutral-700">
                     Return to Orbit
                   </a>
                 </div>
