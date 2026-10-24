@@ -333,7 +333,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                   </button>
 
                   <!-- Notification UI matching PeakBot -->
-                  <div id="dash-notif-dropdown" class="hidden absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-[384px] max-w-[384px] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                  <div id="dash-notif-dropdown" data-no-search="true" class="hidden absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-[384px] max-w-[384px] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl z-50 overflow-hidden">
                     <div class="flex items-center gap-2 px-4 py-3 border-b border-neutral-800">
                       <h2 class="text-sm font-semibold text-white">Notifications</h2>
                       <button disabled="" class="ml-auto flex items-center gap-1 text-[12px] text-cyan-400 hover:text-cyan-300 disabled:text-neutral-600 disabled:cursor-default transition-colors">
@@ -364,7 +364,7 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
                   </button>
                   
                   <!-- User Dropdown Menu matching PeakBot -->
-                  <div id="dash-user-dropdown" class="hidden absolute right-0 mt-2 w-56 py-2 bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl z-[60]">
+                  <div id="dash-user-dropdown" data-no-search="true" class="hidden absolute right-0 mt-2 w-56 py-2 bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl z-[60]">
                     <div class="px-4 py-3 border-b border-neutral-800">
                       <p class="text-sm font-semibold text-white truncate">${escapeHtml(userName)}</p>
                       <p class="text-xs text-neutral-500 truncate">ID: ${user.id}</p>

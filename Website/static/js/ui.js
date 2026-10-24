@@ -743,20 +743,109 @@ const OrbitDropdownManager = {
     });
   },
 
+  isSearchableDropdown(menu) {
+    if (!menu) return false;
+    // Explicit opt-out
+    if (menu.hasAttribute('data-no-search') || menu.classList.contains('no-search')) return false;
+
+    // Explicit opt-in
+    if (menu.hasAttribute('data-searchable') || menu.classList.contains('orbit-searchable')) return true;
+
+    const id = (menu.id || '').toLowerCase();
+    const className = (menu.className || '').toLowerCase();
+
+    // Exclude user profile / auth / account menus
+    if (
+      id.includes('user') ||
+      id.includes('profile') ||
+      id.includes('account') ||
+      id.includes('avatar') ||
+      className.includes('user-menu') ||
+      className.includes('profile-menu')
+    ) {
+      return false;
+    }
+
+    // Exclude notification panels
+    if (id.includes('notif') || id.includes('notification')) {
+      return false;
+    }
+
+    // Exclude 3-dot action menus, context menus, card options
+    if (
+      id.includes('card-menu') ||
+      id.includes('action-menu') ||
+      menu.hasAttribute('data-poll-menu') ||
+      menu.hasAttribute('data-chat-options-menu') ||
+      menu.querySelector('[data-pick-autopost-color], [data-poll-action], [data-msg-action], [data-panel-action], [data-ticket-action]')
+    ) {
+      return false;
+    }
+
+    // Exclude AI model picker, quick add, history dropdowns
+    if (id.includes('ai-model') || id.includes('ai-quick-add') || id.includes('ai-history')) {
+      return false;
+    }
+
+    // Exclude color swatches
+    if (id.includes('color')) {
+      return false;
+    }
+
+    // Exclude dropdowns that consist of navigation links (Home, Settings, Logout)
+    if (menu.querySelector('a[href="/"], a[href="/dashboard"], a[href="/settings"]') || menu.querySelector('button[onclick*="logout"]')) {
+      return false;
+    }
+
+    // Channels: id or class contains channel/chan, or elements with data-ch/data-channel
+    const isChannel = id.includes('channel') || id.includes('chan-') || id.includes('-ch-') || id.endsWith('-ch') ||
+      Boolean(menu.querySelector('[data-ch], [data-channel], .w-ch-opt, .g-ch-opt'));
+
+    // Roles: id or class contains role, or elements with data-role/data-rid
+    const isRole = id.includes('role') ||
+      Boolean(menu.querySelector('[data-role], [data-rid], [data-role-id]'));
+
+    // Categories: id contains cat/category, or elements with data-cat/data-category
+    const isCategory = id.includes('cat') || id.includes('category') ||
+      Boolean(menu.querySelector('[data-category], [data-cat]'));
+
+    if (isChannel || isRole || isCategory) {
+      return true;
+    }
+
+    // Check if items contain channel prefix '#' or role prefix '@'
+    const items = Array.from(menu.querySelectorAll('button, .select-item, [role="option"]'));
+    if (items.length > 0) {
+      const hasChannelOrRoleItems = items.some(it => {
+        const t = (it.textContent || '').trim();
+        return t.startsWith('#') || t.startsWith('@');
+      });
+      if (hasChannelOrRoleItems) return true;
+    }
+
+    // For general select menus, only show searchbar if there are at least 7 items and it's not a navigation menu
+    if (items.length >= 7 && !menu.querySelector('a')) {
+      return true;
+    }
+
+    return false;
+  },
+
   ensureSearchBar(menu) {
+    if (!this.isSearchableDropdown(menu)) {
+      // Remove any previously erroneously injected search bar
+      const existingAutoSearch = menu.querySelector('.orbit-auto-search');
+      if (existingAutoSearch) existingAutoSearch.remove();
+      menu.dataset.orbitSearchInit = 'true';
+      return;
+    }
+
     if (menu.dataset.orbitSearchInit === 'true') return;
     if (menu.querySelector('input[type="text"], input[type="search"]')) {
       menu.dataset.orbitSearchInit = 'true';
       return;
     }
-    // Skip 3-dot action menus or color swatch popovers
-    if (
-      menu.hasAttribute('data-poll-menu') ||
-      menu.querySelector('[data-pick-autopost-color], [data-poll-action], [data-msg-action], [data-panel-action]')
-    ) {
-      menu.dataset.orbitSearchInit = 'true';
-      return;
-    }
+
     const items = Array.from(menu.querySelectorAll('button, .select-item'));
     if (items.length === 0) return;
     const hasTextItems = items.some(it => (it.textContent || '').trim().length > 0);
