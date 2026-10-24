@@ -71,42 +71,46 @@ function renderServerStatsModule(el, guildId, sCfg, categoryOptions) {
     </div>
   `;
 
-  document.getElementById('save-serverstats-btn').onclick = async () => {
-    const btn = document.getElementById('save-serverstats-btn');
-    btn.textContent = 'Saving...';
-    try {
-      await API.saveConfig(guildId, {
-        serverstats: {
-          enabled,
-          category_id: categoryId,
-          users_name: document.getElementById('stats-users-fmt')?.value || usersName,
-          bots_name: document.getElementById('stats-bots-fmt')?.value || botsName,
-          boosts_name: document.getElementById('stats-boosts-fmt')?.value || boostsName,
-          users_enabled: true,
-          bots_enabled: true,
-          boosts_enabled: true
-        }
-      });
-      Toast.success('Server Stats settings saved!');
-    } catch (err) {
-      Toast.error('Failed to save: ' + err.message);
-    } finally {
-      btn.textContent = 'Save Changes';
-    }
-  };
+  const saveBtn = document.getElementById('save-serverstats-btn');
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      saveBtn.textContent = 'Saving...';
+      try {
+        await API.saveConfig(guildId, {
+          serverstats: {
+            enabled,
+            category_id: categoryId,
+            users_name: document.getElementById('stats-users-fmt')?.value || usersName,
+            bots_name: document.getElementById('stats-bots-fmt')?.value || botsName,
+            boosts_name: document.getElementById('stats-boosts-fmt')?.value || boostsName,
+            users_enabled: true,
+            bots_enabled: true,
+            boosts_enabled: true
+          }
+        });
+        Toast.success('Server Stats settings saved!');
+      } catch (err) {
+        Toast.error('Failed to save: ' + err.message);
+      } finally {
+        saveBtn.textContent = 'Save Changes';
+      }
+    };
+  }
 
-  document.getElementById('setup-stats-auto-btn').onclick = async () => {
-    const btn = document.getElementById('setup-stats-auto-btn');
-    btn.textContent = 'Setting up...';
-    try {
-      await API.setupServerStats(guildId);
-      Toast.success('Stats channels successfully generated in Discord!');
-    } catch (err) {
-      Toast.error('Setup failed: ' + err.message);
-    } finally {
-      btn.innerHTML = `${icon('zap', 14)} Auto-Setup Channels`;
-    }
-  };
+  const setupAutoBtn = document.getElementById('setup-stats-auto-btn');
+  if (setupAutoBtn) {
+    setupAutoBtn.onclick = async () => {
+      setupAutoBtn.textContent = 'Setting up...';
+      try {
+        await API.setupServerStats(guildId);
+        Toast.success('Stats channels successfully generated in Discord!');
+      } catch (err) {
+        Toast.error('Setup failed: ' + err.message);
+      } finally {
+        setupAutoBtn.innerHTML = `${icon('zap', 14)} Auto-Setup Channels`;
+      }
+    };
+  }
 }
 
 window.renderServerStatsModule = renderServerStatsModule;

@@ -141,6 +141,22 @@
       return found ? found.name : 'Select staff review channel...';
     }
 
+    // Cooldown Options & Helpers
+    const COOLDOWN_OPTIONS = [
+      { value: 0, label: 'None (Immediate)' },
+      { value: 1, label: '1 Day' },
+      { value: 3, label: '3 Days' },
+      { value: 7, label: '7 Days' },
+      { value: 14, label: '14 Days' },
+      { value: 30, label: '30 Days' }
+    ];
+
+    function getCooldownLabel(days) {
+      const val = Number(days);
+      const match = COOLDOWN_OPTIONS.find(o => o.value === val);
+      return match ? match.label : `${val} Days`;
+    }
+
     // Render Initial Static Skeleton
     container.innerHTML = `
       <div class="space-y-6 pb-24 max-w-5xl mx-auto">
@@ -469,22 +485,6 @@
         </div>
       </div>
     `;
-
-    // Cooldown Options & Helpers
-    const COOLDOWN_OPTIONS = [
-      { value: 0, label: 'None (Immediate)' },
-      { value: 1, label: '1 Day' },
-      { value: 3, label: '3 Days' },
-      { value: 7, label: '7 Days' },
-      { value: 14, label: '14 Days' },
-      { value: 30, label: '30 Days' }
-    ];
-
-    function getCooldownLabel(days) {
-      const val = Number(days);
-      const match = COOLDOWN_OPTIONS.find(o => o.value === val);
-      return match ? match.label : `${val} Days`;
-    }
 
     function renderCooldownOptions() {
       const menu = container.querySelector('#cooldown-dd-menu');
