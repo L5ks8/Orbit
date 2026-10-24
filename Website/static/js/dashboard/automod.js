@@ -1173,7 +1173,7 @@
                     <span class="flex-shrink-0 w-11 flex justify-center">
                       ${renderCustomToggle('toggle-warn-dm', state.dm_notifications.warn_dm, 'Warn DM on or off')}
                     </span>
-                    <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/messages?slot=moderation.warn_dm&from=moderation">Customize</a>
+                    <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/embed-builder?slot=moderation.warn_dm&from=moderation">Customize</a>
                   </div>
 
                   <!-- Timeout DM -->
@@ -1192,7 +1192,7 @@
                     <span class="flex-shrink-0 w-11 flex justify-center">
                       ${renderCustomToggle('toggle-timeout-dm', state.dm_notifications.timeout_dm, 'Timeout DM on or off')}
                     </span>
-                    <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/messages?slot=moderation.mute_dm&from=moderation">Customize</a>
+                    <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/embed-builder?slot=moderation.timeout_dm&from=moderation">Customize</a>
                   </div>
 
                   <!-- Kick DM -->
@@ -1211,7 +1211,7 @@
                     <span class="flex-shrink-0 w-11 flex justify-center">
                       ${renderCustomToggle('toggle-kick-dm', state.dm_notifications.kick_dm, 'Kick DM on or off')}
                     </span>
-                    <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/messages?slot=moderation.kick_dm&from=moderation">Customize</a>
+                    <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/embed-builder?slot=moderation.kick_dm&from=moderation">Customize</a>
                   </div>
 
                   <!-- Ban DM -->
@@ -1230,7 +1230,7 @@
                     <span class="flex-shrink-0 w-11 flex justify-center">
                       ${renderCustomToggle('toggle-ban-dm', state.dm_notifications.ban_dm, 'Ban DM on or off')}
                     </span>
-                    <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/messages?slot=moderation.ban_dm&from=moderation">Customize</a>
+                    <a class="inline-flex items-center h-8 px-3 rounded-lg text-[12px] font-medium text-neutral-200 bg-neutral-800/70 hover:bg-neutral-800 flex-shrink-0" href="/dashboard/${guildId}/embed-builder?slot=moderation.ban_dm&from=moderation">Customize</a>
                   </div>
 
                 </div>

@@ -483,7 +483,8 @@ class ConfigMixin:
                     "timeout_dm": True,
                     "kick_dm": True,
                     "ban_dm": True
-                })
+                }),
+                "dm_templates": automod_cfg.get("dm_templates", {})
             },
             "verify": {
                 "enabled": verify_cfg.get("enabled", False),
@@ -946,6 +947,10 @@ class ConfigMixin:
 
                 if "log_channel" in am:
                     automod_cfg["log_channel"] = str(am["log_channel"]) if am["log_channel"] else ""
+                if "dm_templates" in am and isinstance(am["dm_templates"], dict):
+                    if "dm_templates" not in automod_cfg:
+                        automod_cfg["dm_templates"] = {}
+                    automod_cfg["dm_templates"].update(am["dm_templates"])
                 if "dm_notifications" in am and isinstance(am["dm_notifications"], dict):
                     automod_cfg["dm_notifications"] = {
                         "warn_dm": bool(am["dm_notifications"].get("warn_dm", True)),

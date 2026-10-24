@@ -1117,6 +1117,94 @@ class ActionsMixin:
                     formatted = f"{formatted}\n-# Sent from {guild.name}"
                 await member.send(formatted)
                     
+
+            elif dm_type.startswith("moderation") or dm_type in ["warn_dm", "timeout_dm", "kick_dm", "ban_dm"]:
+                raw_embed = data.get("embed", {})
+                content_text = data.get("content", "")
+
+                sample_vars = {
+                    "{server.name}": guild.name,
+                    "{server}": guild.name,
+                    "{user.name}": member.display_name,
+                    "{user.mention}": member.mention,
+                    "{user}": member.mention,
+                    "{case.id}": "102",
+                    "{case.reason}": "Spamming in #general",
+                    "{case.moderator}": f"@{member.display_name}",
+                    "{case.warning_count}": "2",
+                    "{case.duration}": "15 minutes",
+                    "{server.member_count}": str(guild.member_count)
+                }
+
+                def render_mock(val):
+                    if not val or not isinstance(val, str):
+                        return val or ""
+                    res = val
+                    for k, v in sample_vars.items():
+                        res = res.replace(k, v)
+                    return res
+
+                send_kwargs = {}
+                if content_text:
+                    send_kwargs["content"] = render_mock(content_text)
+
+                if raw_embed:
+                    emb_title = render_mock(raw_embed.get("title", ""))
+                    emb_desc = render_mock(raw_embed.get("description", ""))
+                    color_hex = raw_embed.get("color", "#5865F2")
+                    try:
+                        color_int = int(str(color_hex).replace("#", ""), 16)
+                    except Exception:
+                        color_int = 0x5865F2
+
+                    emb = discord.Embed(
+                        title=emb_title[:256] if emb_title else None,
+                        description=emb_desc[:4096] if emb_desc else None,
+                        color=discord.Color(color_int)
+                    )
+
+                    if raw_embed.get("author_name"):
+                        emb.set_author(
+                            name=render_mock(raw_embed.get("author_name"))[:256],
+                            icon_url=raw_embed.get("author_icon") or None,
+                            url=raw_embed.get("author_url") or None
+                        )
+
+                    thumb = raw_embed.get("thumbnail")
+                    if thumb == "server_icon" or thumb == "server" or thumb is True:
+                        if guild.icon:
+                            emb.set_thumbnail(url=guild.icon.url)
+                    elif thumb and isinstance(thumb, str) and thumb.startswith("http"):
+                        emb.set_thumbnail(url=thumb)
+
+                    if raw_embed.get("image") and isinstance(raw_embed["image"], str) and raw_embed["image"].startswith("http"):
+                        emb.set_image(url=raw_embed.get("image"))
+
+                    footer_txt = render_mock(raw_embed.get("footer_text", ""))
+                    if footer_txt or raw_embed.get("footer_icon"):
+                        emb.set_footer(
+                            text=footer_txt[:2048] if footer_txt else None,
+                            icon_url=raw_embed.get("footer_icon") or None
+                        )
+
+                    if raw_embed.get("timestamp"):
+                        emb.timestamp = discord.utils.utcnow()
+
+                    fields = raw_embed.get("fields", [])
+                    if isinstance(fields, list):
+                        for f in fields[:25]:
+                            if isinstance(f, dict):
+                                fn = render_mock(f.get("name", ""))[:256] or "\u200b"
+                                fv = render_mock(f.get("value", ""))[:1024] or "\u200b"
+                                emb.add_field(name=fn, value=fv, inline=bool(f.get("inline", False)))
+
+                    send_kwargs["embed"] = emb
+
+                if not send_kwargs:
+                    return web.json_response({"error": "No content or embed provided to test."}, status=400)
+
+                await member.send(**send_kwargs)
+
             return web.json_response({"success": True})
         except discord.Forbidden:
             return web.json_response({"error": "I cannot send DMs to you. Please enable DMs from server members."}, status=400)

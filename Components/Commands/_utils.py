@@ -226,28 +226,161 @@ class UserOrIDConverter(commands.Converter):
 
         raise commands.BadArgument(f"Could not find user '{argument}'. Please provide a valid @mention or user ID.")
 
-async def send_moderation_dm(user: discord.Member | discord.User, guild_name: str, action: str, reason: str, duration: str = None, guild_id: int = None):
+async def send_moderation_dm(user: discord.Member | discord.User, guild_name: str, action: str, reason: str, duration: str = None, guild_id: int = None, case_id: Any = None, moderator: Any = None, warning_count: Any = None):
     try:
-        desc = f"You were {action} in {guild_name}{f' for {duration}' if duration else ''}. | {reason}"
-        
-        if guild_id:
-            from Components.Systems.BanAppeals._storage import load_appeals_config
-            appeals_cfg = load_appeals_config(guild_id)
-            if appeals_cfg.get("enabled"):
-                allowed = appeals_cfg.get("allowed_punishments", [])
-                p_map = {"banned": "ban", "voice banned": "ban", "timed out": "timeout", "muted": "timeout", "voice muted": "timeout", "kicked": "kick", "warned": "warn"}
-                if p_map.get(action) in allowed:
-                    custom_url = appeals_cfg.get("custom_url", "orbit")
-                    import urllib.parse
-                    encoded_url = urllib.parse.quote(custom_url)
-                    base_url = os.environ.get("BASE_URL")
-                    desc += f"\n\n**Appeals:** You can appeal this punishment at: {base_url}/appeal/{encoded_url}"
+        slot_map = {
+            "warned": "moderation.warn_dm",
+            "warn": "moderation.warn_dm",
+            "timed out": "moderation.timeout_dm",
+            "timeout": "moderation.timeout_dm",
+            "muted": "moderation.timeout_dm",
+            "voice muted": "moderation.timeout_dm",
+            "kicked": "moderation.kick_dm",
+            "kick": "moderation.kick_dm",
+            "banned": "moderation.ban_dm",
+            "ban": "moderation.ban_dm",
+            "voice banned": "moderation.ban_dm"
+        }
+        notif_key_map = {
+            "warned": "warn_dm",
+            "warn": "warn_dm",
+            "timed out": "timeout_dm",
+            "timeout": "timeout_dm",
+            "muted": "timeout_dm",
+            "voice muted": "timeout_dm",
+            "kicked": "kick_dm",
+            "kick": "kick_dm",
+            "banned": "ban_dm",
+            "ban": "ban_dm",
+            "voice banned": "ban_dm"
+        }
 
-        embed = discord.Embed(
-            description=desc,
-            color=discord.Color.red()
-        )
-        await user.send(embed=embed)
+        slot_key = slot_map.get(action.lower(), "moderation.warn_dm")
+        notif_key = notif_key_map.get(action.lower(), "warn_dm")
+
+        automod_cfg = {}
+        if guild_id:
+            try:
+                from Components.Systems.Automoderation._storage import load_automod_config
+                automod_cfg = load_automod_config(guild_id)
+            except Exception:
+                automod_cfg = {}
+
+        dm_notifs = automod_cfg.get("dm_notifications", {})
+        if dm_notifs.get(notif_key) is False:
+            return
+
+        dm_templates = automod_cfg.get("dm_templates", {})
+        tpl = dm_templates.get(slot_key)
+
+        moderator_str = "Moderator"
+        if moderator:
+            moderator_str = getattr(moderator, "display_name", str(moderator))
+
+        sample_vars = {
+            "{server.name}": guild_name,
+            "{server}": guild_name,
+            "{user.name}": getattr(user, "display_name", getattr(user, "name", "User")),
+            "{user.mention}": getattr(user, "mention", f"<@{getattr(user, 'id', '')}>"),
+            "{user}": getattr(user, "mention", f"<@{getattr(user, 'id', '')}>"),
+            "{case.id}": str(case_id or "—"),
+            "{case.reason}": str(reason or "No reason provided"),
+            "{case.moderator}": f"@{moderator_str}" if not str(moderator_str).startswith("@") else str(moderator_str),
+            "{case.warning_count}": str(warning_count or "1"),
+            "{case.duration}": str(duration or "—")
+        }
+
+        def apply_vars(txt):
+            if not txt or not isinstance(txt, str):
+                return txt or ""
+            res = txt
+            for k, v in sample_vars.items():
+                res = res.replace(k, v)
+            return res
+
+        send_kwargs = {}
+        if tpl and isinstance(tpl, dict):
+            content_text = apply_vars(tpl.get("content", ""))
+            if content_text:
+                send_kwargs["content"] = content_text
+
+            if tpl.get("has_embed", True):
+                title_text = apply_vars(tpl.get("title", ""))
+                desc_text = apply_vars(tpl.get("description", ""))
+                color_hex = tpl.get("color", "#5865F2")
+                try:
+                    color_int = int(str(color_hex).replace("#", ""), 16)
+                except Exception:
+                    color_int = 0x5865F2
+
+                embed = discord.Embed(
+                    title=title_text[:256] if title_text else None,
+                    description=desc_text[:4096] if desc_text else None,
+                    color=discord.Color(color_int)
+                )
+
+                if tpl.get("author_name"):
+                    embed.set_author(
+                        name=apply_vars(tpl.get("author_name"))[:256],
+                        icon_url=tpl.get("author_icon") or None,
+                        url=tpl.get("author_url") or None
+                    )
+
+                thumb = tpl.get("thumbnail")
+                if (thumb == "server_icon" or thumb == "server" or thumb is True) and guild_id:
+                    try:
+                        from discord.ext import commands
+                        # bot can fetch guild icon
+                        pass
+                    except Exception:
+                        pass
+                elif thumb and isinstance(thumb, str) and thumb.startswith("http"):
+                    embed.set_thumbnail(url=thumb)
+
+                if tpl.get("image") and isinstance(tpl["image"], str) and tpl["image"].startswith("http"):
+                    embed.set_image(url=tpl["image"])
+
+                footer_text = apply_vars(tpl.get("footer_text", ""))
+                if footer_text or tpl.get("footer_icon"):
+                    embed.set_footer(
+                        text=footer_text[:2048] if footer_text else None,
+                        icon_url=tpl.get("footer_icon") or None
+                    )
+
+                if tpl.get("timestamp"):
+                    embed.timestamp = discord.utils.utcnow()
+
+                fields = tpl.get("fields", [])
+                if isinstance(fields, list):
+                    for f in fields[:25]:
+                        if isinstance(f, dict):
+                            fn = apply_vars(f.get("name", ""))[:256] or "\u200b"
+                            fv = apply_vars(f.get("value", ""))[:1024] or "\u200b"
+                            embed.add_field(name=fn, value=fv, inline=bool(f.get("inline", False)))
+
+                send_kwargs["embed"] = embed
+
+        if not send_kwargs:
+            desc = f"You were {action} in {guild_name}{f' for {duration}' if duration else ''}. | {reason}"
+            if guild_id:
+                try:
+                    from Components.Systems.BanAppeals._storage import load_appeals_config
+                    appeals_cfg = load_appeals_config(guild_id)
+                    if appeals_cfg.get("enabled"):
+                        allowed = appeals_cfg.get("allowed_punishments", [])
+                        p_map = {"banned": "ban", "voice banned": "ban", "timed out": "timeout", "muted": "timeout", "voice muted": "timeout", "kicked": "kick", "warned": "warn"}
+                        if p_map.get(action) in allowed:
+                            custom_url = appeals_cfg.get("custom_url", "orbit")
+                            import urllib.parse
+                            encoded_url = urllib.parse.quote(custom_url)
+                            base_url = os.environ.get("BASE_URL")
+                            desc += f"\n\n**Appeals:** You can appeal this punishment at: {base_url}/appeal/{encoded_url}"
+                except Exception:
+                    pass
+
+            send_kwargs["embed"] = discord.Embed(description=desc, color=discord.Color.red())
+
+        await user.send(**send_kwargs)
     except Exception:
         pass
 

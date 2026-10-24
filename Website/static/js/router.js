@@ -48,7 +48,7 @@ const Router = {
 
   async handleRoute() {
     const path = window.location.pathname;
-    this.currentPath = path;
+    this.currentPath = window.location.pathname + window.location.search;
     window.scrollTo(0, 0);
 
     const app = document.getElementById('app');

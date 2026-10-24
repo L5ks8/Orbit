@@ -76,24 +76,8 @@ async def _do_warn_add(ctx: commands.Context, user: discord.Member | discord.Use
                 punishment_text = f"\n**Automatic Action:** Failed to apply timeout ({e})"
 
     try:
-        dm_embed = discord.Embed(title="Formal Warning Received", color=discord.Color.red())
-        dm_embed.add_field(name="Server", value=ctx.guild.name, inline=False)
-        dm_embed.add_field(name="Warn ID", value=f"`{warn_entry['warn_id']}`", inline=False)
-        dm_embed.add_field(name="Reason", value=f"{reason}{punishment_text}", inline=False)
-        
-        from Components.Systems.BanAppeals._storage import load_appeals_config
-        appeals_cfg = load_appeals_config(ctx.guild.id)
-        if appeals_cfg.get("enabled"):
-            allowed = appeals_cfg.get("allowed_punishments", [])
-            if "warn" in allowed:
-                custom_url = appeals_cfg.get("custom_url", "orbit")
-                import urllib.parse
-                encoded_url = urllib.parse.quote(custom_url)
-                import os
-                base_url = os.environ.get("BASE_URL")
-                dm_embed.add_field(name="Appeals", value=f"You can appeal this warning at: {base_url}/appeal/{encoded_url}", inline=False)
-
-        await user.send(embed=dm_embed)
+        from Components.Commands._utils import send_moderation_dm
+        await send_moderation_dm(user, ctx.guild.name, "warned", reason=f"{reason}{punishment_text}", guild_id=ctx.guild.id, case_id=case_id, moderator=ctx.author, warning_count=total_warns)
     except Exception:
         pass
     try:
