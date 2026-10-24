@@ -535,18 +535,18 @@ DashboardTabs.Welcome = async function(container, guildId) {
                 <!-- Body -->
                 <div class="p-4 sm:p-5 space-y-3">
                   <div class="space-y-2.5">
-                    <!-- Goodbye Title + Color Picker -->
-                    <div id="g-title-row" class="${state.goodbye.embed ? 'flex' : 'hidden'} items-stretch gap-2">
+                    <!-- Goodbye Author / Header Row (Visible in Embed mode) -->
+                    <div id="g-author-row" class="${state.goodbye.embed ? 'flex' : 'hidden'} items-stretch gap-2">
                       <div class="flex-1 min-w-0">
                         <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 42px;">
-                          <div id="g-title-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white h-full text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: nowrap; box-sizing: border-box; margin: 0px; overflow: hidden; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_title, 'Goodbye!  (empty = no title)')}</div>
-                          <textarea id="g-title-input" rows="1" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: nowrap; box-sizing: border-box; margin: 0px; overflow: hidden; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.embed_title)}</textarea>
-                          <button type="button" data-emoji-target="g-title-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-1/2 -translate-y-1/2">
+                          <div id="g-author-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_author, '• Goodbye! (Author / Header)')}</div>
+                          <textarea id="g-author-input" rows="1" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.embed_author)}</textarea>
+                          <button type="button" data-emoji-target="g-author-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
                           </button>
                         </div>
                       </div>
-                      <div class="flex items-center">
+                      <div class="flex items-start">
                         <div class="relative flex flex-col" id="g-color-wrap">
                           <button type="button" id="g-color-btn" class="w-[42px] h-[42px] rounded-xl shadow-sm border border-neutral-700 hover:border-neutral-500 transition-colors cursor-pointer flex-shrink-0" style="background-color: ${esc(state.goodbye.embed_color)};"></button>
                           <div id="g-color-popover" class="hidden absolute right-0 top-12 z-40 w-52 p-3 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl space-y-2.5">
@@ -564,13 +564,37 @@ DashboardTabs.Welcome = async function(container, guildId) {
                       </div>
                     </div>
 
+                    <!-- Goodbye Title Row (Visible in Embed mode) -->
+                    <div id="g-title-row" class="${state.goodbye.embed ? 'block' : 'hidden'}">
+                      <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 42px;">
+                        <div id="g-title-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_title, '***{user} left the server.*** (Title)')}</div>
+                        <textarea id="g-title-input" rows="1" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.embed_title)}</textarea>
+                        <button type="button" data-emoji-target="g-title-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
+                        </button>
+                      </div>
+                    </div>
+
                     <!-- Goodbye Description -->
-                    <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 84px;">
-                      <div id="g-desc-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white h-full text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1; height: 84px;">${highlightVariablesOverlay(state.goodbye.embed_description, '{user} left {server}.  (empty = no text)')}</div>
-                      <textarea id="g-desc-input" rows="3" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white; height: 84px;">${esc(state.goodbye.embed_description)}</textarea>
-                      <button type="button" data-emoji-target="g-desc-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 bottom-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
-                      </button>
+                    <div id="g-desc-row" class="block">
+                      <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 84px;">
+                        <div id="g-desc-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_description, 'Goodbye {user}! (Description)')}</div>
+                        <textarea id="g-desc-input" rows="3" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.embed_description)}</textarea>
+                        <button type="button" data-emoji-target="g-desc-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 bottom-2.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Goodbye Footer Row (Visible in Embed mode) -->
+                    <div id="g-footer-row" class="${state.goodbye.embed ? 'block' : 'hidden'}">
+                      <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 42px;">
+                        <div id="g-footer-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_footer, 'Footer text (optional)')}</div>
+                        <textarea id="g-footer-input" rows="1" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.embed_footer)}</textarea>
+                        <button type="button" data-emoji-target="g-footer-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -585,7 +609,7 @@ DashboardTabs.Welcome = async function(container, guildId) {
                       <button type="button" data-var="{inviter.name}" title="Insert {inviter.name}" class="g-var-chip px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-orange-500/20 text-orange-300 hover:bg-orange-500/25 border border-orange-500/20">@inviter.name</button>
                       <button type="button" data-var="{time.in.server}" title="Insert {time.in.server}" class="g-var-chip px-1.5 py-0.5 text-xs font-medium rounded-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 bg-purple-500/20 text-purple-300 hover:bg-purple-500/25 border border-purple-500/20">@time.in.server</button>
                     </div>
-                    <span id="g-char-count" class="text-xs tabular-nums flex-shrink-0 ml-2 text-neutral-600">${(state.goodbye.embed_description || '').length}/2000</span>
+                    <span id="g-char-count" class="text-xs tabular-nums flex-shrink-0 ml-2 ${gTotalChars > 2000 ? 'text-red-400' : 'text-neutral-600'}">${gTotalChars}/2000</span>
                   </div>
 
                   <!-- Goodbye Embed Toggle -->
@@ -738,9 +762,11 @@ DashboardTabs.Welcome = async function(container, guildId) {
     const bodyEl = document.getElementById('w-preview-body');
     if (!bodyEl) return;
 
+    const rawAuthor = state.welcome.embed_author;
     const rawTitle = state.welcome.embed_title;
     const rawDesc = state.welcome.embed_description;
-    const isDefault = !rawTitle && !rawDesc;
+    const rawFooter = state.welcome.embed_footer;
+    const isDefault = !rawAuthor && !rawTitle && !rawDesc && !rawFooter;
 
     if (!state.welcome.embed) {
       const textVal = rawDesc || 'Welcome {user} to {server}! Enjoy your stay.';
@@ -750,20 +776,25 @@ DashboardTabs.Welcome = async function(container, guildId) {
       return;
     }
 
+    const authorHtml = rawAuthor ? renderPreviewTokens(rawAuthor) : '';
     const titleHtml = rawTitle
       ? renderPreviewTokens(rawTitle)
-      : `<span>Welcome to </span><span class="bg-green-500/30 text-green-300 rounded-[3px] px-[2px]">${esc(state.guildName)}</span><span>!</span>`;
+      : (isDefault ? `<span>Welcome to </span><span class="bg-green-500/30 text-green-300 rounded-[3px] px-[2px]">${esc(state.guildName)}</span><span>!</span>` : '');
     const descHtml = rawDesc
       ? renderPreviewTokens(rawDesc)
-      : `<span>Welcome </span><span class="bg-[#5865f2]/30 text-[#c9cdfb] rounded-[3px] px-[2px]">@User</span><span>! Glad you're here.</span>`;
+      : (isDefault ? `<span>Welcome </span><span class="bg-[#5865f2]/30 text-[#c9cdfb] rounded-[3px] px-[2px]">@User</span><span>! Glad you're here.</span>` : '');
+    const footerHtml = rawFooter ? renderPreviewTokens(rawFooter) : '';
 
     bodyEl.innerHTML = `
-      <div class="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[380px]" style="border-color: ${esc(state.welcome.embed_color || '#5865F2')};">
+      <div class="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[420px]" style="border-color: ${esc(state.welcome.embed_color || '#5865F2')};">
         <div class="p-2.5 flex flex-col gap-2">
+          ${authorHtml ? `
+            <div class="text-[11px] font-semibold text-white break-words">${authorHtml}</div>
+          ` : ''}
           <div class="flex gap-2.5">
             <div class="flex-1 min-w-0 space-y-1">
-              <p class="text-xs font-semibold text-white leading-snug break-words">${titleHtml}</p>
-              <p class="text-xs text-neutral-300 leading-relaxed whitespace-pre-wrap break-all">${descHtml}</p>
+              ${titleHtml ? `<p class="text-xs font-semibold text-white leading-snug break-words">${titleHtml}</p>` : ''}
+              ${descHtml ? `<p class="text-xs text-neutral-300 leading-relaxed whitespace-pre-wrap break-words">${descHtml}</p>` : ''}
               ${isDefault ? `<p class="text-xs text-neutral-600 italic">Start typing to customize...</p>` : ''}
             </div>
             ${state.welcome.show_avatar ? `
@@ -773,7 +804,10 @@ DashboardTabs.Welcome = async function(container, guildId) {
             ` : ''}
           </div>
           ${state.welcome.embed_image ? `
-            <img src="${esc(state.welcome.embed_image)}" alt="Embed preview" class="w-full max-h-40 object-cover rounded-lg border border-neutral-800/60">
+            <img src="${esc(state.welcome.embed_image)}" alt="Embed preview" class="w-full max-h-48 object-cover rounded-lg border border-neutral-800/60 mt-0.5">
+          ` : ''}
+          ${footerHtml ? `
+            <div class="pt-0.5 text-[10px] text-neutral-400 break-words">${footerHtml}</div>
           ` : ''}
         </div>
       </div>
@@ -784,8 +818,10 @@ DashboardTabs.Welcome = async function(container, guildId) {
     const bodyEl = document.getElementById('g-preview-body');
     if (!bodyEl) return;
 
+    const rawAuthor = state.goodbye.embed_author;
     const rawTitle = state.goodbye.embed_title;
     const rawDesc = state.goodbye.embed_description;
+    const rawFooter = state.goodbye.embed_footer;
 
     if (!state.goodbye.embed) {
       const textVal = rawDesc || '{user} left {server}.';
@@ -795,26 +831,37 @@ DashboardTabs.Welcome = async function(container, guildId) {
       return;
     }
 
-    if (!rawTitle && !rawDesc && !state.goodbye.embed_image) {
+    if (!rawAuthor && !rawTitle && !rawDesc && !rawFooter && !state.goodbye.embed_image) {
       bodyEl.innerHTML = `
-        <div class="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[380px]" style="border-color: ${esc(state.goodbye.embed_color || '#5865F2')};">
+        <div class="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[420px]" style="border-color: ${esc(state.goodbye.embed_color || '#5865F2')};">
           <div class="p-2.5 space-y-1">
-            <p class="text-xs text-amber-400/90 italic">Empty title and text. A real goodbye will only post the avatar and a timestamp, so type something here.</p>
+            <p class="text-xs text-amber-400/90 italic">Empty embed. Start typing to customize...</p>
           </div>
         </div>
       `;
       return;
     }
 
+    const authorHtml = rawAuthor ? renderPreviewTokens(rawAuthor) : '';
+    const titleHtml = rawTitle ? renderPreviewTokens(rawTitle) : '';
+    const descHtml = rawDesc ? renderPreviewTokens(rawDesc) : '';
+    const footerHtml = rawFooter ? renderPreviewTokens(rawFooter) : '';
+
     bodyEl.innerHTML = `
-      <div class="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[380px]" style="border-color: ${esc(state.goodbye.embed_color || '#5865F2')};">
+      <div class="border-l-[3px] rounded-r bg-[#2b2d31] max-w-full sm:max-w-[420px]" style="border-color: ${esc(state.goodbye.embed_color || '#5865F2')};">
         <div class="p-2.5 flex flex-col gap-2">
-          <div class="space-y-1">
-            ${rawTitle ? `<p class="text-xs font-semibold text-white leading-snug break-words">${renderPreviewTokens(rawTitle)}</p>` : ''}
-            ${rawDesc ? `<p class="text-xs text-neutral-300 leading-relaxed whitespace-pre-wrap break-all">${renderPreviewTokens(rawDesc)}</p>` : ''}
+          ${authorHtml ? `
+            <div class="text-[11px] font-semibold text-white break-words">${authorHtml}</div>
+          ` : ''}
+          <div class="flex-1 min-w-0 space-y-1">
+            ${titleHtml ? `<p class="text-xs font-semibold text-white leading-snug break-words">${titleHtml}</p>` : ''}
+            ${descHtml ? `<p class="text-xs text-neutral-300 leading-relaxed whitespace-pre-wrap break-words">${descHtml}</p>` : ''}
           </div>
           ${state.goodbye.embed_image ? `
-            <img src="${esc(state.goodbye.embed_image)}" alt="Goodbye embed preview" class="w-full max-h-40 object-cover rounded-lg border border-neutral-800/60">
+            <img src="${esc(state.goodbye.embed_image)}" alt="Goodbye embed preview" class="w-full max-h-48 object-cover rounded-lg border border-neutral-800/60 mt-0.5">
+          ` : ''}
+          ${footerHtml ? `
+            <div class="pt-0.5 text-[10px] text-neutral-400 break-words">${footerHtml}</div>
           ` : ''}
         </div>
       </div>
@@ -845,15 +892,53 @@ DashboardTabs.Welcome = async function(container, guildId) {
     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  function bindOverlayTextarea(inputId, overlayId, placeholder, onUpdate) {
+  function autoResizeOverlayTextarea(input, overlay, minHeight = 42) {
+    if (!input) return;
+    input.style.height = 'auto';
+    const targetH = Math.max(minHeight, input.scrollHeight);
+    input.style.height = `${targetH}px`;
+    if (overlay) {
+      overlay.style.height = `${targetH}px`;
+      overlay.scrollTop = input.scrollTop;
+      overlay.scrollLeft = input.scrollLeft;
+    }
+    const parent = input.parentElement;
+    if (parent) {
+      parent.style.minHeight = `${targetH}px`;
+    }
+  }
+
+  function refreshAllAutoResizes() {
+    [
+      { id: 'w-author-input', ov: 'w-author-overlay', min: 42 },
+      { id: 'w-title-input', ov: 'w-title-overlay', min: 42 },
+      { id: 'w-desc-input', ov: 'w-desc-overlay', min: 84 },
+      { id: 'w-footer-input', ov: 'w-footer-overlay', min: 42 },
+      { id: 'w-dm-input', ov: 'w-dm-overlay', min: 104 },
+      { id: 'g-author-input', ov: 'g-author-overlay', min: 42 },
+      { id: 'g-title-input', ov: 'g-title-overlay', min: 42 },
+      { id: 'g-desc-input', ov: 'g-desc-overlay', min: 84 },
+      { id: 'g-footer-input', ov: 'g-footer-overlay', min: 42 },
+      { id: 'g-dm-input', ov: 'g-dm-overlay', min: 84 }
+    ].forEach(({ id, ov, min }) => {
+      const input = document.getElementById(id);
+      const overlay = document.getElementById(ov);
+      if (input && overlay && input.offsetParent !== null) {
+        autoResizeOverlayTextarea(input, overlay, min);
+      }
+    });
+  }
+
+  window.addEventListener('resize', refreshAllAutoResizes);
+
+  function bindOverlayTextarea(inputId, overlayId, placeholder, onUpdate, minHeight = 42) {
     const input = document.getElementById(inputId);
     const overlay = document.getElementById(overlayId);
     if (!input || !overlay) return;
 
     const sync = () => {
       overlay.innerHTML = highlightVariablesOverlay(input.value, placeholder);
-      overlay.scrollTop = input.scrollTop;
-      overlay.scrollLeft = input.scrollLeft;
+      autoResizeOverlayTextarea(input, overlay, minHeight);
       onUpdate(input.value);
     };
 
@@ -862,6 +947,9 @@ DashboardTabs.Welcome = async function(container, guildId) {
       overlay.scrollTop = input.scrollTop;
       overlay.scrollLeft = input.scrollLeft;
     });
+
+    autoResizeOverlayTextarea(input, overlay, minHeight);
+    overlay.innerHTML = highlightVariablesOverlay(input.value, placeholder);
   }
 
   function bindImageUpload(dropzoneId, fileInputId, urlBtnId, removeBtnId, onSetUrl) {
@@ -944,67 +1032,131 @@ DashboardTabs.Welcome = async function(container, guildId) {
   }
 
   function bindEvents() {
+    function updateWelcomeCharCount() {
+      const cnt = document.getElementById('w-char-count');
+      if (!cnt) return;
+      const total = (state.welcome.embed_author || '').length +
+                    (state.welcome.embed_title || '').length +
+                    (state.welcome.embed_description || '').length +
+                    (state.welcome.embed_footer || '').length;
+      cnt.textContent = `${total}/2000`;
+      cnt.classList.toggle('text-red-400', total > 2000);
+      cnt.classList.toggle('text-neutral-600', total <= 2000);
+    }
+
+    function updateGoodbyeCharCount() {
+      const cnt = document.getElementById('g-char-count');
+      if (!cnt) return;
+      const total = (state.goodbye.embed_author || '').length +
+                    (state.goodbye.embed_title || '').length +
+                    (state.goodbye.embed_description || '').length +
+                    (state.goodbye.embed_footer || '').length;
+      cnt.textContent = `${total}/2000`;
+      cnt.classList.toggle('text-red-400', total > 2000);
+      cnt.classList.toggle('text-neutral-600', total <= 2000);
+    }
+
     // Track last focused input for variable chip insertion
+    const wAuthor = document.getElementById('w-author-input');
     const wTitle = document.getElementById('w-title-input');
     const wDesc = document.getElementById('w-desc-input');
+    const wFooter = document.getElementById('w-footer-input');
+    const gAuthor = document.getElementById('g-author-input');
     const gTitle = document.getElementById('g-title-input');
     const gDesc = document.getElementById('g-desc-input');
+    const gFooter = document.getElementById('g-footer-input');
 
+    if (wAuthor) wAuthor.addEventListener('focus', () => { lastFocusedWelcomeInput = 'w-author'; });
     if (wTitle) wTitle.addEventListener('focus', () => { lastFocusedWelcomeInput = 'w-title'; });
     if (wDesc) wDesc.addEventListener('focus', () => { lastFocusedWelcomeInput = 'w-desc'; });
+    if (wFooter) wFooter.addEventListener('focus', () => { lastFocusedWelcomeInput = 'w-footer'; });
+
+    if (gAuthor) gAuthor.addEventListener('focus', () => { lastFocusedGoodbyeInput = 'g-author'; });
     if (gTitle) gTitle.addEventListener('focus', () => { lastFocusedGoodbyeInput = 'g-title'; });
     if (gDesc) gDesc.addEventListener('focus', () => { lastFocusedGoodbyeInput = 'g-desc'; });
+    if (gFooter) gFooter.addEventListener('focus', () => { lastFocusedGoodbyeInput = 'g-footer'; });
 
-    // Bind syntax-highlighted textareas
-    bindOverlayTextarea('w-title-input', 'w-title-overlay', 'Welcome!  (default)', (val) => {
+    // Bind syntax-highlighted textareas with dynamic auto-height
+    bindOverlayTextarea('w-author-input', 'w-author-overlay', '• Welcome to Archrealm!  (Author / Header)', (val) => {
+      state.welcome.embed_author = val;
+      updateWelcomeCharCount();
+      updateWelcomePreview();
+      scheduleSave();
+    }, 42);
+
+    bindOverlayTextarea('w-title-input', 'w-title-overlay', '***{user} Explore the server.***  (Title)', (val) => {
       state.welcome.embed_title = val;
+      updateWelcomeCharCount();
       updateWelcomePreview();
       scheduleSave();
-    });
+    }, 42);
 
-    bindOverlayTextarea('w-desc-input', 'w-desc-overlay', 'Welcome {user} to {server}!  (default)', (val) => {
+    bindOverlayTextarea('w-desc-input', 'w-desc-overlay', 'Welcome {user} to {server}!  (Description)', (val) => {
       state.welcome.embed_description = val;
-      const cnt = document.getElementById('w-char-count');
-      if (cnt) cnt.textContent = `${val.length}/2000`;
+      updateWelcomeCharCount();
       updateWelcomePreview();
       scheduleSave();
-    });
+    }, 84);
+
+    bindOverlayTextarea('w-footer-input', 'w-footer-overlay', 'Footer text (optional)', (val) => {
+      state.welcome.embed_footer = val;
+      updateWelcomeCharCount();
+      updateWelcomePreview();
+      scheduleSave();
+    }, 42);
 
     bindOverlayTextarea('w-dm-input', 'w-dm-overlay', '👋 Welcome to {server} (default)', (val) => {
       state.welcome.dm_message = val;
       const cnt = document.getElementById('w-dm-char-count');
       if (cnt) cnt.textContent = `${val.length}/2000`;
       scheduleSave();
-    });
+    }, 104);
 
-    bindOverlayTextarea('g-title-input', 'g-title-overlay', 'Goodbye!  (empty = no title)', (val) => {
+    bindOverlayTextarea('g-author-input', 'g-author-overlay', '• Goodbye! (Author / Header)', (val) => {
+      state.goodbye.embed_author = val;
+      updateGoodbyeCharCount();
+      updateGoodbyePreview();
+      scheduleSave();
+    }, 42);
+
+    bindOverlayTextarea('g-title-input', 'g-title-overlay', '***{user} left the server.*** (Title)', (val) => {
       state.goodbye.embed_title = val;
+      updateGoodbyeCharCount();
       updateGoodbyePreview();
       scheduleSave();
-    });
+    }, 42);
 
-    bindOverlayTextarea('g-desc-input', 'g-desc-overlay', '{user} left {server}.  (empty = no text)', (val) => {
+    bindOverlayTextarea('g-desc-input', 'g-desc-overlay', 'Goodbye {user}! (Description)', (val) => {
       state.goodbye.embed_description = val;
-      const cnt = document.getElementById('g-char-count');
-      if (cnt) cnt.textContent = `${val.length}/2000`;
+      updateGoodbyeCharCount();
       updateGoodbyePreview();
       scheduleSave();
-    });
+    }, 84);
+
+    bindOverlayTextarea('g-footer-input', 'g-footer-overlay', 'Footer text (optional)', (val) => {
+      state.goodbye.embed_footer = val;
+      updateGoodbyeCharCount();
+      updateGoodbyePreview();
+      scheduleSave();
+    }, 42);
 
     bindOverlayTextarea('g-dm-input', 'g-dm-overlay', '👋 You left {server} (default)', (val) => {
       state.goodbye.dm_message = val;
       const cnt = document.getElementById('g-dm-char-count');
       if (cnt) cnt.textContent = `${val.length}/2000`;
       scheduleSave();
-    });
+    }, 84);
 
     // Variable chips
     document.querySelectorAll('.w-var-chip').forEach(btn => {
       btn.onclick = () => {
         const token = btn.getAttribute('data-var');
-        const target = lastFocusedWelcomeInput === 'w-title' && state.welcome.embed
-          ? document.getElementById('w-title-input')
-          : document.getElementById('w-desc-input');
+        let target = document.getElementById('w-desc-input');
+        if (state.welcome.embed) {
+          if (lastFocusedWelcomeInput === 'w-author') target = document.getElementById('w-author-input');
+          else if (lastFocusedWelcomeInput === 'w-title') target = document.getElementById('w-title-input');
+          else if (lastFocusedWelcomeInput === 'w-footer') target = document.getElementById('w-footer-input');
+        }
         insertAtCursor(target, token);
       };
     });
@@ -1018,9 +1170,12 @@ DashboardTabs.Welcome = async function(container, guildId) {
     document.querySelectorAll('.g-var-chip').forEach(btn => {
       btn.onclick = () => {
         const token = btn.getAttribute('data-var');
-        const target = lastFocusedGoodbyeInput === 'g-title' && state.goodbye.embed
-          ? document.getElementById('g-title-input')
-          : document.getElementById('g-desc-input');
+        let target = document.getElementById('g-desc-input');
+        if (state.goodbye.embed) {
+          if (lastFocusedGoodbyeInput === 'g-author') target = document.getElementById('g-author-input');
+          else if (lastFocusedGoodbyeInput === 'g-title') target = document.getElementById('g-title-input');
+          else if (lastFocusedGoodbyeInput === 'g-footer') target = document.getElementById('g-footer-input');
+        }
         insertAtCursor(target, token);
       };
     });
@@ -1113,11 +1268,22 @@ DashboardTabs.Welcome = async function(container, guildId) {
 
     bindSwitch('w-embed-switch', () => state.welcome.embed, (v) => {
       state.welcome.embed = v;
-      const row = document.getElementById('w-title-row');
-      if (row) {
-        row.classList.toggle('flex', v);
-        row.classList.toggle('hidden', !v);
+      const authorRow = document.getElementById('w-author-row');
+      if (authorRow) {
+        authorRow.classList.toggle('flex', v);
+        authorRow.classList.toggle('hidden', !v);
       }
+      const titleRow = document.getElementById('w-title-row');
+      if (titleRow) {
+        titleRow.classList.toggle('block', v);
+        titleRow.classList.toggle('hidden', !v);
+      }
+      const footerRow = document.getElementById('w-footer-row');
+      if (footerRow) {
+        footerRow.classList.toggle('block', v);
+        footerRow.classList.toggle('hidden', !v);
+      }
+      setTimeout(refreshAllAutoResizes, 10);
       updateWelcomePreview();
     });
 
@@ -1150,11 +1316,22 @@ DashboardTabs.Welcome = async function(container, guildId) {
 
     bindSwitch('g-embed-switch', () => state.goodbye.embed, (v) => {
       state.goodbye.embed = v;
-      const row = document.getElementById('g-title-row');
-      if (row) {
-        row.classList.toggle('flex', v);
-        row.classList.toggle('hidden', !v);
+      const authorRow = document.getElementById('g-author-row');
+      if (authorRow) {
+        authorRow.classList.toggle('flex', v);
+        authorRow.classList.toggle('hidden', !v);
       }
+      const titleRow = document.getElementById('g-title-row');
+      if (titleRow) {
+        titleRow.classList.toggle('block', v);
+        titleRow.classList.toggle('hidden', !v);
+      }
+      const footerRow = document.getElementById('g-footer-row');
+      if (footerRow) {
+        footerRow.classList.toggle('block', v);
+        footerRow.classList.toggle('hidden', !v);
+      }
+      setTimeout(refreshAllAutoResizes, 10);
       updateGoodbyePreview();
     });
 
@@ -1407,8 +1584,10 @@ DashboardTabs.Welcome = async function(container, guildId) {
         show_avatar: w.show_avatar !== undefined ? Boolean(w.show_avatar) : true,
         invite_vars: Boolean(w.invite_vars),
         embed_color: w.embed_color || '#5865F2',
+        embed_author: w.embed_author || '',
         embed_title: w.embed_title || '',
         embed_description: desc,
+        embed_footer: w.embed_footer || '',
         embed_image: w.embed_image || w.image_url || '',
         dm_enabled: Boolean(w.dm_enabled),
         dm_message: w.dm_message || ''
@@ -1431,8 +1610,10 @@ DashboardTabs.Welcome = async function(container, guildId) {
         channel_id: g.channel_id ? String(g.channel_id) : '',
         embed: g.msg_mode ? (g.msg_mode !== 'text') : true,
         embed_color: g.embed_color || '#5865F2',
+        embed_author: g.embed_author || '',
         embed_title: g.embed_title || '',
         embed_description: desc,
+        embed_footer: g.embed_footer || '',
         embed_image: g.embed_image || g.image_url || '',
         dm_enabled: Boolean(g.dm_enabled),
         dm_message: g.dm_message || ''
