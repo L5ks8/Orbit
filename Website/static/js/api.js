@@ -252,7 +252,10 @@ const API = {
 
   // Guilds
   async getGuilds(force = false) {
-    return await this.cachedRequest('guilds', () => this.request(`/api/guilds${force ? '?force=true' : ''}`), force);
+    if (force) {
+      this.invalidateCache('guilds');
+    }
+    return await this.cachedRequest('guilds', () => this.request(`/api/guilds${force ? '?force=true' : ''}`), force, 15000);
   },
 
   async getGuild(guildId) {

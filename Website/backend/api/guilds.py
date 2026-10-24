@@ -170,10 +170,23 @@ class GuildsMixin:
         now = time.time()
         
         force_refresh = request.query.get("force") == "true"
+        if force_refresh and user["id"] in self._manageable_guilds_cache:
+            self._manageable_guilds_cache.pop(user["id"], None)
         
         cached = self._manageable_guilds_cache.get(user["id"])
         if cached and (now - cached['time'] < 60) and not force_refresh:
-            return web.json_response(cached['data'])
+            cached_data = cached.get('data', [])
+            has_any_bot = any(g.get("has_bot") for g in cached_data)
+            # If bot was not ready when cache was stored (0 bot guilds), but is ready now with guilds, re-fetch!
+            if has_any_bot or (not self.bot.is_ready()) or len(self.bot.guilds) == 0:
+                return web.json_response(cached_data)
+
+        # Ensure bot is ready before evaluating bot server presence
+        if not self.bot.is_ready() or len(self.bot.guilds) == 0:
+            try:
+                await asyncio.wait_for(self.bot.wait_until_ready(), timeout=5.0)
+            except Exception:
+                pass
 
         headers = {"Authorization": f"Bearer {user['access_token']}"}
         user_guilds = None
@@ -223,10 +236,15 @@ class GuildsMixin:
             if not has_perms:
                 continue
                 
-            bot_guild = self.bot.get_guild(int(g["id"]))
+            bot_guild = None
+            try:
+                gid_int = int(g["id"])
+                bot_guild = self.bot.get_guild(gid_int)
+            except Exception:
+                pass
             if not bot_guild:
                 try:
-                    bot_guild = discord.utils.get(self.bot.guilds, id=int(g["id"]))
+                    bot_guild = discord.utils.find(lambda x: str(x.id) == str(g["id"]), self.bot.guilds)
                 except Exception:
                     pass
             bot_in_server = bot_guild is not None
@@ -258,7 +276,8 @@ class GuildsMixin:
             })
         
         print(f"[api_guilds] Returning {len(manageable_guilds)} manageable guilds", flush=True)
-        self._manageable_guilds_cache[user["id"]] = {'time': now, 'data': manageable_guilds}
+        if self.bot.is_ready() and len(self.bot.guilds) > 0:
+            self._manageable_guilds_cache[user["id"]] = {'time': now, 'data': manageable_guilds}
         return web.json_response(manageable_guilds)
 
     def _build_48h_buckets(self, guild_id: int, doc_map: dict, now_dt):
