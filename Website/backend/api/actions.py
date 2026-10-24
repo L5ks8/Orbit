@@ -2961,3 +2961,56 @@ class ActionsMixin:
             return web.json_response({"success": True})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
+    async def api_delete_warning(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_messages") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "Invalid JSON"}, status=400)
+
+        user_id_str = str(body.get("user_id", "")).strip()
+        warn_id = str(body.get("warn_id", "")).strip()
+        if not user_id_str.isdigit() or not warn_id:
+            return web.json_response({"error": "user_id and warn_id required"}, status=400)
+
+        try:
+            from Components.Commands.Warn._storage import delete_warning
+            success = delete_warning(guild_id, int(user_id_str), warn_id)
+            return web.json_response({"success": bool(success)})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_clear_user_warnings(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (user_perms.get("can_messages") or user_perms.get("is_admin")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "Invalid JSON"}, status=400)
+
+        user_id_str = str(body.get("user_id", "")).strip()
+        if not user_id_str.isdigit():
+            return web.json_response({"error": "user_id required"}, status=400)
+
+        try:
+            from Components.Commands.Warn._storage import clear_user_warnings
+            cleared = clear_user_warnings(guild_id, int(user_id_str))
+            return web.json_response({"success": True, "cleared": cleared})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)

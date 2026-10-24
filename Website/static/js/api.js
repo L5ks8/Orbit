@@ -341,6 +341,24 @@ const API = {
     return await this.cachedRequest(`modactivity_${guildId}`, () => this.request(`/api/mod_activity/${guildId}`), force, 120000);
   },
 
+  async getUserWarns(guildId, userId) {
+    return await this.request(`/api/warns/${guildId}/${userId}`);
+  },
+
+  async deleteWarning(guildId, userId, warnId) {
+    return await this.request(`/api/action/${guildId}/delete_warning`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, warn_id: warnId })
+    });
+  },
+
+  async clearUserWarnings(guildId, userId) {
+    return await this.request(`/api/action/${guildId}/clear_warnings`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId })
+    });
+  },
+
   async getGuildStats(guildId, days = 7, channelsDays = null, force = false) {
     const chQuery = channelsDays !== null ? `&channels_days=${encodeURIComponent(channelsDays)}` : '';
     const key = `guild_stats_${guildId}_${days}_${channelsDays}`;

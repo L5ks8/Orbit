@@ -476,7 +476,14 @@ class ConfigMixin:
                     "enabled": automod_cfg.get("anti_zalgo", {}).get("enabled", False),
                     "action": automod_cfg.get("anti_zalgo", {}).get("action", "warn"),
                     "timeout_duration_min": automod_cfg.get("anti_zalgo", {}).get("timeout_duration_min", 5)
-                }
+                },
+                "log_channel": str(automod_cfg.get("log_channel", "")) if automod_cfg.get("log_channel") else "",
+                "dm_notifications": automod_cfg.get("dm_notifications", {
+                    "warn_dm": True,
+                    "timeout_dm": True,
+                    "kick_dm": True,
+                    "ban_dm": True
+                })
             },
             "verify": {
                 "enabled": verify_cfg.get("enabled", False),
@@ -934,6 +941,18 @@ class ConfigMixin:
                 save_submodule("mention_spam", {}, [{"name": "max_mentions", "type": int, "default": 4}])
                 save_submodule("anti_bot", {"action": "kick"}, [])
                 save_submodule("anti_zalgo", {"action": "warn"}, [])
+                save_submodule("ai_automod", {"action": "delete"}, [{"name": "min_words", "type": int, "default": 3}])
+                save_submodule("ai_image", {"action": "delete"}, [])
+
+                if "log_channel" in am:
+                    automod_cfg["log_channel"] = str(am["log_channel"]) if am["log_channel"] else ""
+                if "dm_notifications" in am and isinstance(am["dm_notifications"], dict):
+                    automod_cfg["dm_notifications"] = {
+                        "warn_dm": bool(am["dm_notifications"].get("warn_dm", True)),
+                        "timeout_dm": bool(am["dm_notifications"].get("timeout_dm", True)),
+                        "kick_dm": bool(am["dm_notifications"].get("kick_dm", True)),
+                        "ban_dm": bool(am["dm_notifications"].get("ban_dm", True))
+                    }
 
                 if "anti_alt" not in automod_cfg:
                     automod_cfg["anti_alt"] = {}
