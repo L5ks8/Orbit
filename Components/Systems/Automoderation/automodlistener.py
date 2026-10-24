@@ -145,12 +145,7 @@ class AutoModListener(commands.Cog):
             if escalation_str:
                 embed.add_field(name="Escalation", value=f"`{escalation_str}`", inline=False)
             try:
-                from Components.Commands._utils import embed_to_v2_card
-                card = embed_to_v2_card(embed)
-                if card:
-                    await message.channel.send(view=card, allowed_mentions=discord.AllowedMentions.none())
-                else:
-                    await message.channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                await message.channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
             except Exception:
                 pass
             try:

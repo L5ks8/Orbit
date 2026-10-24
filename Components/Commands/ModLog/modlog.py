@@ -5,7 +5,7 @@ from discord.ui import View, Button
 from Components.Commands.ModLog._modlog_storage import get_modlogs
 from Components.Commands.Warn._storage import load_warnings
 from Components.Commands.Ban._storage import load_ban_history
-from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, make_v2_card, ORBIT_COLOR, InteractionContext
+from Components.Commands._utils import MemberOrIDConverter, format_usage, make_embed, ORBIT_COLOR, InteractionContext
 from Components.emojis import Emojis
 
 class ModLogPaginationView(View):
@@ -142,22 +142,7 @@ class ModLogCommand(commands.Cog):
         if len(unique_logs) <= view.per_page:
             name = user_target.display_name if hasattr(user_target, 'display_name') else str(user_target)
             if not unique_logs:
-                card = make_v2_card(f"# Actions by: {name}\n\nNo moderation history found for this user.", color=ORBIT_COLOR)
-                if card:
-                    return await ctx.send(view=card)
-            else:
-                lines = []
-                for i, log in enumerate(unique_logs, start=1):
-                    action = log.get('action_type', 'Unknown Action')
-                    reason = log.get('reason', 'No reason provided')
-                    ts = log.get('timestamp', 0)
-                    date_str = f"<t:{int(ts)}:f>" if ts else "Unknown date"
-                    target_id = log.get('user_id', 'Unknown')
-                    lines.append(f"**{i}. {action}**\n**Date:** {date_str} | **Target:** <@{target_id}>\n**Reason:** {reason}")
-                body = f"# Actions by: {name}\n\n" + "\n\n".join(lines)
-                card = make_v2_card(body, color=ORBIT_COLOR, footer=f"Total records: {len(unique_logs)}")
-                if card:
-                    return await ctx.send(view=card)
+                return await ctx.send(embed=make_embed("No moderation history found for this user.", ORBIT_COLOR, title=f"Actions by: {name}"))
             await ctx.send(embed=embed)
         else:
             await ctx.send(embed=embed, view=view)

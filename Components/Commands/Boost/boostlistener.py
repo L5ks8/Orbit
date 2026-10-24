@@ -1,5 +1,5 @@
 import discord
-from Components.Commands._utils import ORBIT_COLOR, make_v2_card
+from Components.Commands._utils import ORBIT_COLOR
 from Components.emojis import Emojis
 from discord.ext import commands
 from Components.Commands.Boost._storage import load_boost_config
@@ -282,21 +282,14 @@ class BoostListener(commands.Cog):
             await channel.send(content=formatted if formatted else None, file=file, allowed_mentions=allowed)
         except Exception:
             try:
-                card = make_v2_card(
-                    f"# Server Boost!\n\n" + (formatted or f"**{member.name}** just boosted the server!"),
+                embed = discord.Embed(
+                    title="Server Boost!",
+                    description=formatted or f"**{member.name}** just boosted the server!",
                     color=discord.Color.from_rgb(255, 115, 250)
                 )
-                if card:
-                    await channel.send(view=card, allowed_mentions=allowed)
-                else:
-                    embed = discord.Embed(
-                        title="Server Boost!",
-                        description=formatted or f"**{member.name}** just boosted the server!",
-                        color=discord.Color.from_rgb(255, 115, 250)
-                    )
-                    if getattr(member, "display_avatar", None):
-                        embed.set_thumbnail(url=member.display_avatar.url)
-                    await channel.send(embed=embed, allowed_mentions=allowed)
+                if getattr(member, "display_avatar", None):
+                    embed.set_thumbnail(url=member.display_avatar.url)
+                await channel.send(embed=embed, allowed_mentions=allowed)
             except Exception:
                 if formatted:
                     try:
