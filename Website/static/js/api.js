@@ -289,26 +289,49 @@ const API = {
     return res;
   },
 
-  async saveConfig(guildId, payload) {
-    // Optimistically update cached config
-    const cached = this.getCache(`config_${guildId}`);
-    if (cached && typeof cached === 'object' && typeof payload === 'object') {
-      const target = cached.config || cached;
-      for (const [k, v] of Object.entries(payload)) {
-        if (v && typeof v === 'object' && !Array.isArray(v) && target[k] && typeof target[k] === 'object') {
-          target[k] = { ...target[k], ...v };
-        } else {
-          target[k] = v;
+    async withSaveToast(fn, savingMsg = 'Saving...', savedMsg = 'Saved', errorMsg = 'Error saving changes') {
+    if (window.Toast && typeof Toast.saving === 'function') {
+      Toast.saving(savingMsg);
+    }
+    try {
+      const res = await fn();
+      if (window.Toast && typeof Toast.saved === 'function') {
+        Toast.saved(savedMsg);
+      }
+      return res;
+    } catch (err) {
+      if (window.Toast && typeof Toast.errorSaving === 'function') {
+        Toast.errorSaving(err?.message || errorMsg);
+      }
+      throw err;
+    }
+  },
+
+  async saveConfig(guildId, payload, silent = false) {
+    const doSave = async () => {
+      // Optimistically update cached config
+      const cached = this.getCache(`config_${guildId}`);
+      if (cached && typeof cached === 'object' && typeof payload === 'object') {
+        const target = cached.config || cached;
+        for (const [k, v] of Object.entries(payload)) {
+          if (v && typeof v === 'object' && !Array.isArray(v) && target[k] && typeof target[k] === 'object') {
+            target[k] = { ...target[k], ...v };
+          } else {
+            target[k] = v;
+          }
         }
       }
-    }
-    const res = await this.request(`/api/config/${guildId}`, {
-      method: 'POST',
-      body: payload
-    });
-    // Background refresh
-    setTimeout(() => this.getConfig(guildId, true).catch(() => {}), 300);
-    return res;
+      const res = await this.request(`/api/config/${guildId}`, {
+        method: 'POST',
+        body: payload
+      });
+      // Background refresh
+      setTimeout(() => this.getConfig(guildId, true).catch(() => {}), 300);
+      return res;
+    };
+
+    if (silent) return await doSave();
+    return await this.withSaveToast(doSave);
   },
 
   async getSecurityConfig(guildId, force = false) {
@@ -324,23 +347,28 @@ const API = {
     return res;
   },
 
-  async saveSecurityConfig(guildId, payload) {
-    this.invalidateCache(`security_${guildId}`);
-    this.invalidateCache(`config_${guildId}`);
-    const res = await this.request(`/api/server/${guildId}/security`, {
-      method: 'POST',
-      body: { security: payload }
-    });
-    const cached = this.getCache(`config_${guildId}`);
-    if (cached && typeof cached === 'object') {
-      const target = cached.config || cached;
-      target.security = res?.security || payload;
-    }
-    setTimeout(() => {
-      this.getSecurityConfig(guildId, true).catch(() => {});
-      this.getConfig(guildId, true).catch(() => {});
-    }, 200);
-    return res;
+  async saveSecurityConfig(guildId, payload, silent = false) {
+    const doSave = async () => {
+      this.invalidateCache(`security_${guildId}`);
+      this.invalidateCache(`config_${guildId}`);
+      const res = await this.request(`/api/server/${guildId}/security`, {
+        method: 'POST',
+        body: { security: payload }
+      });
+      const cached = this.getCache(`config_${guildId}`);
+      if (cached && typeof cached === 'object') {
+        const target = cached.config || cached;
+        target.security = res?.security || payload;
+      }
+      setTimeout(() => {
+        this.getSecurityConfig(guildId, true).catch(() => {});
+        this.getConfig(guildId, true).catch(() => {});
+      }, 200);
+      return res;
+    };
+
+    if (silent) return await doSave();
+    return await this.withSaveToast(doSave);
   },
 
   async getChannels(guildId, force = false) {
@@ -381,13 +409,17 @@ const API = {
     return await this.cachedRequest(`botprofile_${guildId}`, () => this.request(`/api/botprofile/${guildId}`), force);
   },
 
-  async saveBotProfile(guildId, payload) {
-    const res = await this.request(`/api/botprofile/${guildId}`, {
-      method: 'POST',
-      body: payload
-    });
-    this.invalidateCache(`botprofile_${guildId}`);
-    return res;
+  async saveBotProfile(guildId, payload, silent = false) {
+    const doSave = async () => {
+      const res = await this.request(`/api/botprofile/${guildId}`, {
+        method: 'POST',
+        body: payload
+      });
+      this.invalidateCache(`botprofile_${guildId}`);
+      return res;
+    };
+    if (silent) return await doSave();
+    return await this.withSaveToast(doSave);
   },
 
   async uploadImage(file) {
@@ -596,13 +628,17 @@ const API = {
     return await this.cachedRequest(`appeals_cfg_${guildId}`, () => this.request(`/api/server/${guildId}/appeals/config`), force, 30000);
   },
 
-  async saveAppealsConfig(guildId, payload) {
-    const res = await this.request(`/api/server/${guildId}/appeals/config`, {
-      method: 'POST',
-      body: payload
-    });
-    this.invalidateCache(`appeals_cfg_${guildId}`);
-    return res;
+  async saveAppealsConfig(guildId, payload, silent = false) {
+    const doSave = async () => {
+      const res = await this.request(`/api/server/${guildId}/appeals/config`, {
+        method: 'POST',
+        body: payload
+      });
+      this.invalidateCache(`appeals_cfg_${guildId}`);
+      return res;
+    };
+    if (silent) return await doSave();
+    return await this.withSaveToast(doSave);
   },
 
   async resolveAppeal(guildId, payload) {
@@ -799,11 +835,15 @@ const API = {
     });
   },
 
-  async saveBackupConfig(guildId, config) {
-    return await this.request(`/api/server/${guildId}/backups/config`, {
-      method: 'POST',
-      body: config
-    });
+  async saveBackupConfig(guildId, config, silent = false) {
+    const doSave = async () => {
+      return await this.request(`/api/server/${guildId}/backups/config`, {
+        method: 'POST',
+        body: config
+      });
+    };
+    if (silent) return await doSave();
+    return await this.withSaveToast(doSave);
   }
 };
 

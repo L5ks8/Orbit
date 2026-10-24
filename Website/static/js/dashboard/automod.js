@@ -1287,6 +1287,7 @@
           }
           if (cb) cb();
           renderUI();
+          if (window.AutoSave) AutoSave.trigger(saveAutomodConfig, 400);
         };
       }
 
@@ -1314,6 +1315,7 @@
         btn.onclick = () => {
           state.filter_level = btn.getAttribute('data-level');
           renderUI();
+          if (window.AutoSave) AutoSave.trigger(saveAutomodConfig, 400);
         };
       });
 
@@ -1326,6 +1328,7 @@
           else if (group === 'spam_action') state.spam_action = act;
           else if (group === 'link_action') state.link_action = act;
           renderUI();
+          if (window.AutoSave) AutoSave.trigger(saveAutomodConfig, 400);
         };
       });
 
@@ -1791,6 +1794,7 @@
     }
 
     renderUI();
+    if (window.AutoSave) AutoSave.register(saveAutomodConfig);
   };
 
   // Provide renderAutomodModule backward compatibility

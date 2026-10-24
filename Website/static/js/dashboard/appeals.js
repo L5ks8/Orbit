@@ -617,6 +617,29 @@
     }
 
     function bindEvents() {
+      async function saveAppealsSettings() {
+        const payload = {
+          enabled: cfg.enabled,
+          custom_url: cfg.custom_url || 'orbit',
+          channel_id: cfg.channel_id,
+          mod_roles: cfg.mod_roles || [],
+          allowed_punishments: cfg.allowed_punishments || ['ban', 'timeout'],
+          mention_mods: cfg.mention_mods,
+          cooldown_days: cfg.cooldown_days,
+          multiple_submissions: cfg.multiple_submissions,
+          anonymous_mods: cfg.anonymous_mods,
+          invite_unbanned: cfg.invite_unbanned,
+          custom_questions: cfg.custom_questions
+        };
+
+        const res = await API.saveAppealsConfig(guildId, payload);
+        if (res && res.config) {
+          cfg = { ...cfg, ...res.config };
+        }
+        return res;
+      }
+      if (window.AutoSave) AutoSave.register(saveAppealsSettings);
+
       // Custom Dropdown Outside Click handler
       function closeAllCustomDropdowns() {
         container.querySelectorAll('.custom-channel-menu').forEach(menu => menu.classList.add('hidden'));
@@ -673,6 +696,7 @@
             cfg.channel_id = chId;
             closeAllCustomDropdowns();
             renderView();
+            if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
           };
         });
       });
@@ -682,7 +706,7 @@
       if (toggleMaster) {
         toggleMaster.onclick = () => {
           cfg.enabled = !cfg.enabled;
-          updateToggleDOM(toggleMaster, cfg.enabled);
+          updateToggleDOM(toggleMaster, cfg.enabled); if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
           const badge = container.querySelector('#badge-portal-status');
           if (badge) {
             badge.textContent = cfg.enabled ? 'ACTIVE' : 'DISABLED';
@@ -700,7 +724,7 @@
       if (toggleMention) {
         toggleMention.onclick = () => {
           cfg.mention_mods = !cfg.mention_mods;
-          updateToggleDOM(toggleMention, cfg.mention_mods);
+          updateToggleDOM(toggleMention, cfg.mention_mods); if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
       }
 
@@ -709,7 +733,7 @@
       if (toggleInvite) {
         toggleInvite.onclick = () => {
           cfg.invite_unbanned = !cfg.invite_unbanned;
-          updateToggleDOM(toggleInvite, cfg.invite_unbanned);
+          updateToggleDOM(toggleInvite, cfg.invite_unbanned); if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
       }
 
@@ -718,7 +742,7 @@
       if (toggleAnon) {
         toggleAnon.onclick = () => {
           cfg.anonymous_mods = !cfg.anonymous_mods;
-          updateToggleDOM(toggleAnon, cfg.anonymous_mods);
+          updateToggleDOM(toggleAnon, cfg.anonymous_mods); if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
       }
 
@@ -727,7 +751,7 @@
       if (toggleRepeat) {
         toggleRepeat.onclick = () => {
           cfg.multiple_submissions = !cfg.multiple_submissions;
-          updateToggleDOM(toggleRepeat, cfg.multiple_submissions);
+          updateToggleDOM(toggleRepeat, cfg.multiple_submissions); if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
       }
 
@@ -743,6 +767,7 @@
           }
           cfg.allowed_punishments = list;
           renderView();
+          if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
       });
 
@@ -768,7 +793,7 @@
       const inpUrl = container.querySelector('#inp-custom-url');
       if (inpUrl) {
         inpUrl.oninput = (e) => {
-          cfg.custom_url = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+          cfg.custom_url = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''); if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 700);
         };
       }
 
@@ -776,7 +801,7 @@
       const selCooldown = container.querySelector('#sel-cooldown-days');
       if (selCooldown) {
         selCooldown.onchange = (e) => {
-          cfg.cooldown_days = parseInt(e.target.value, 10) || 0;
+          cfg.cooldown_days = parseInt(e.target.value, 10) || 0; if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
       }
 
@@ -787,6 +812,7 @@
           const roleId = btn.dataset.roleId;
           cfg.mod_roles = (cfg.mod_roles || []).filter(r => String(r) !== String(roleId));
           renderView();
+          if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
       });
 
@@ -799,6 +825,7 @@
             if (!Array.isArray(cfg.mod_roles)) cfg.mod_roles = [];
             cfg.mod_roles.push(String(roleId));
             renderView();
+            if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
           }
         };
       }
@@ -845,6 +872,7 @@
           if (!Array.isArray(cfg.custom_questions)) cfg.custom_questions = [];
           cfg.custom_questions.push(newQ);
           renderView();
+          if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
       }
 
@@ -853,6 +881,7 @@
           const qId = btn.dataset.qId;
           cfg.custom_questions = (cfg.custom_questions || []).filter(q => q.id !== qId);
           renderView();
+          if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 350);
         };
       });
 
@@ -957,32 +986,14 @@
         btnSave.onclick = async () => {
           btnSave.disabled = true;
           btnSave.innerHTML = `<span class="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin"></span> Saving...`;
-
           try {
-            const payload = {
-              enabled: cfg.enabled,
-              custom_url: cfg.custom_url || 'orbit',
-              channel_id: cfg.channel_id,
-              mod_roles: cfg.mod_roles || [],
-              allowed_punishments: cfg.allowed_punishments || ['ban', 'timeout'],
-              mention_mods: cfg.mention_mods,
-              cooldown_days: cfg.cooldown_days,
-              multiple_submissions: cfg.multiple_submissions,
-              anonymous_mods: cfg.anonymous_mods,
-              invite_unbanned: cfg.invite_unbanned,
-              custom_questions: cfg.custom_questions
-            };
-
-            const res = await API.saveAppealsConfig(guildId, payload);
-            if (res && res.config) {
-              cfg = { ...cfg, ...res.config };
-            }
-            showNotify('Ban Appeals settings saved successfully!');
+            await saveAppealsSettings();
             renderView();
           } catch (err) {
             console.error('Save failed:', err);
-            showNotify('Failed to save settings: ' + err.message, 'error');
             renderView();
+          } finally {
+            btnSave.disabled = false;
           }
         };
       }
