@@ -527,7 +527,13 @@ Pages._switchDashboardPane = function(tabContainer, tab, guildId) {
   if (targetPane) {
     // Already in memory! 0ms instant display without any loading screen
     targetPane.style.display = 'block';
-    if (typeof window.__refreshWelcomeAutoResizes === 'function') {
+    if (typeof window.__refreshWelcomeTab === 'function') {
+      window.__refreshWelcomeTab();
+      requestAnimationFrame(window.__refreshWelcomeTab);
+      setTimeout(window.__refreshWelcomeTab, 50);
+      setTimeout(window.__refreshWelcomeTab, 150);
+      setTimeout(window.__refreshWelcomeTab, 350);
+    } else if (typeof window.__refreshWelcomeAutoResizes === 'function') {
       window.__refreshWelcomeAutoResizes();
       requestAnimationFrame(window.__refreshWelcomeAutoResizes);
     }

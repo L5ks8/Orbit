@@ -14,6 +14,9 @@ DashboardTabs.Welcome = async function (container, guildId) {
       .replace(/"/g, '&quot;');
   }
 
+  const $ = (id) => (container && container.querySelector('#' + id)) || document.getElementById(id);
+  const $$ = (sel) => container ? container.querySelectorAll(sel) : document.querySelectorAll(sel);
+
   const state = {
     guildName: 'My Server',
     memberCount: 128,
@@ -156,7 +159,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
   function scheduleSave() {
     if (isInitialLoading) return;
-    const statusEl = document.getElementById('welcome-save-status');
+    const statusEl = $('welcome-save-status');
     if (statusEl) {
       statusEl.textContent = 'Saving...';
       statusEl.className = 'text-xs text-neutral-400 transition-colors';
@@ -782,13 +785,38 @@ DashboardTabs.Welcome = async function (container, guildId) {
     bindEvents();
 
     refreshAllAutoResizes();
-    requestAnimationFrame(refreshAllAutoResizes);
-    setTimeout(refreshAllAutoResizes, 50);
-    setTimeout(refreshAllAutoResizes, 250);
+    requestAnimationFrame(() => {
+      refreshAllAutoResizes();
+      updateWelcomePreview();
+      updateGoodbyePreview();
+    });
+    setTimeout(() => {
+      refreshAllAutoResizes();
+      updateWelcomePreview();
+      updateGoodbyePreview();
+    }, 50);
+    setTimeout(() => {
+      refreshAllAutoResizes();
+      updateWelcomePreview();
+      updateGoodbyePreview();
+    }, 150);
+    setTimeout(() => {
+      refreshAllAutoResizes();
+      updateWelcomePreview();
+      updateGoodbyePreview();
+    }, 350);
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        refreshAllAutoResizes();
+        updateWelcomePreview();
+        updateGoodbyePreview();
+      });
+    }
   }
 
   function updateWelcomePreview() {
-    const bodyEl = document.getElementById('w-preview-body');
+    const bodyEl = $('w-preview-body');
     if (!bodyEl) return;
 
     try {
@@ -857,7 +885,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
   }
 
   function updateGoodbyePreview() {
-    const bodyEl = document.getElementById('g-preview-body');
+    const bodyEl = $('g-preview-body');
     if (!bodyEl) return;
 
     try {
@@ -922,7 +950,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
   }
 
   function setSwitchVisual(btnId, checked) {
-    const btn = document.getElementById(btnId);
+    const btn = $(btnId);
     if (!btn) return;
     btn.setAttribute('aria-checked', checked ? 'true' : 'false');
     btn.classList.toggle('bg-white', checked);
@@ -947,8 +975,10 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
   function autoResizeOverlayTextarea(input, overlay, minHeight = 42) {
     if (!input) return;
-    input.style.height = '0px';
-    const targetH = Math.max(minHeight, input.scrollHeight);
+    input.style.height = 'auto';
+    const scrollH = input.scrollHeight;
+    const overlayH = overlay ? overlay.scrollHeight : 0;
+    const targetH = Math.max(minHeight, scrollH, overlayH);
     input.style.height = `${targetH}px`;
     if (overlay) {
       overlay.style.height = `${targetH}px`;
@@ -957,8 +987,8 @@ DashboardTabs.Welcome = async function (container, guildId) {
     }
     const parent = input.parentElement;
     if (parent) {
-      parent.style.minHeight = `${targetH}px`;
-      parent.style.height = `${targetH}px`;
+      parent.style.minHeight = `${minHeight}px`;
+      parent.style.height = 'auto';
     }
   }
 
@@ -975,20 +1005,29 @@ DashboardTabs.Welcome = async function (container, guildId) {
       { id: 'g-footer-input', ov: 'g-footer-overlay', min: 42 },
       { id: 'g-dm-input', ov: 'g-dm-overlay', min: 84 }
     ].forEach(({ id, ov, min }) => {
-      const input = document.getElementById(id);
-      const overlay = document.getElementById(ov);
+      const input = $(id);
+      const overlay = $(ov);
       if (input && overlay) {
         autoResizeOverlayTextarea(input, overlay, min);
       }
     });
   }
   window.__refreshWelcomeAutoResizes = refreshAllAutoResizes;
+  window.__refreshWelcomePreviews = () => {
+    updateWelcomePreview();
+    updateGoodbyePreview();
+  };
+  window.__refreshWelcomeTab = () => {
+    updateWelcomePreview();
+    updateGoodbyePreview();
+    refreshAllAutoResizes();
+  };
 
   window.addEventListener('resize', refreshAllAutoResizes);
 
   function bindOverlayTextarea(inputId, overlayId, placeholder, onUpdate, minHeight = 42) {
-    const input = document.getElementById(inputId);
-    const overlay = document.getElementById(overlayId);
+    const input = $(inputId);
+    const overlay = $(overlayId);
     if (!input || !overlay) return;
 
     const sync = () => {
@@ -1013,10 +1052,10 @@ DashboardTabs.Welcome = async function (container, guildId) {
   }
 
   function bindImageUpload(dropzoneId, fileInputId, urlBtnId, removeBtnId, onSetUrl) {
-    const dropzone = document.getElementById(dropzoneId);
-    const fileInput = document.getElementById(fileInputId);
-    const urlBtn = document.getElementById(urlBtnId);
-    const removeBtn = document.getElementById(removeBtnId);
+    const dropzone = $(dropzoneId);
+    const fileInput = $(fileInputId);
+    const urlBtn = $(urlBtnId);
+    const removeBtn = $(removeBtnId);
 
     if (removeBtn) {
       removeBtn.onclick = (e) => {
@@ -1093,7 +1132,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
   function bindEvents() {
     function updateWelcomeCharCount() {
-      const cnt = document.getElementById('w-char-count');
+      const cnt = $('w-char-count');
       if (!cnt) return;
       const total = (state.welcome.embed_author || '').length +
         (state.welcome.embed_title || '').length +
@@ -1105,7 +1144,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
     }
 
     function updateGoodbyeCharCount() {
-      const cnt = document.getElementById('g-char-count');
+      const cnt = $('g-char-count');
       if (!cnt) return;
       const total = (state.goodbye.embed_author || '').length +
         (state.goodbye.embed_title || '').length +
@@ -1117,14 +1156,14 @@ DashboardTabs.Welcome = async function (container, guildId) {
     }
 
     // Track last focused input for variable chip insertion
-    const wAuthor = document.getElementById('w-author-input');
-    const wTitle = document.getElementById('w-title-input');
-    const wDesc = document.getElementById('w-desc-input');
-    const wFooter = document.getElementById('w-footer-input');
-    const gAuthor = document.getElementById('g-author-input');
-    const gTitle = document.getElementById('g-title-input');
-    const gDesc = document.getElementById('g-desc-input');
-    const gFooter = document.getElementById('g-footer-input');
+    const wAuthor = $('w-author-input');
+    const wTitle = $('w-title-input');
+    const wDesc = $('w-desc-input');
+    const wFooter = $('w-footer-input');
+    const gAuthor = $('g-author-input');
+    const gTitle = $('g-title-input');
+    const gDesc = $('g-desc-input');
+    const gFooter = $('g-footer-input');
 
     if (wAuthor) wAuthor.addEventListener('focus', () => { lastFocusedWelcomeInput = 'w-author'; });
     if (wTitle) wTitle.addEventListener('focus', () => { lastFocusedWelcomeInput = 'w-title'; });
@@ -1167,7 +1206,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
     bindOverlayTextarea('w-dm-input', 'w-dm-overlay', '👋 Welcome to {server} (default)', (val) => {
       state.welcome.dm_message = val;
-      const cnt = document.getElementById('w-dm-char-count');
+      const cnt = $('w-dm-char-count');
       if (cnt) cnt.textContent = `${val.length}/2000`;
       scheduleSave();
     }, 104);
@@ -1202,103 +1241,103 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
     bindOverlayTextarea('g-dm-input', 'g-dm-overlay', '👋 You left {server} (default)', (val) => {
       state.goodbye.dm_message = val;
-      const cnt = document.getElementById('g-dm-char-count');
+      const cnt = $('g-dm-char-count');
       if (cnt) cnt.textContent = `${val.length}/2000`;
       scheduleSave();
     }, 84);
 
     // Variable chips
-    document.querySelectorAll('.w-var-chip').forEach(btn => {
+    $$('.w-var-chip').forEach(btn => {
       btn.onclick = () => {
         const token = btn.getAttribute('data-var');
-        let target = document.getElementById('w-desc-input');
+        let target = $('w-desc-input');
         if (state.welcome.embed) {
-          if (lastFocusedWelcomeInput === 'w-author') target = document.getElementById('w-author-input');
-          else if (lastFocusedWelcomeInput === 'w-title') target = document.getElementById('w-title-input');
-          else if (lastFocusedWelcomeInput === 'w-footer') target = document.getElementById('w-footer-input');
+          if (lastFocusedWelcomeInput === 'w-author') target = $('w-author-input');
+          else if (lastFocusedWelcomeInput === 'w-title') target = $('w-title-input');
+          else if (lastFocusedWelcomeInput === 'w-footer') target = $('w-footer-input');
         }
         insertAtCursor(target, token);
       };
     });
 
-    document.querySelectorAll('.w-dm-chip').forEach(btn => {
+    $$('.w-dm-chip').forEach(btn => {
       btn.onclick = () => {
-        insertAtCursor(document.getElementById('w-dm-input'), btn.getAttribute('data-var'));
+        insertAtCursor($('w-dm-input'), btn.getAttribute('data-var'));
       };
     });
 
-    document.querySelectorAll('.g-var-chip').forEach(btn => {
+    $$('.g-var-chip').forEach(btn => {
       btn.onclick = () => {
         const token = btn.getAttribute('data-var');
-        let target = document.getElementById('g-desc-input');
+        let target = $('g-desc-input');
         if (state.goodbye.embed) {
-          if (lastFocusedGoodbyeInput === 'g-author') target = document.getElementById('g-author-input');
-          else if (lastFocusedGoodbyeInput === 'g-title') target = document.getElementById('g-title-input');
-          else if (lastFocusedGoodbyeInput === 'g-footer') target = document.getElementById('g-footer-input');
+          if (lastFocusedGoodbyeInput === 'g-author') target = $('g-author-input');
+          else if (lastFocusedGoodbyeInput === 'g-title') target = $('g-title-input');
+          else if (lastFocusedGoodbyeInput === 'g-footer') target = $('g-footer-input');
         }
         insertAtCursor(target, token);
       };
     });
 
-    document.querySelectorAll('.g-dm-chip').forEach(btn => {
+    $$('.g-dm-chip').forEach(btn => {
       btn.onclick = () => {
-        insertAtCursor(document.getElementById('g-dm-input'), btn.getAttribute('data-var'));
+        insertAtCursor($('g-dm-input'), btn.getAttribute('data-var'));
       };
     });
 
     // Channel dropdowns
-    const wChBtn = document.getElementById('w-channel-btn');
-    const wChMenu = document.getElementById('w-channel-menu');
+    const wChBtn = $('w-channel-btn');
+    const wChMenu = $('w-channel-menu');
     if (wChBtn && wChMenu) {
       wChBtn.onclick = (e) => {
         e.stopPropagation();
         wChMenu.classList.toggle('hidden');
-        document.getElementById('g-channel-menu')?.classList.add('hidden');
+        $('g-channel-menu')?.classList.add('hidden');
         if (!wChMenu.classList.contains('hidden') && window.OrbitDropdownManager) {
           window.OrbitDropdownManager.scheduleSync();
         }
       };
-      document.querySelectorAll('.w-ch-opt').forEach(opt => {
+      $$('.w-ch-opt').forEach(opt => {
         opt.onclick = () => {
           state.welcome.channel_id = opt.getAttribute('data-ch') || '';
           wChMenu.classList.add('hidden');
-          const lbl = document.getElementById('w-channel-label');
+          const lbl = $('w-channel-label');
           if (lbl) {
             lbl.textContent = getChannelLabel(state.welcome.channel_id);
             lbl.className = `min-w-0 truncate text-sm ${state.welcome.channel_id ? 'text-white font-medium' : 'text-neutral-500'}`;
           }
-          const prevCh = document.getElementById('w-preview-channel-name');
+          const prevCh = $('w-preview-channel-name');
           if (prevCh) prevCh.textContent = getChannelPureName(state.welcome.channel_id, 'welcome');
-          const testBtn = document.getElementById('w-send-test-btn');
+          const testBtn = $('w-send-test-btn');
           if (testBtn) testBtn.disabled = !state.welcome.channel_id;
           scheduleSave();
         };
       });
     }
 
-    const gChBtn = document.getElementById('g-channel-btn');
-    const gChMenu = document.getElementById('g-channel-menu');
+    const gChBtn = $('g-channel-btn');
+    const gChMenu = $('g-channel-menu');
     if (gChBtn && gChMenu) {
       gChBtn.onclick = (e) => {
         e.stopPropagation();
         gChMenu.classList.toggle('hidden');
-        document.getElementById('w-channel-menu')?.classList.add('hidden');
+        $('w-channel-menu')?.classList.add('hidden');
         if (!gChMenu.classList.contains('hidden') && window.OrbitDropdownManager) {
           window.OrbitDropdownManager.scheduleSync();
         }
       };
-      document.querySelectorAll('.g-ch-opt').forEach(opt => {
+      $$('.g-ch-opt').forEach(opt => {
         opt.onclick = () => {
           state.goodbye.channel_id = opt.getAttribute('data-ch') || '';
           gChMenu.classList.add('hidden');
-          const lbl = document.getElementById('g-channel-label');
+          const lbl = $('g-channel-label');
           if (lbl) {
             lbl.textContent = getChannelLabel(state.goodbye.channel_id);
             lbl.className = `min-w-0 truncate text-sm ${state.goodbye.channel_id ? 'text-white font-medium' : 'text-neutral-500'}`;
           }
-          const prevCh = document.getElementById('g-preview-channel-name');
+          const prevCh = $('g-preview-channel-name');
           if (prevCh) prevCh.textContent = getChannelPureName(state.goodbye.channel_id, 'goodbye');
-          const testBtn = document.getElementById('g-send-test-btn');
+          const testBtn = $('g-send-test-btn');
           if (testBtn) testBtn.disabled = !state.goodbye.channel_id;
           scheduleSave();
         };
@@ -1307,7 +1346,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
     // Switches
     const bindSwitch = (id, getter, setter) => {
-      const el = document.getElementById(id);
+      const el = $(id);
       if (!el) return;
       el.onclick = () => {
         const next = !getter();
@@ -1319,7 +1358,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
     bindSwitch('w-enabled-switch', () => state.welcome.enabled, (v) => {
       state.welcome.enabled = v;
-      const wrap = document.getElementById('w-preview-bot-wrap');
+      const wrap = $('w-preview-bot-wrap');
       if (wrap) {
         wrap.classList.toggle('opacity-100', v);
         wrap.classList.toggle('opacity-40', !v);
@@ -1328,17 +1367,17 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
     bindSwitch('w-embed-switch', () => state.welcome.embed, (v) => {
       state.welcome.embed = v;
-      const authorRow = document.getElementById('w-author-row');
+      const authorRow = $('w-author-row');
       if (authorRow) {
         authorRow.classList.toggle('flex', v);
         authorRow.classList.toggle('hidden', !v);
       }
-      const titleRow = document.getElementById('w-title-row');
+      const titleRow = $('w-title-row');
       if (titleRow) {
         titleRow.classList.toggle('block', v);
         titleRow.classList.toggle('hidden', !v);
       }
-      const footerRow = document.getElementById('w-footer-row');
+      const footerRow = $('w-footer-row');
       if (footerRow) {
         footerRow.classList.toggle('block', v);
         footerRow.classList.toggle('hidden', !v);
@@ -1354,7 +1393,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
     bindSwitch('w-invitevars-switch', () => state.welcome.invite_vars, (v) => {
       state.welcome.invite_vars = v;
-      const extra = document.getElementById('w-extra-invite-chips');
+      const extra = $('w-extra-invite-chips');
       if (extra) {
         extra.classList.toggle('inline-flex', v);
         extra.classList.toggle('hidden', !v);
@@ -1367,7 +1406,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
     bindSwitch('g-enabled-switch', () => state.goodbye.enabled, (v) => {
       state.goodbye.enabled = v;
-      const wrap = document.getElementById('g-preview-bot-wrap');
+      const wrap = $('g-preview-bot-wrap');
       if (wrap) {
         wrap.classList.toggle('opacity-100', v);
         wrap.classList.toggle('opacity-40', !v);
@@ -1376,17 +1415,17 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
     bindSwitch('g-embed-switch', () => state.goodbye.embed, (v) => {
       state.goodbye.embed = v;
-      const authorRow = document.getElementById('g-author-row');
+      const authorRow = $('g-author-row');
       if (authorRow) {
         authorRow.classList.toggle('flex', v);
         authorRow.classList.toggle('hidden', !v);
       }
-      const titleRow = document.getElementById('g-title-row');
+      const titleRow = $('g-title-row');
       if (titleRow) {
         titleRow.classList.toggle('block', v);
         titleRow.classList.toggle('hidden', !v);
       }
-      const footerRow = document.getElementById('g-footer-row');
+      const footerRow = $('g-footer-row');
       if (footerRow) {
         footerRow.classList.toggle('block', v);
         footerRow.classList.toggle('hidden', !v);
@@ -1401,10 +1440,10 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
     // Color pickers
     const setupColorPicker = (btnId, popId, presetClass, nativeId, hexId, onColor) => {
-      const btn = document.getElementById(btnId);
-      const pop = document.getElementById(popId);
-      const native = document.getElementById(nativeId);
-      const hex = document.getElementById(hexId);
+      const btn = $(btnId);
+      const pop = $(popId);
+      const native = $(nativeId);
+      const hex = $(hexId);
       if (!btn || !pop) return;
 
       btn.onclick = (e) => {
@@ -1421,7 +1460,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
         scheduleSave();
       };
 
-      document.querySelectorAll(`.${presetClass}`).forEach(p => {
+      $$(`.${presetClass}`).forEach(p => {
         p.onclick = () => applyColor(p.getAttribute('data-color'));
       });
       if (native) {
@@ -1460,10 +1499,10 @@ DashboardTabs.Welcome = async function (container, guildId) {
     });
 
     // Emoji Popover
-    const emojiPop = document.getElementById('welcome-emoji-popover');
+    const emojiPop = $('welcome-emoji-popover');
     let activeEmojiTargetId = null;
 
-    document.querySelectorAll('.emoji-trigger-btn').forEach(btn => {
+    $$('.emoji-trigger-btn').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
         const targetId = btn.getAttribute('data-emoji-target');
@@ -1480,12 +1519,12 @@ DashboardTabs.Welcome = async function (container, guildId) {
       };
     });
 
-    document.querySelectorAll('.welcome-emoji-item').forEach(item => {
+    $$('.welcome-emoji-item').forEach(item => {
       item.onclick = (e) => {
         e.stopPropagation();
         const em = item.getAttribute('data-emoji');
         if (activeEmojiTargetId && em) {
-          insertAtCursor(document.getElementById(activeEmojiTargetId), em);
+          insertAtCursor($(activeEmojiTargetId), em);
         }
         emojiPop?.classList.add('hidden');
       };
@@ -1493,15 +1532,15 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
     // Close popovers on outside click
     document.addEventListener('click', () => {
-      document.getElementById('w-channel-menu')?.classList.add('hidden');
-      document.getElementById('g-channel-menu')?.classList.add('hidden');
-      document.getElementById('w-color-popover')?.classList.add('hidden');
-      document.getElementById('g-color-popover')?.classList.add('hidden');
-      document.getElementById('welcome-emoji-popover')?.classList.add('hidden');
+      $('w-channel-menu')?.classList.add('hidden');
+      $('g-channel-menu')?.classList.add('hidden');
+      $('w-color-popover')?.classList.add('hidden');
+      $('g-color-popover')?.classList.add('hidden');
+      $('welcome-emoji-popover')?.classList.add('hidden');
     });
 
     // Send Test Welcome
-    const wTestBtn = document.getElementById('w-send-test-btn');
+    const wTestBtn = $('w-send-test-btn');
     if (wTestBtn) {
       wTestBtn.onclick = async () => {
         if (!state.welcome.channel_id) return;
@@ -1525,7 +1564,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
     }
 
     // Send Test Goodbye
-    const gTestBtn = document.getElementById('g-send-test-btn');
+    const gTestBtn = $('g-send-test-btn');
     if (gTestBtn) {
       gTestBtn.onclick = async () => {
         if (!state.goodbye.channel_id) return;
@@ -1549,7 +1588,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
     }
 
     // Test DM (Welcome)
-    const wTestDmBtn = document.getElementById('w-test-dm-btn');
+    const wTestDmBtn = $('w-test-dm-btn');
     if (wTestDmBtn) {
       wTestDmBtn.onclick = async () => {
         const orig = wTestDmBtn.innerHTML;
@@ -1572,7 +1611,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
     }
 
     // Test DM (Goodbye)
-    const gTestDmBtn = document.getElementById('g-test-dm-btn');
+    const gTestDmBtn = $('g-test-dm-btn');
     if (gTestDmBtn) {
       gTestDmBtn.onclick = async () => {
         const orig = gTestDmBtn.innerHTML;
@@ -1690,6 +1729,21 @@ DashboardTabs.Welcome = async function (container, guildId) {
   } finally {
     isInitialLoading = false;
     renderPage();
+
+    if (typeof IntersectionObserver !== 'undefined' && container) {
+      const io = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            updateWelcomePreview();
+            updateGoodbyePreview();
+            refreshAllAutoResizes();
+            setTimeout(refreshAllAutoResizes, 50);
+            setTimeout(refreshAllAutoResizes, 150);
+          }
+        }
+      }, { threshold: 0.01 });
+      io.observe(container);
+    }
   }
 };
 

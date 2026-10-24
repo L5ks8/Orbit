@@ -294,14 +294,14 @@ const DiscordMarkdown = {
 
   getChannelName(id, options = {}) {
     const list = options.channels || this._channels || window.__orbitChannels || [];
-    const found = list.find(c => String(c.id) === String(id));
+    const found = list.find(c => c && String(c.id) === String(id));
     if (found && found.name) return found.name.replace(/^#+/, '');
     return 'channel';
   },
 
   getRole(id, options = {}) {
     const list = options.roles || this._roles || window.__orbitRoles || [];
-    const found = list.find(r => String(r.id) === String(id));
+    const found = list.find(r => r && String(r.id) === String(id));
     if (found) {
       return {
         name: found.name || 'role',
@@ -398,7 +398,7 @@ const DiscordMarkdown = {
     // 6. User mentions <@id> or <@!id>
     raw = raw.replace(/<@!?(\d+)>/g, (match, id) => {
       const list = options.members || window.__orbitMembers || [];
-      const found = list.find(m => String(m.id) === String(id));
+      const found = list.find(m => m && String(m.id) === String(id));
       const uName = found ? (found.displayName || found.name) : 'User';
       const html = `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#5865F2]/15 text-[#c9cdfb] font-medium text-[0.88em] select-none align-baseline cursor-pointer hover:bg-[#5865F2]/25 transition-colors">@${this.escapeHtml(uName)}</span>`;
       return saveToken(html);
@@ -528,7 +528,7 @@ const DiscordMarkdown = {
     const guildEmojis = options.emojis || this._emojis || window.__orbitEmojis || [];
     raw = raw.replace(/:([a-zA-Z0-9_~+-]+):/g, (match, name) => {
       const lower = name.toLowerCase();
-      const customFound = guildEmojis.find(e => (e.name || '').toLowerCase() === lower);
+      const customFound = guildEmojis.find(e => e && (e.name || '').toLowerCase() === lower);
       if (customFound && customFound.id) {
         const isAnim = Boolean(customFound.animated);
         const ext = isAnim ? 'gif' : 'webp';
