@@ -37,12 +37,20 @@ DashboardTabs.Security = async function (container, guildId) {
   let allRoles = [];
 
   try {
-    const [cfgRes, chRes, rRes] = await Promise.all([
-      API.getConfig(guildId),
+    const [cfgRes, chRes, rRes, secDirectRes] = await Promise.all([
+      API.getConfig(guildId).catch(() => ({})),
       API.getChannels(guildId).catch(() => []),
-      API.getRoles(guildId).catch(() => [])
+      API.getRoles(guildId).catch(() => []),
+      (typeof API.getSecurityConfig === 'function' ? API.getSecurityConfig(guildId).catch(() => null) : Promise.resolve(null))
     ]);
-    rawConfig = cfgRes || {};
+
+    const configObj = (cfgRes && cfgRes.config) ? cfgRes.config : (cfgRes || {});
+    rawConfig = configObj;
+    if (secDirectRes && typeof secDirectRes === 'object') {
+      rawConfig.security = secDirectRes;
+    } else if (!rawConfig.security && cfgRes && cfgRes.security) {
+      rawConfig.security = cfgRes.security;
+    }
 
     try {
       if (typeof API.getGuild === 'function') {
@@ -153,67 +161,100 @@ DashboardTabs.Security = async function (container, guildId) {
     return `${days}d ago`;
   }
 
+  // Save security settings immediately or debounced
+  let isSaving = false;
+  async function performSave(showToast = true) {
+    if (isSaving) return;
+    isSaving = true;
+    const saveBtn = container.querySelector('#btn-save-security');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = `
+        <svg class="animate-spin w-3.5 h-3.5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Saving...</span>
+      `;
+    }
+
+    const payload = {
+      anti_nuke: {
+        enabled: Boolean(an.enabled),
+        level: an.level || 'recommended',
+        test_mode: Boolean(an.test_mode),
+        privilege_escalation: Boolean(an.privilege_escalation),
+        webhook_firewall: Boolean(an.webhook_firewall),
+        server_identity: Boolean(an.server_identity),
+        block_unknown_bot: Boolean(an.block_unknown_bot),
+        exempt_users: an.exempt_users || '',
+        exempt_roles: Array.isArray(an.exempt_roles) ? an.exempt_roles : [],
+        permissions_granted_watch: Array.isArray(an.permissions_granted_watch) ? an.permissions_granted_watch : [],
+        permissions_removed_watch: Array.isArray(an.permissions_removed_watch) ? an.permissions_removed_watch : [],
+        mass_emoji_threshold: parseInt(an.mass_emoji_threshold || 3, 10)
+      },
+      anti_raid: {
+        enabled: Boolean(ar.enabled),
+        level: ar.level || 'balanced',
+        join_threshold: parseInt(ar.join_threshold || 10, 10),
+        join_time_window: `${parseInt(String(ar.join_time_window || 30).replace(/\\D/g, '') || 30, 10)}s`,
+        young_account_cutoff: `${parseInt(String(ar.young_account_cutoff || 7).replace(/\\D/g, '') || 7, 10)}d`,
+        action: ar.action || 'lockdown',
+        auto_unlock_after: `${parseInt(String(ar.auto_unlock_after || 60).replace(/\\D/g, '') || 60, 10)}m`,
+        immune_users: ar.immune_users || '',
+        immune_roles: Array.isArray(ar.immune_roles) ? ar.immune_roles : [],
+        verification_challenge: Boolean(ar.verification_challenge),
+        alert_channel: ar.alert_channel || null,
+        suspicious_account: Boolean(ar.suspicious_account),
+        suspicious_account_age: `${parseInt(String(ar.suspicious_account_age || 14).replace(/\\D/g, '') || 14, 10)}d`,
+        no_profile_picture: Boolean(ar.no_profile_picture),
+        default_username: Boolean(ar.default_username),
+        suspicious_action: ar.suspicious_action || 'flag',
+        suspicious_alert_channel: ar.suspicious_alert_channel || null
+      },
+      webhook_protection: {
+        enabled: Boolean(wp.enabled),
+        block_everyone: Boolean(wp.block_everyone),
+        block_invite_links: Boolean(wp.block_invite_links),
+        rate_limit: parseInt(wp.rate_limit || 5, 10),
+        action: wp.action || 'delete',
+        trusted_webhooks: wp.trusted_webhooks || ''
+      },
+      threat_logs: Array.isArray(sec.threat_logs) ? sec.threat_logs : []
+    };
+
+    try {
+      if (typeof API.saveSecurityConfig === 'function') {
+        await API.saveSecurityConfig(guildId, payload);
+      } else {
+        await API.saveConfig(guildId, { security: payload });
+      }
+      if (showToast && window.Toast) {
+        Toast.success('Security settings saved!');
+      }
+    } catch (err) {
+      console.error('Failed to save security settings:', err);
+      if (window.Toast) {
+        Toast.error(err.message || 'Error saving security settings');
+      }
+    } finally {
+      isSaving = false;
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span>Save Changes</span>
+        `;
+      }
+    }
+  }
+
   // Debounced auto-save
   function scheduleSave() {
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(async () => {
-      try {
-        await API.saveConfig(guildId, {
-          security: {
-            anti_nuke: {
-              enabled: an.enabled,
-              level: an.level,
-              test_mode: an.test_mode,
-              privilege_escalation: an.privilege_escalation,
-              webhook_firewall: an.webhook_firewall,
-              server_identity: an.server_identity,
-              block_unknown_bot: an.block_unknown_bot,
-              exempt_users: an.exempt_users,
-              exempt_roles: an.exempt_roles,
-              permissions_granted_watch: an.permissions_granted_watch,
-              permissions_removed_watch: an.permissions_removed_watch,
-              mass_emoji_threshold: an.mass_emoji_threshold
-            },
-            anti_raid: {
-              enabled: ar.enabled,
-              level: ar.level,
-              join_threshold: ar.join_threshold,
-              join_time_window: `${ar.join_time_window}s`,
-              young_account_cutoff: `${ar.young_account_cutoff}d`,
-              action: ar.action,
-              auto_unlock_after: `${ar.auto_unlock_after}m`,
-              immune_users: ar.immune_users,
-              immune_roles: ar.immune_roles,
-              verification_challenge: ar.verification_challenge,
-              alert_channel: ar.alert_channel || null,
-              suspicious_account: ar.suspicious_account,
-              suspicious_account_age: `${ar.suspicious_account_age}d`,
-              no_profile_picture: ar.no_profile_picture,
-              default_username: ar.default_username,
-              suspicious_action: ar.suspicious_action,
-              suspicious_alert_channel: ar.suspicious_alert_channel || null
-            },
-            webhook_protection: {
-              enabled: wp.enabled,
-              block_everyone: wp.block_everyone,
-              block_invite_links: wp.block_invite_links,
-              rate_limit: wp.rate_limit,
-              action: wp.action,
-              trusted_webhooks: wp.trusted_webhooks
-            },
-            threat_logs: sec.threat_logs
-          }
-        });
-        if (window.Notifications) {
-          Notifications.show('Security settings saved', 'success');
-        }
-      } catch (err) {
-        console.error('Failed to save security settings:', err);
-        if (window.Notifications) {
-          Notifications.show(err.message || 'Error saving security settings', 'error');
-        }
-      }
-    }, 400);
+    saveTimeout = setTimeout(() => {
+      performSave(true);
+    }, 600);
   }
 
   // Custom Toggle Button Generator
@@ -473,6 +514,12 @@ DashboardTabs.Security = async function (container, guildId) {
                 ${SVGS.shieldCheck}
               </span>
               <h1 class="text-base font-medium text-white truncate">Security</h1>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <button id="btn-save-security" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-neutral-200 text-black font-bold text-xs transition-colors cursor-pointer shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span>Save Changes</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1006,6 +1053,15 @@ DashboardTabs.Security = async function (container, guildId) {
   }
 
   function bindEvents() {
+    // 0. Manual Save Changes Button
+    const saveBtn = container.querySelector('#btn-save-security');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        performSave(true);
+      });
+    }
+
     // 1. Master Toggles
     const anMaster = document.getElementById('an-toggle-master');
     if (anMaster) {

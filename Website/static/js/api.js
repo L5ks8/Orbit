@@ -297,6 +297,38 @@ const API = {
     return res;
   },
 
+  async getSecurityConfig(guildId, force = false) {
+    const res = await this.cachedRequest(`security_${guildId}`, async () => {
+      try {
+        const data = await this.request(`/api/server/${guildId}/security`);
+        return data?.security || null;
+      } catch (e) {
+        const full = await this.getConfig(guildId, force);
+        return full?.config?.security || full?.security || null;
+      }
+    }, force);
+    return res;
+  },
+
+  async saveSecurityConfig(guildId, payload) {
+    this.invalidateCache(`security_${guildId}`);
+    this.invalidateCache(`config_${guildId}`);
+    const res = await this.request(`/api/server/${guildId}/security`, {
+      method: 'POST',
+      body: { security: payload }
+    });
+    const cached = this.getCache(`config_${guildId}`);
+    if (cached && typeof cached === 'object') {
+      const target = cached.config || cached;
+      target.security = res?.security || payload;
+    }
+    setTimeout(() => {
+      this.getSecurityConfig(guildId, true).catch(() => {});
+      this.getConfig(guildId, true).catch(() => {});
+    }, 200);
+    return res;
+  },
+
   async getChannels(guildId, force = false) {
     const list = await this.cachedRequest(`channels_${guildId}`, async () => {
       const res = await this.request(`/api/channels/${guildId}`);

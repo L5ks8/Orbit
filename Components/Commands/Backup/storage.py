@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 MONGODB_URI = os.getenv("MONGODB_URI")
 
+from Components.Database.mongodb import get_db
+
 client = None
 db = None
 backups_col = None
@@ -14,14 +16,18 @@ backup_configs_col = None
 
 MAX_BACKUPS = 5
 
-if MONGODB_URI:
-    try:
-        client = pymongo.MongoClient(MONGODB_URI)
-        db = client["orbit"]
-        backups_col = db["backups"]
-        backup_configs_col = db["backup_configs"]
-    except Exception as e:
-        print(f"Warning: Failed to connect to MongoDB for Backup Storage: {e}")
+def _init_collections():
+    global db, backups_col, backup_configs_col
+    if backups_col is None or backup_configs_col is None:
+        try:
+            db = get_db()
+            if db is not None:
+                backups_col = db["backups"]
+                backup_configs_col = db["backup_configs"]
+        except Exception as e:
+            print(f"Warning: Failed to connect to MongoDB for Backup Storage: {e}")
+
+_init_collections()
 
 def clean_doc_for_json(doc):
     if not isinstance(doc, dict):
@@ -39,6 +45,7 @@ def clean_doc_for_json(doc):
     return clean
 
 def get_backups(guild_id: int) -> List[Dict]:
+    _init_collections()
     if backups_col is None:
         return []
     try:
@@ -49,6 +56,7 @@ def get_backups(guild_id: int) -> List[Dict]:
         return []
 
 def get_backup(backup_id: str) -> Optional[Dict]:
+    _init_collections()
     if backups_col is None:
         return None
     try:
@@ -59,6 +67,7 @@ def get_backup(backup_id: str) -> Optional[Dict]:
         return None
 
 def save_backup(backup_data: Dict):
+    _init_collections()
     if backups_col is None:
         return
     try:
@@ -80,6 +89,7 @@ def save_backup(backup_data: Dict):
         print(f"Backup Error (save_backup): {e}")
 
 def delete_backup(backup_id: str):
+    _init_collections()
     if backups_col is None:
         return
     try:
@@ -88,6 +98,7 @@ def delete_backup(backup_id: str):
         print(f"Backup Error (delete_backup): {e}")
 
 def get_backup_config(guild_id: int) -> Dict:
+    _init_collections()
     default_cfg = {
         "guild_id": guild_id,
         "enabled": False,
@@ -111,6 +122,7 @@ def get_backup_config(guild_id: int) -> Dict:
         return default_cfg
 
 def save_backup_config(guild_id: int, config_data: Dict):
+    _init_collections()
     if backup_configs_col is None:
         return
     try:
@@ -127,6 +139,7 @@ def save_backup_config(guild_id: int, config_data: Dict):
         print(f"Backup Error (save_backup_config): {e}")
 
 def get_all_active_backup_configs() -> List[Dict]:
+    _init_collections()
     if backup_configs_col is None:
         return []
     try:

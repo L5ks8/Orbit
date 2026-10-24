@@ -219,6 +219,10 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/server/{id}/backups/{backup_id}/restore", dashboard.api_restore_backup)
     app.router.add_delete("/api/server/{id}/backups/{backup_id}", dashboard.api_delete_backup)
 
+    # Server Security
+    app.router.add_get("/api/server/{id}/security", dashboard.api_get_security_config)
+    app.router.add_post("/api/server/{id}/security", dashboard.api_save_security_config)
+
     app.router.add_get("/{tail:.*}", dashboard.handle_spa)
 
     return app

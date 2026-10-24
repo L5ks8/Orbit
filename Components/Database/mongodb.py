@@ -37,9 +37,24 @@ def get_db():
             if default_db is not None and default_db.name not in ("admin", "local", "test", ""):
                 _db = default_db
             else:
-                _db = _client["OrbitBot"]
+                names = _client.list_database_names()
+                if "orbit" in names:
+                    _db = _client["orbit"]
+                elif "OrbitBot" in names:
+                    _db = _client["OrbitBot"]
+                else:
+                    _db = _client["orbit"]
         except Exception:
-            _db = _client["OrbitBot"]
+            try:
+                names = _client.list_database_names()
+                if "orbit" in names:
+                    _db = _client["orbit"]
+                elif "OrbitBot" in names:
+                    _db = _client["OrbitBot"]
+                else:
+                    _db = _client["orbit"]
+            except Exception:
+                _db = _client["orbit"]
     return _db
 
 def _query_collection_doc(collection, guild_id):

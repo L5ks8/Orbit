@@ -3277,3 +3277,66 @@ class ActionsMixin:
         save_backup_config(guild_id, cfg)
         cfg.pop("_id", None)
         return web.json_response({"success": True, "config": cfg})
+
+    async def api_get_security_config(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        from Components.Systems.Security._storage import load_security_config
+        sec_cfg = load_security_config(guild_id)
+        if isinstance(sec_cfg, dict):
+            sec_cfg.pop("_id", None)
+        return web.json_response({"success": True, "security": sec_cfg})
+
+    async def api_save_security_config(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild:
+            return web.json_response({"error": "Unauthorized"}, status=403)
+
+        can_admin = bool(user_perms.get("is_admin"))
+        can_channels = can_admin or bool(user_perms.get("can_channels"))
+        can_messages = can_admin or bool(user_perms.get("can_messages"))
+        can_roles = can_admin or bool(user_perms.get("can_roles"))
+        if not (can_admin or can_channels or can_messages or can_roles):
+            return web.json_response({"error": "Missing permissions"}, status=403)
+
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "Invalid JSON"}, status=400)
+
+        from Components.Systems.Security._storage import load_security_config, save_security_config
+        sec_cfg = load_security_config(guild_id)
+        new_sec = body.get("security") if isinstance(body, dict) and "security" in body else body
+
+        if isinstance(new_sec, dict):
+            if "anti_nuke" in new_sec and isinstance(new_sec["anti_nuke"], dict):
+                if not isinstance(sec_cfg.get("anti_nuke"), dict):
+                    sec_cfg["anti_nuke"] = {}
+                sec_cfg["anti_nuke"].update(new_sec["anti_nuke"])
+            if "anti_raid" in new_sec and isinstance(new_sec["anti_raid"], dict):
+                if not isinstance(sec_cfg.get("anti_raid"), dict):
+                    sec_cfg["anti_raid"] = {}
+                sec_cfg["anti_raid"].update(new_sec["anti_raid"])
+            if "webhook_protection" in new_sec and isinstance(new_sec["webhook_protection"], dict):
+                if not isinstance(sec_cfg.get("webhook_protection"), dict):
+                    sec_cfg["webhook_protection"] = {}
+                sec_cfg["webhook_protection"].update(new_sec["webhook_protection"])
+            if "threat_logs" in new_sec and isinstance(new_sec["threat_logs"], list):
+                sec_cfg["threat_logs"] = new_sec["threat_logs"]
+
+        if isinstance(sec_cfg, dict):
+            sec_cfg.pop("_id", None)
+        save_security_config(guild_id, sec_cfg)
+        if isinstance(sec_cfg, dict):
+            sec_cfg.pop("_id", None)
+        return web.json_response({"success": True, "security": sec_cfg})

@@ -968,7 +968,7 @@ class ConfigMixin:
 
                 save_automod_config(guild_id, automod_cfg)
 
-            if (can_admin or can_channels) and "security" in data:
+            if (can_admin or can_channels or can_roles or can_messages) and "security" in data:
                 from Components.Systems.Security._storage import load_security_config, save_security_config
                 sec_cfg = load_security_config(guild_id)
                 new_sec = data["security"]
