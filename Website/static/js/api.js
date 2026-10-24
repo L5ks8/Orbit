@@ -45,6 +45,10 @@ const API = {
       }
 
       if (!res.ok) {
+        if ((res.status === 502 || res.status === 503 || res.status === 504) && !options._retried) {
+          await new Promise(r => setTimeout(r, 1200));
+          return await this.request(endpoint, { ...options, _retried: true });
+        }
         const errorMsg = (typeof data === 'object' && data?.error) ? data.error : (typeof data === 'string' && data ? data : `HTTP ${res.status}`);
         const err = new Error(errorMsg);
         err.status = res.status;
