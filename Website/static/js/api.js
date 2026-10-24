@@ -556,7 +556,24 @@ const API = {
   },
 
   async getAppeals(guildId, force = false) {
-    return await this.cachedRequest(`appeals_${guildId}`, () => this.request(`/api/server/${guildId}/appeals`), force, 60000);
+    return await this.cachedRequest(`appeals_${guildId}`, () => this.request(`/api/server/${guildId}/appeals`), force, 30000);
+  },
+
+  async getAppealsHistory(guildId, force = false) {
+    return await this.cachedRequest(`appeals_history_${guildId}`, () => this.request(`/api/server/${guildId}/appeals/history`), force, 30000);
+  },
+
+  async getAppealsConfig(guildId, force = false) {
+    return await this.cachedRequest(`appeals_cfg_${guildId}`, () => this.request(`/api/server/${guildId}/appeals/config`), force, 30000);
+  },
+
+  async saveAppealsConfig(guildId, payload) {
+    const res = await this.request(`/api/server/${guildId}/appeals/config`, {
+      method: 'POST',
+      body: payload
+    });
+    this.invalidateCache(`appeals_cfg_${guildId}`);
+    return res;
   },
 
   async resolveAppeal(guildId, payload) {
@@ -565,6 +582,7 @@ const API = {
       body: payload
     });
     this.invalidateCache(`appeals_${guildId}`);
+    this.invalidateCache(`appeals_history_${guildId}`);
     return res;
   },
 

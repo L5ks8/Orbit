@@ -36,7 +36,7 @@ async def resolve_appeal_logic(bot, guild_id: int, target_user_id: int, moderato
         except Exception as e:
             return False, f"Could not revoke punishment: {e}"
             
-    close_appeal(guild_id, target_user_id)
+    close_appeal(guild_id, target_user_id, status="accepted" if is_accept else "denied", moderator=moderator_name)
     return True, "Appeal accepted." if is_accept else "Appeal denied."
 
 

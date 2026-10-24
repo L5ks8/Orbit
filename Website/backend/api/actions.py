@@ -1370,9 +1370,56 @@ class ActionsMixin:
         guild, perms = await self._check_guild_access(request, guild_id)
         if not guild: return web.json_response({"error": "Unauthorized"}, status=401)
         
-        from Components.Systems.BanAppeals._storage import get_open_appeals
-        appeals = get_open_appeals(guild_id)
-        return web.json_response(appeals)
+        try:
+            from Components.Systems.BanAppeals._storage import get_open_appeals
+            appeals = get_open_appeals(guild_id)
+            for a in appeals:
+                if "_id" in a: a["_id"] = str(a["_id"])
+            return web.json_response(appeals)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_get_appeals_history(self, request: web.Request):
+        guild_id = int(request.match_info["id"])
+        guild, perms = await self._check_guild_access(request, guild_id)
+        if not guild: return web.json_response({"error": "Unauthorized"}, status=401)
+        
+        try:
+            from Components.Systems.BanAppeals._storage import get_appeals_history
+            history = get_appeals_history(guild_id, limit=50)
+            return web.json_response(history)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_get_appeals_config(self, request: web.Request):
+        guild_id = int(request.match_info["id"])
+        guild, perms = await self._check_guild_access(request, guild_id)
+        if not guild: return web.json_response({"error": "Unauthorized"}, status=401)
+        
+        try:
+            from Components.Systems.BanAppeals._storage import load_appeals_config
+            cfg = load_appeals_config(guild_id)
+            if "_id" in cfg:
+                cfg["_id"] = str(cfg["_id"])
+            return web.json_response(cfg)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_save_appeals_config(self, request: web.Request):
+        guild_id = int(request.match_info["id"])
+        guild, perms = await self._check_guild_access(request, guild_id)
+        if not guild or not (perms.get("is_admin") or perms.get("can_manage_guild")):
+            return web.json_response({"error": "Unauthorized"}, status=403)
+            
+        try:
+            data = await request.json()
+            from Components.Systems.BanAppeals._storage import save_appeals_config
+            saved = save_appeals_config(guild_id, data)
+            if "_id" in saved:
+                saved["_id"] = str(saved["_id"])
+            return web.json_response({"success": True, "config": saved})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
 
     async def api_resolve_appeal(self, request: web.Request):
         guild_id = int(request.match_info["id"])
@@ -1382,17 +1429,17 @@ class ActionsMixin:
         data = await request.json()
         user_id = data.get("user_id")
         action = data.get("action")
-        if not user_id or action not in ["accept", "decline"]:
+        if not user_id or action not in ["accept", "decline", "deny"]:
             return web.json_response({"error": "Invalid payload"}, status=400)
             
         session = await self.get_user_session(request)
-        user_discord_id = int(session["id"])
+        user_discord_id = int(session["id"]) if session and "id" in session else 0
         
         from Components.Systems.BanAppeals._storage import load_appeals_config
         cfg = load_appeals_config(guild_id)
         
-        member = guild.get_member(user_discord_id)
-        if not member:
+        member = guild.get_member(user_discord_id) if user_discord_id else None
+        if not member and user_discord_id:
             try:
                 member = await guild.fetch_member(user_discord_id)
             except:
@@ -1417,7 +1464,6 @@ class ActionsMixin:
             return web.json_response({"success": True, "message": msg})
         else:
             return web.json_response({"error": msg}, status=400)
-
     async def api_get_messages(self, request: web.Request):
         user = await self.get_user_session(request)
         if not user: return web.json_response({"error": "Unauthorized"}, status=401)
@@ -2152,59 +2198,6 @@ class ActionsMixin:
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
-
-    async def api_get_recent_appeals(self, request: web.Request):
-        guild_id = int(request.match_info["id"])
-        guild, perms = await self._check_guild_access(request, guild_id)
-        if not guild: return web.json_response({"error": "Unauthorized"}, status=401)
-        
-        from Components.Systems.BanAppeals._storage import get_open_appeals
-        appeals = get_open_appeals(guild_id)
-        return web.json_response(appeals)
-
-    async def api_resolve_appeal(self, request: web.Request):
-        guild_id = int(request.match_info["id"])
-        guild, perms = await self._check_guild_access(request, guild_id)
-        if not guild: return web.json_response({"error": "Unauthorized"}, status=401)
-        
-        data = await request.json()
-        user_id = data.get("user_id")
-        action = data.get("action")
-        if not user_id or action not in ["accept", "decline"]:
-            return web.json_response({"error": "Invalid payload"}, status=400)
-            
-        session = await self.get_user_session(request)
-        user_discord_id = int(session["id"])
-        
-        from Components.Systems.BanAppeals._storage import load_appeals_config
-        cfg = load_appeals_config(guild_id)
-        
-        member = guild.get_member(user_discord_id)
-        if not member:
-            try:
-                member = await guild.fetch_member(user_discord_id)
-            except:
-                pass
-                
-        mod_name = "a Moderator"
-        if not cfg.get("anonymous_mods", False) and member:
-            mod_name = member.name
-            
-        from Components.Systems.BanAppeals.appeals import resolve_appeal_logic
-        is_accept = (action == "accept")
-        success, msg = await resolve_appeal_logic(
-            self.bot, 
-            guild_id, 
-            int(user_id), 
-            user_discord_id, 
-            is_accept, 
-            mod_name
-        )
-        
-        if success:
-            return web.json_response({"success": True, "message": msg})
-        else:
-            return web.json_response({"error": msg}, status=400)
 
     async def api_action_post_invite_leaderboard(self, request: web.Request):
         guild_id_str = request.match_info.get("id")

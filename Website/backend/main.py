@@ -190,6 +190,9 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/submit_appeal/{custom_url}", dashboard.api_submit_appeal)
     
     app.router.add_get("/api/server/{id}/appeals", dashboard.api_get_recent_appeals)
+    app.router.add_get("/api/server/{id}/appeals/history", dashboard.api_get_appeals_history)
+    app.router.add_get("/api/server/{id}/appeals/config", dashboard.api_get_appeals_config)
+    app.router.add_post("/api/server/{id}/appeals/config", dashboard.api_save_appeals_config)
     app.router.add_post("/api/server/{id}/appeals/resolve", dashboard.api_resolve_appeal)
     app.router.add_get("/api/channels/{id}", dashboard.api_channels)
     app.router.add_get("/api/roles/{id}", dashboard.api_roles)
