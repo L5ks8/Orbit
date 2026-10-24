@@ -521,6 +521,11 @@ Pages._switchDashboardPane = function(tabContainer, tab, guildId) {
   if (targetPane) {
     // Already in memory! 0ms instant display without any loading screen
     targetPane.style.display = 'block';
+    if (typeof window.__refreshWelcomeAutoResizes === 'function') {
+      window.__refreshWelcomeAutoResizes();
+      requestAnimationFrame(window.__refreshWelcomeAutoResizes);
+    }
+    window.dispatchEvent(new Event('resize'));
     return;
   }
 

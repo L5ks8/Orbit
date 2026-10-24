@@ -111,19 +111,27 @@ DashboardTabs.Welcome = async function (container, guildId) {
   }
 
   function renderPreviewTokens(text) {
-    if (!text) return '';
-    if (window.DiscordMarkdown && typeof window.DiscordMarkdown.parse === 'function') {
-      return window.DiscordMarkdown.parse(text, {
-        guildName: state.guildName,
-        memberCount: state.memberCount,
-        channels: state.allChannels && state.allChannels.length ? state.allChannels : state.channels,
-        roles: state.roles || [],
-        emojis: state.emojis || [],
-        members: state.members || [],
-        highlightVariables: true
-      });
+    if (!text && text !== 0) return '';
+    try {
+      if (window.DiscordMarkdown && typeof window.DiscordMarkdown.parse === 'function') {
+        return window.DiscordMarkdown.parse(text, {
+          guildName: state.guildName || 'My Server',
+          memberCount: state.memberCount || 100,
+          channels: Array.isArray(state.allChannels) && state.allChannels.length ? state.allChannels.filter(Boolean) : (Array.isArray(state.channels) ? state.channels.filter(Boolean) : []),
+          roles: Array.isArray(state.roles) ? state.roles.filter(Boolean) : [],
+          emojis: Array.isArray(state.emojis) ? state.emojis.filter(Boolean) : [],
+          members: Array.isArray(state.members) ? state.members.filter(Boolean) : [],
+          highlightVariables: true
+        });
+      }
+    } catch (err) {
+      console.warn('[Welcome] DiscordMarkdown.parse failed, falling back:', err);
     }
-    return renderPreviewTokensLegacy(text);
+    try {
+      return renderPreviewTokensLegacy(text);
+    } catch (err2) {
+      return esc(text);
+    }
   }
 
   function renderPreviewTokensLegacy(text) {
@@ -302,7 +310,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
                     <div id="w-author-row" class="${state.welcome.embed ? 'flex' : 'hidden'} items-stretch gap-2">
                       <div class="flex-1 min-w-0">
                         <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 42px;">
-                          <div id="w-author-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.welcome.embed_author, '• Welcome to Archrealm!  (Author / Header)')}</div>
+                          <div id="w-author-overlay" aria-hidden="true" class="absolute top-0 inset-x-0 bottom-auto pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.welcome.embed_author, '• Welcome to Archrealm!  (Author / Header)')}</div>
                           <textarea id="w-author-input" rows="1" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.welcome.embed_author)}</textarea>
                           <button type="button" data-emoji-target="w-author-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
@@ -330,7 +338,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
                     <!-- Title Row (Visible in Embed mode) -->
                     <div id="w-title-row" class="${state.welcome.embed ? 'block' : 'hidden'}">
                       <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 42px;">
-                        <div id="w-title-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.welcome.embed_title, '***{user} Explore the server.***  (Title)')}</div>
+                        <div id="w-title-overlay" aria-hidden="true" class="absolute top-0 inset-x-0 bottom-auto pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.welcome.embed_title, '***{user} Explore the server.***  (Title)')}</div>
                         <textarea id="w-title-input" rows="1" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.welcome.embed_title)}</textarea>
                         <button type="button" data-emoji-target="w-title-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
@@ -341,9 +349,9 @@ DashboardTabs.Welcome = async function (container, guildId) {
                     <!-- Description Textarea -->
                     <div id="w-desc-row" class="block">
                       <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 84px;">
-                        <div id="w-desc-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.welcome.embed_description, 'Welcome {user} to {server}!  (Description)')}</div>
+                        <div id="w-desc-overlay" aria-hidden="true" class="absolute top-0 inset-x-0 bottom-auto pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.welcome.embed_description, 'Welcome {user} to {server}!  (Description)')}</div>
                         <textarea id="w-desc-input" rows="3" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.welcome.embed_description)}</textarea>
-                        <button type="button" data-emoji-target="w-desc-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 bottom-2.5">
+                        <button type="button" data-emoji-target="w-desc-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
                         </button>
                       </div>
@@ -352,7 +360,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
                     <!-- Footer Row (Visible in Embed mode) -->
                     <div id="w-footer-row" class="${state.welcome.embed ? 'block' : 'hidden'}">
                       <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 42px;">
-                        <div id="w-footer-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.welcome.embed_footer, 'Footer text (optional)')}</div>
+                        <div id="w-footer-overlay" aria-hidden="true" class="absolute top-0 inset-x-0 bottom-auto pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.welcome.embed_footer, 'Footer text (optional)')}</div>
                         <textarea id="w-footer-input" rows="1" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.welcome.embed_footer)}</textarea>
                         <button type="button" data-emoji-target="w-footer-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
@@ -382,18 +390,18 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
                   <!-- Toggles Row -->
                   <div class="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2 border-t border-neutral-800/60">
-                    <label class="inline-flex items-center gap-2 cursor-pointer">
-                      <span class="text-[12px] text-neutral-300">Embed</span>
+                    <div class="inline-flex items-center gap-2 select-none">
+                      <span class="text-[12px] text-neutral-300 cursor-pointer hover:text-white transition-colors" onclick="document.getElementById('w-embed-switch')?.click()">Embed</span>
                       ${renderSwitchHtml('w-embed-switch', state.welcome.embed)}
-                    </label>
-                    <label class="inline-flex items-center gap-2 cursor-pointer">
-                      <span class="text-[12px] text-neutral-300">User Avatar</span>
+                    </div>
+                    <div class="inline-flex items-center gap-2 select-none">
+                      <span class="text-[12px] text-neutral-300 cursor-pointer hover:text-white transition-colors" onclick="document.getElementById('w-avatar-switch')?.click()">User Avatar</span>
                       ${renderSwitchHtml('w-avatar-switch', state.welcome.show_avatar)}
-                    </label>
-                    <label class="inline-flex items-center gap-2 cursor-pointer" title="Unlocks {inviter}, {inviter.name}, {inviter.count}, {invite.code} and {account.age}. Invite tracking must be enabled.">
-                      <span class="text-[12px] text-neutral-300">Invite Variables</span>
+                    </div>
+                    <div class="inline-flex items-center gap-2 select-none" title="Unlocks {inviter}, {inviter.name}, {inviter.count}, {invite.code} and {account.age}. Invite tracking must be enabled.">
+                      <span class="text-[12px] text-neutral-300 cursor-pointer hover:text-white transition-colors" onclick="document.getElementById('w-invitevars-switch')?.click()">Invite Variables</span>
                       ${renderSwitchHtml('w-invitevars-switch', state.welcome.invite_vars)}
-                    </label>
+                    </div>
                   </div>
 
                   <!-- Embed Image Upload / URL -->
@@ -482,10 +490,10 @@ DashboardTabs.Welcome = async function (container, guildId) {
                       </div>
                       <div class="transition-all duration-200 flex-1 flex flex-col min-h-0">
                         <div class="flex-1 min-h-0 flex flex-col">
-                          <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors h-full flex flex-col" style="min-height: 104px;">
-                            <div id="w-dm-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white h-full text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.welcome.dm_message, '👋 Welcome to {server} (default)')}</div>
-                            <textarea id="w-dm-input" rows="4" class="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.welcome.dm_message)}</textarea>
-                            <button type="button" data-emoji-target="w-dm-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 bottom-2">
+                          <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 104px;">
+                            <div id="w-dm-overlay" aria-hidden="true" class="absolute top-0 inset-x-0 bottom-auto pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.welcome.dm_message, '👋 Welcome to {server} (default)')}</div>
+                            <textarea id="w-dm-input" rows="4" class="relative block w-full resize-none focus:outline-none bg-transparent overflow-hidden text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.welcome.dm_message)}</textarea>
+                            <button type="button" data-emoji-target="w-dm-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
                             </button>
                           </div>
@@ -555,7 +563,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
                     <div id="g-author-row" class="${state.goodbye.embed ? 'flex' : 'hidden'} items-stretch gap-2">
                       <div class="flex-1 min-w-0">
                         <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 42px;">
-                          <div id="g-author-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_author, '• Goodbye! (Author / Header)')}</div>
+                          <div id="g-author-overlay" aria-hidden="true" class="absolute top-0 inset-x-0 bottom-auto pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_author, '• Goodbye! (Author / Header)')}</div>
                           <textarea id="g-author-input" rows="1" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.embed_author)}</textarea>
                           <button type="button" data-emoji-target="g-author-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
@@ -583,7 +591,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
                     <!-- Goodbye Title Row (Visible in Embed mode) -->
                     <div id="g-title-row" class="${state.goodbye.embed ? 'block' : 'hidden'}">
                       <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 42px;">
-                        <div id="g-title-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_title, '***{user} left the server.*** (Title)')}</div>
+                        <div id="g-title-overlay" aria-hidden="true" class="absolute top-0 inset-x-0 bottom-auto pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_title, '***{user} left the server.*** (Title)')}</div>
                         <textarea id="g-title-input" rows="1" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.embed_title)}</textarea>
                         <button type="button" data-emoji-target="g-title-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
@@ -594,9 +602,9 @@ DashboardTabs.Welcome = async function (container, guildId) {
                     <!-- Goodbye Description -->
                     <div id="g-desc-row" class="block">
                       <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 84px;">
-                        <div id="g-desc-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_description, 'Goodbye {user}! (Description)')}</div>
+                        <div id="g-desc-overlay" aria-hidden="true" class="absolute top-0 inset-x-0 bottom-auto pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_description, 'Goodbye {user}! (Description)')}</div>
                         <textarea id="g-desc-input" rows="3" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.embed_description)}</textarea>
-                        <button type="button" data-emoji-target="g-desc-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 bottom-2.5">
+                        <button type="button" data-emoji-target="g-desc-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
                         </button>
                       </div>
@@ -605,7 +613,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
                     <!-- Goodbye Footer Row (Visible in Embed mode) -->
                     <div id="g-footer-row" class="${state.goodbye.embed ? 'block' : 'hidden'}">
                       <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 42px;">
-                        <div id="g-footer-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_footer, 'Footer text (optional)')}</div>
+                        <div id="g-footer-overlay" aria-hidden="true" class="absolute top-0 inset-x-0 bottom-auto pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.embed_footer, 'Footer text (optional)')}</div>
                         <textarea id="g-footer-input" rows="1" class="relative block w-full resize-none focus:outline-none bg-transparent text-[16px] leading-6 sm:text-[13px] sm:leading-5 overflow-hidden" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 10px 34px 10px 14px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.embed_footer)}</textarea>
                         <button type="button" data-emoji-target="g-footer-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
@@ -630,10 +638,10 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
                   <!-- Goodbye Embed Toggle -->
                   <div class="flex items-center gap-2 pt-2 border-t border-neutral-800/60">
-                    <label class="inline-flex items-center gap-2 cursor-pointer">
-                      <span class="text-[12px] text-neutral-300">Embed</span>
+                    <div class="inline-flex items-center gap-2 select-none">
+                      <span class="text-[12px] text-neutral-300 cursor-pointer hover:text-white transition-colors" onclick="document.getElementById('g-embed-switch')?.click()">Embed</span>
                       ${renderSwitchHtml('g-embed-switch', state.goodbye.embed)}
-                    </label>
+                    </div>
                   </div>
 
                   <!-- Goodbye Embed Image -->
@@ -722,10 +730,10 @@ DashboardTabs.Welcome = async function (container, guildId) {
                       </div>
                       <div class="transition-all duration-200 flex-1 flex flex-col min-h-0">
                         <div class="flex-1 min-h-0 flex flex-col">
-                          <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors h-full flex flex-col" style="min-height: 84px;">
-                            <div id="g-dm-overlay" aria-hidden="true" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl text-white h-full text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.dm_message, '👋 You left {server} (default)')}</div>
-                            <textarea id="g-dm-input" rows="3" class="relative block w-full resize-none focus:outline-none bg-transparent flex-1 overflow-y-auto text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.dm_message)}</textarea>
-                            <button type="button" data-emoji-target="g-dm-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 bottom-2">
+                          <div class="relative rounded-xl border border-neutral-700/50 bg-neutral-800/50 focus-within:border-neutral-500 transition-colors" style="min-height: 84px;">
+                            <div id="g-dm-overlay" aria-hidden="true" class="absolute top-0 inset-x-0 bottom-auto pointer-events-none overflow-hidden rounded-xl text-white text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 1;">${highlightVariablesOverlay(state.goodbye.dm_message, '👋 You left {server} (default)')}</div>
+                            <textarea id="g-dm-input" rows="3" class="relative block w-full resize-none focus:outline-none bg-transparent overflow-hidden text-[16px] leading-6 sm:text-[13px] sm:leading-5" style="font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, &quot;JetBrains Mono&quot;, Consolas, Monaco, monospace; padding: 12px 34px 12px 16px; letter-spacing: 0px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; box-sizing: border-box; margin: 0px; z-index: 2; box-shadow: none; color: transparent; -webkit-text-fill-color: transparent; caret-color: white;">${esc(state.goodbye.dm_message)}</textarea>
+                            <button type="button" data-emoji-target="g-dm-input" title="Add emoji" aria-label="Add emoji" class="emoji-trigger-btn absolute right-2 z-[3] rounded-md p-1 text-neutral-500 transition-colors hover:bg-white/[0.06] hover:text-neutral-200 top-2.5">
                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-smile h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" x2="9.01" y1="9" y2="9"></line><line x1="15" x2="15.01" y1="9" y2="9"></line></svg>
                             </button>
                           </div>
@@ -772,116 +780,145 @@ DashboardTabs.Welcome = async function (container, guildId) {
     updateWelcomePreview();
     updateGoodbyePreview();
     bindEvents();
+
+    refreshAllAutoResizes();
+    requestAnimationFrame(refreshAllAutoResizes);
+    setTimeout(refreshAllAutoResizes, 50);
+    setTimeout(refreshAllAutoResizes, 250);
   }
 
   function updateWelcomePreview() {
     const bodyEl = document.getElementById('w-preview-body');
     if (!bodyEl) return;
 
-    const rawAuthor = state.welcome.embed_author;
-    const rawTitle = state.welcome.embed_title;
-    const rawDesc = state.welcome.embed_description;
-    const rawFooter = state.welcome.embed_footer;
-    const isDefault = !rawAuthor && !rawTitle && !rawDesc && !rawFooter;
+    try {
+      const rawAuthor = (state.welcome.embed_author || '').trim();
+      const rawTitle = (state.welcome.embed_title || '').trim();
+      const rawDesc = (state.welcome.embed_description || '').trim();
+      const rawFooter = (state.welcome.embed_footer || '').trim();
+      const hasContent = Boolean(rawAuthor || rawTitle || rawDesc || rawFooter || state.welcome.embed_image);
 
-    if (!state.welcome.embed) {
-      const textVal = rawDesc || 'Welcome {user} to {server}! Enjoy your stay.';
+      // TEXT MODE (when embed switch is OFF)
+      if (!state.welcome.embed) {
+        const textVal = state.welcome.embed_description || 'Welcome {user} to {server}! Enjoy your stay.';
+        const parsed = renderPreviewTokens(textVal);
+        bodyEl.innerHTML = `
+          <div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words" style="font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">${parsed || '<span class="text-neutral-500 italic">No welcome message set</span>'}</div>
+        `;
+        return;
+      }
+
+      // EMBED MODE
+      const isDefault = !hasContent;
+      const authorHtml = rawAuthor ? renderPreviewTokens(rawAuthor) : '';
+      const titleHtml = rawTitle
+        ? renderPreviewTokens(rawTitle)
+        : (isDefault ? `<span>Welcome to </span><span class="bg-green-500/30 text-green-300 rounded-[3px] px-[2px]">${esc(state.guildName || 'My Server')}</span><span>!</span>` : '');
+      const descHtml = rawDesc
+        ? renderPreviewTokens(rawDesc)
+        : (isDefault ? `<span>Welcome </span><span class="bg-[#5865f2]/30 text-[#c9cdfb] rounded-[3px] px-[2px]">@User</span><span>! Glad you're here.</span>` : '');
+      const footerHtml = rawFooter ? renderPreviewTokens(rawFooter) : '';
+
       bodyEl.innerHTML = `
-        <div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words" style="font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">${renderPreviewTokens(textVal)}</div>
-      `;
-      return;
-    }
-
-    const authorHtml = rawAuthor ? renderPreviewTokens(rawAuthor) : '';
-    const titleHtml = rawTitle
-      ? renderPreviewTokens(rawTitle)
-      : (isDefault ? `<span>Welcome to </span><span class="bg-green-500/30 text-green-300 rounded-[3px] px-[2px]">${esc(state.guildName)}</span><span>!</span>` : '');
-    const descHtml = rawDesc
-      ? renderPreviewTokens(rawDesc)
-      : (isDefault ? `<span>Welcome </span><span class="bg-[#5865f2]/30 text-[#c9cdfb] rounded-[3px] px-[2px]">@User</span><span>! Glad you're here.</span>` : '');
-    const footerHtml = rawFooter ? renderPreviewTokens(rawFooter) : '';
-
-    bodyEl.innerHTML = `
-      <div class="border-l-[4px] rounded-r bg-[#2b2d31] w-full" style="max-width: 520px; border-color: ${esc(state.welcome.embed_color || '#5865F2')}; font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-        <div class="p-3 flex flex-col gap-2">
-          ${authorHtml ? `
-            <div class="text-xs font-semibold text-white break-words">${authorHtml}</div>
-          ` : ''}
-          <div class="flex gap-2.5">
-            <div class="flex-1 min-w-0 space-y-1">
-              ${titleHtml ? `<p class="text-sm font-semibold text-white leading-snug break-words">${titleHtml}</p>` : ''}
-              ${descHtml ? `<div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words">${descHtml}</div>` : ''}
-              ${isDefault ? `<p class="text-xs text-neutral-500 italic">Start typing to customize...</p>` : ''}
-            </div>
-            ${state.welcome.show_avatar ? `
-              <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-neutral-700 grid place-items-center">
-                <span class="text-[9px] font-semibold text-neutral-400">USER</span>
+        <div class="border-l-[4px] rounded-r bg-[#2b2d31] w-full" style="max-width: 520px; border-color: ${esc(state.welcome.embed_color || '#5865F2')}; font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+          <div class="p-3 flex flex-col gap-2">
+            ${authorHtml ? `
+              <div class="text-xs font-semibold text-white break-words">${authorHtml}</div>
+            ` : ''}
+            <div class="flex gap-2.5">
+              <div class="flex-1 min-w-0 space-y-1">
+                ${titleHtml ? `<p class="text-sm font-semibold text-white leading-snug break-words">${titleHtml}</p>` : ''}
+                ${descHtml ? `<div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words">${descHtml}</div>` : ''}
+                ${isDefault ? `<p class="text-xs text-neutral-500 italic">Start typing to customize...</p>` : ''}
               </div>
+              ${state.welcome.show_avatar ? `
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-neutral-700 grid place-items-center">
+                  <span class="text-[9px] font-semibold text-neutral-400">USER</span>
+                </div>
+              ` : ''}
+            </div>
+            ${state.welcome.embed_image ? `
+              <img src="${esc(state.welcome.embed_image)}" alt="Embed preview" class="w-full rounded-lg border border-neutral-800/60 mt-1 object-cover" style="max-height: 280px; max-width: 100%;" onerror="this.style.display='none';">
+            ` : ''}
+            ${footerHtml ? `
+              <div class="pt-0.5 text-[11px] text-[#949ba4] break-words">${footerHtml}</div>
             ` : ''}
           </div>
-          ${state.welcome.embed_image ? `
-            <img src="${esc(state.welcome.embed_image)}" alt="Embed preview" class="w-full rounded-lg border border-neutral-800/60 mt-1 object-cover" style="max-height: 280px; max-width: 100%;">
-          ` : ''}
-          ${footerHtml ? `
-            <div class="pt-0.5 text-[11px] text-[#949ba4] break-words">${footerHtml}</div>
-          ` : ''}
         </div>
-      </div>
-    `;
+      `;
+    } catch (err) {
+      console.error('[Welcome] updateWelcomePreview failed:', err);
+      bodyEl.innerHTML = `
+        <div class="text-[13px] text-neutral-400 font-normal leading-[1.375] whitespace-pre-wrap break-words">
+          ${esc(state.welcome.embed_description || 'Welcome {user} to My Server!')}
+        </div>
+      `;
+    }
   }
 
   function updateGoodbyePreview() {
     const bodyEl = document.getElementById('g-preview-body');
     if (!bodyEl) return;
 
-    const rawAuthor = state.goodbye.embed_author;
-    const rawTitle = state.goodbye.embed_title;
-    const rawDesc = state.goodbye.embed_description;
-    const rawFooter = state.goodbye.embed_footer;
+    try {
+      const rawAuthor = (state.goodbye.embed_author || '').trim();
+      const rawTitle = (state.goodbye.embed_title || '').trim();
+      const rawDesc = (state.goodbye.embed_description || '').trim();
+      const rawFooter = (state.goodbye.embed_footer || '').trim();
+      const hasContent = Boolean(rawAuthor || rawTitle || rawDesc || rawFooter || state.goodbye.embed_image);
 
-    if (!state.goodbye.embed) {
-      const textVal = rawDesc || '{user} left {server}.';
-      bodyEl.innerHTML = `
-        <div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words" style="font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">${renderPreviewTokens(textVal)}</div>
-      `;
-      return;
-    }
+      if (!state.goodbye.embed) {
+        const textVal = state.goodbye.embed_description || '{user} left {server}.';
+        const parsed = renderPreviewTokens(textVal);
+        bodyEl.innerHTML = `
+          <div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words" style="font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">${parsed || '<span class="text-neutral-500 italic">No goodbye message set</span>'}</div>
+        `;
+        return;
+      }
 
-    if (!rawAuthor && !rawTitle && !rawDesc && !rawFooter && !state.goodbye.embed_image) {
+      if (!hasContent) {
+        bodyEl.innerHTML = `
+          <div class="border-l-[4px] rounded-r bg-[#2b2d31] w-full" style="max-width: 520px; border-color: ${esc(state.goodbye.embed_color || '#5865F2')}; font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+            <div class="p-3 space-y-1">
+              <p class="text-xs text-amber-400/90 italic">Empty embed. Start typing to customize...</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const authorHtml = rawAuthor ? renderPreviewTokens(rawAuthor) : '';
+      const titleHtml = rawTitle ? renderPreviewTokens(rawTitle) : '';
+      const descHtml = rawDesc ? renderPreviewTokens(rawDesc) : '';
+      const footerHtml = rawFooter ? renderPreviewTokens(rawFooter) : '';
+
       bodyEl.innerHTML = `
         <div class="border-l-[4px] rounded-r bg-[#2b2d31] w-full" style="max-width: 520px; border-color: ${esc(state.goodbye.embed_color || '#5865F2')}; font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-          <div class="p-3 space-y-1">
-            <p class="text-xs text-amber-400/90 italic">Empty embed. Start typing to customize...</p>
+          <div class="p-3 flex flex-col gap-2">
+            ${authorHtml ? `
+              <div class="text-xs font-semibold text-white break-words">${authorHtml}</div>
+            ` : ''}
+            <div class="flex-1 min-w-0 space-y-1">
+              ${titleHtml ? `<p class="text-sm font-semibold text-white leading-snug break-words">${titleHtml}</p>` : ''}
+              ${descHtml ? `<div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words">${descHtml}</div>` : ''}
+            </div>
+            ${state.goodbye.embed_image ? `
+              <img src="${esc(state.goodbye.embed_image)}" alt="Goodbye embed preview" class="w-full rounded-lg border border-neutral-800/60 mt-1 object-cover" style="max-height: 280px; max-width: 100%;" onerror="this.style.display='none';">
+            ` : ''}
+            ${footerHtml ? `
+              <div class="pt-0.5 text-[11px] text-[#949ba4] break-words">${footerHtml}</div>
+            ` : ''}
           </div>
         </div>
       `;
-      return;
-    }
-
-    const authorHtml = rawAuthor ? renderPreviewTokens(rawAuthor) : '';
-    const titleHtml = rawTitle ? renderPreviewTokens(rawTitle) : '';
-    const descHtml = rawDesc ? renderPreviewTokens(rawDesc) : '';
-    const footerHtml = rawFooter ? renderPreviewTokens(rawFooter) : '';
-
-    bodyEl.innerHTML = `
-      <div class="border-l-[4px] rounded-r bg-[#2b2d31] w-full" style="max-width: 520px; border-color: ${esc(state.goodbye.embed_color || '#5865F2')}; font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-        <div class="p-3 flex flex-col gap-2">
-          ${authorHtml ? `
-            <div class="text-xs font-semibold text-white break-words">${authorHtml}</div>
-          ` : ''}
-          <div class="flex-1 min-w-0 space-y-1">
-            ${titleHtml ? `<p class="text-sm font-semibold text-white leading-snug break-words">${titleHtml}</p>` : ''}
-            ${descHtml ? `<div class="text-[13px] text-[#dbdee1] font-normal leading-[1.375] whitespace-pre-wrap break-words">${descHtml}</div>` : ''}
-          </div>
-          ${state.goodbye.embed_image ? `
-            <img src="${esc(state.goodbye.embed_image)}" alt="Goodbye embed preview" class="w-full rounded-lg border border-neutral-800/60 mt-1 object-cover" style="max-height: 280px; max-width: 100%;">
-          ` : ''}
-          ${footerHtml ? `
-            <div class="pt-0.5 text-[11px] text-[#949ba4] break-words">${footerHtml}</div>
-          ` : ''}
+    } catch (err) {
+      console.error('[Welcome] updateGoodbyePreview failed:', err);
+      bodyEl.innerHTML = `
+        <div class="text-[13px] text-neutral-400 font-normal leading-[1.375] whitespace-pre-wrap break-words">
+          ${esc(state.goodbye.embed_description || '{user} left the server.')}
         </div>
-      </div>
-    `;
+      `;
+    }
   }
 
   function setSwitchVisual(btnId, checked) {
@@ -910,7 +947,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
 
   function autoResizeOverlayTextarea(input, overlay, minHeight = 42) {
     if (!input) return;
-    input.style.height = 'auto';
+    input.style.height = '0px';
     const targetH = Math.max(minHeight, input.scrollHeight);
     input.style.height = `${targetH}px`;
     if (overlay) {
@@ -921,6 +958,7 @@ DashboardTabs.Welcome = async function (container, guildId) {
     const parent = input.parentElement;
     if (parent) {
       parent.style.minHeight = `${targetH}px`;
+      parent.style.height = `${targetH}px`;
     }
   }
 
@@ -939,11 +977,12 @@ DashboardTabs.Welcome = async function (container, guildId) {
     ].forEach(({ id, ov, min }) => {
       const input = document.getElementById(id);
       const overlay = document.getElementById(ov);
-      if (input && overlay && input.offsetParent !== null) {
+      if (input && overlay) {
         autoResizeOverlayTextarea(input, overlay, min);
       }
     });
   }
+  window.__refreshWelcomeAutoResizes = refreshAllAutoResizes;
 
   window.addEventListener('resize', refreshAllAutoResizes);
 
@@ -959,13 +998,18 @@ DashboardTabs.Welcome = async function (container, guildId) {
     };
 
     input.addEventListener('input', sync);
+    input.addEventListener('change', sync);
+    input.addEventListener('keyup', sync);
+    input.addEventListener('paste', () => {
+      setTimeout(sync, 0);
+    });
     input.addEventListener('scroll', () => {
       overlay.scrollTop = input.scrollTop;
       overlay.scrollLeft = input.scrollLeft;
     });
 
-    autoResizeOverlayTextarea(input, overlay, minHeight);
     overlay.innerHTML = highlightVariablesOverlay(input.value, placeholder);
+    autoResizeOverlayTextarea(input, overlay, minHeight);
   }
 
   function bindImageUpload(dropzoneId, fileInputId, urlBtnId, removeBtnId, onSetUrl) {
