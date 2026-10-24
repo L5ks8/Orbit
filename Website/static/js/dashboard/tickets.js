@@ -886,11 +886,9 @@ DashboardTabs.Tickets = async function (container, guildId) {
                   ${sub.status !== 'rejected' ? `
                     <button type="button" data-sub-action="rejected" data-sub-id="${escapeHtml(subId)}" class="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition-colors cursor-pointer">Ablehnen</button>
                   ` : ''}
-                  ${!sub.is_active ? `
-                    <button type="button" data-sub-delete="${escapeHtml(subId)}" title="Geschlossenes Ticket aus Dashboard löschen" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer ml-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
-                    </button>
-                  ` : ''}
+                  <button type="button" data-sub-delete="${escapeHtml(subId)}" title="Ticket löschen und Discord-Channel schließen" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer ml-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+                  </button>
                 </div>
               </div>
             `;
@@ -903,20 +901,21 @@ DashboardTabs.Tickets = async function (container, guildId) {
           e.stopPropagation();
           const subId = btn.getAttribute('data-sub-delete');
           const confirmed = window.confirmDelete ? await window.confirmDelete({
-            title: 'Geschlossenes Ticket löschen?',
-            message: 'Möchtest du dieses geschlossene Ticket wirklich aus dem Dashboard entfernen?',
+            title: 'Ticket löschen?',
+            message: 'Möchtest du dieses Ticket wirklich löschen? Falls der Discord-Channel noch existiert, wird er geschlossen und das Transkript gesendet.',
             confirmText: 'Löschen',
             cancelText: 'Abbrechen'
-          }) : confirm('Dieses geschlossene Ticket aus dem Dashboard löschen?');
+          }) : confirm('Dieses Ticket löschen? Der Discord-Channel wird geschlossen und das Transkript gesendet.');
           if (!confirmed) return;
           try {
             if (API.clearClosedTickets) {
               await API.clearClosedTickets(guildId, subId);
             }
+            state.activeTickets = state.activeTickets.filter(t => String(t.id || t.channel_id) !== String(subId));
             state.closedTickets = state.closedTickets.filter(t => String(t.id || t.channel_id) !== String(subId));
             renderMain();
-            if (window.Notifications) Notifications.show('Ticket aus dem Dashboard entfernt.', 'success');
-            else if (window.Toast) Toast.success('Ticket aus dem Dashboard entfernt.');
+            if (window.Notifications) Notifications.show('Ticket gelöscht und Discord-Channel geschlossen.', 'success');
+            else if (window.Toast) Toast.success('Ticket gelöscht und Discord-Channel geschlossen.');
           } catch (err) {
             if (window.Notifications) Notifications.show(err.message || 'Fehler beim Löschen.', 'error');
           }

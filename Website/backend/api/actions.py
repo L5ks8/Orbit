@@ -668,29 +668,61 @@ class ActionsMixin:
             closed_list = ticket_cfg.setdefault("closed_tickets", [])
             now_ts = time.time()
 
+            # 1. Match ticket in active_dict or closed_list
+            target_ticket = None
+            in_active = False
+            active_key = None
+
+            if sub_id in active_dict:
+                target_ticket = active_dict[sub_id]
+                in_active = True
+                active_key = sub_id
+            else:
+                for k, t in active_dict.items():
+                    if isinstance(t, dict) and (str(t.get("channel_id")) == sub_id or str(t.get("id")) == sub_id or str(t.get("number")) == sub_id):
+                        target_ticket = t
+                        in_active = True
+                        active_key = k
+                        break
+
+            if not target_ticket:
+                for ct in closed_list:
+                    if isinstance(ct, dict) and (str(ct.get("id")) == sub_id or str(ct.get("channel_id")) == sub_id or str(ct.get("number")) == sub_id):
+                        target_ticket = ct
+                        break
+
+            # 2. Match Discord text channel
             discord_ch = None
-            if guild and sub_id.isdigit():
-                discord_ch = guild.get_channel(int(sub_id))
+            cand_ids = []
+            if target_ticket:
+                if target_ticket.get("channel_id"): cand_ids.append(str(target_ticket["channel_id"]))
+                if target_ticket.get("id"): cand_ids.append(str(target_ticket["id"]))
+            if sub_id: cand_ids.append(str(sub_id))
+
+            for cid in cand_ids:
+                if cid.isdigit():
+                    ch = guild.get_channel(int(cid))
+                    if ch and isinstance(ch, discord.TextChannel):
+                        discord_ch = ch
+                        break
 
             if action == "claimed":
-                if sub_id in active_dict:
-                    item = active_dict[sub_id]
-                    item["claimed_by"] = staff_id
-                    item["status"] = "claimed"
-                else:
-                    for ct in closed_list:
-                        if isinstance(ct, dict) and str(ct.get("id") or ct.get("channel_id")) == sub_id:
-                            ct["claimed_by"] = staff_id
-                            ct["status"] = "claimed"
-                            break
+                if target_ticket:
+                    target_ticket["claimed_by"] = staff_id
+                    target_ticket["status"] = "claimed"
+                if in_active and active_key:
+                    active_dict[active_key] = target_ticket
 
-                if discord_ch and isinstance(discord_ch, discord.TextChannel):
+                if discord_ch:
                     mention_txt = staff_member.mention if staff_member else "Support Team"
+                    subj = (target_ticket.get("subject") or target_ticket.get("category_option") or "Support") if target_ticket else "Support"
                     claim_emb = discord.Embed(
-                        title="🎫 Ticket übernommen",
-                        description=f"Dieses Ticket wurde von {mention_txt} über das Dashboard übernommen.",
+                        title=f"🎫 Ticket Claimed: #{discord_ch.name}",
+                        description="A staff member is handling this ticket now.",
                         color=discord.Color.yellow()
                     )
+                    claim_emb.add_field(name="Assigned Staff", value=mention_txt, inline=False)
+                    claim_emb.add_field(name="Subject", value=str(subj), inline=False)
                     claim_emb.set_footer(text="Orbit Ticket System")
                     try:
                         await discord_ch.send(embed=claim_emb)
@@ -703,36 +735,35 @@ class ActionsMixin:
                 status_label = "Gelöst" if is_resolved else "Abgelehnt"
                 reason = f"Ticket über Dashboard als {status_label} markiert"
 
-                if sub_id in active_dict:
-                    item = active_dict.pop(sub_id)
+                if in_active and active_key and active_key in active_dict:
+                    item = active_dict.pop(active_key)
                     item["status"] = final_status
                     item["closed_at"] = now_ts
                     closed_list.insert(0, item)
+                elif target_ticket:
+                    target_ticket["status"] = final_status
+                    if not target_ticket.get("closed_at"):
+                        target_ticket["closed_at"] = now_ts
 
-                    if discord_ch and isinstance(discord_ch, discord.TextChannel):
-                        mention_txt = executor.mention if hasattr(executor, "mention") else "Support Team"
-                        color = discord.Color.green() if is_resolved else discord.Color.red()
-                        emb = discord.Embed(
-                            title=f"🎫 Ticket {status_label}",
-                            description=f"Dieses Ticket wurde von {mention_txt} über das Dashboard als **{status_label}** markiert und wird nun geschlossen.",
-                            color=color
-                        )
-                        emb.set_footer(text="Orbit Ticket System")
-                        try:
-                            await discord_ch.send(embed=emb)
-                        except Exception:
-                            pass
+                if discord_ch:
+                    mention_txt = executor.mention if hasattr(executor, "mention") else "Support Team"
+                    color = discord.Color.green() if is_resolved else discord.Color.red()
+                    emb = discord.Embed(
+                        title=f"🎫 Ticket {status_label}",
+                        description=f"Dieses Ticket wurde von {mention_txt} über das Dashboard als **{status_label}** markiert und wird nun geschlossen.",
+                        color=color
+                    )
+                    emb.set_footer(text="Orbit Ticket System")
+                    try:
+                        await discord_ch.send(embed=emb)
+                    except Exception:
+                        pass
 
-                        asyncio.create_task(close_ticket_flow(
-                            guild, discord_ch, executor,
-                            reason=reason,
-                            final_status=final_status
-                        ))
-                else:
-                    for ct in closed_list:
-                        if isinstance(ct, dict) and str(ct.get("id") or ct.get("channel_id")) == sub_id:
-                            ct["status"] = final_status
-                            break
+                    asyncio.create_task(close_ticket_flow(
+                        guild, discord_ch, executor,
+                        reason=reason,
+                        final_status=final_status
+                    ))
 
             save_ticket_config(guild_id, ticket_cfg)
             return web.json_response({
@@ -755,7 +786,16 @@ class ActionsMixin:
 
         try:
             from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
+            from Components.Systems.Tickets._views import close_ticket_flow
             ticket_cfg = load_ticket_config(guild_id)
+
+            session = await self.get_user_session(request)
+            staff_id = int(session["id"]) if (session and session.get("id") and str(session["id"]).isdigit()) else None
+            staff_member = guild.get_member(staff_id) if (guild and staff_id) else None
+            executor = staff_member or self.bot.user
+
+            active_dict = ticket_cfg.setdefault("active_tickets", {})
+            closed_list = ticket_cfg.setdefault("closed_tickets", [])
 
             sub_id = None
             try:
@@ -765,13 +805,62 @@ class ActionsMixin:
                 pass
 
             if sub_id:
+                # Find target ticket to see if discord channel is still open
+                target_ticket = None
+                if sub_id in active_dict:
+                    target_ticket = active_dict.pop(sub_id)
+                else:
+                    for k, t in list(active_dict.items()):
+                        if isinstance(t, dict) and (str(t.get("channel_id")) == sub_id or str(t.get("id")) == sub_id or str(t.get("number")) == sub_id):
+                            target_ticket = active_dict.pop(k)
+                            break
+
+                matched_closed = [
+                    t for t in ticket_cfg.get("closed_tickets", [])
+                    if isinstance(t, dict) and (str(t.get("id")) == sub_id or str(t.get("channel_id")) == sub_id or str(t.get("number")) == sub_id)
+                ]
+                if not target_ticket and matched_closed:
+                    target_ticket = matched_closed[0]
+
                 orig_len = len(ticket_cfg.get("closed_tickets", []))
                 ticket_cfg["closed_tickets"] = [
                     t for t in ticket_cfg.get("closed_tickets", [])
-                    if isinstance(t, dict) and str(t.get("id") or t.get("channel_id")) != sub_id
+                    if not (isinstance(t, dict) and (str(t.get("id")) == sub_id or str(t.get("channel_id")) == sub_id or str(t.get("number")) == sub_id))
                 ]
                 removed_count = orig_len - len(ticket_cfg["closed_tickets"])
+
+                discord_ch = None
+                cand_ids = []
+                if target_ticket:
+                    if target_ticket.get("channel_id"): cand_ids.append(str(target_ticket["channel_id"]))
+                    if target_ticket.get("id"): cand_ids.append(str(target_ticket["id"]))
+                if sub_id: cand_ids.append(str(sub_id))
+
+                for cid in cand_ids:
+                    if cid.isdigit():
+                        ch = guild.get_channel(int(cid))
+                        if ch and isinstance(ch, discord.TextChannel):
+                            discord_ch = ch
+                            break
+
+                if discord_ch:
+                    asyncio.create_task(close_ticket_flow(
+                        guild, discord_ch, executor,
+                        reason="Ticket über Dashboard gelöscht",
+                        final_status="deleted"
+                    ))
             else:
+                for t in ticket_cfg.get("closed_tickets", []):
+                    if isinstance(t, dict):
+                        cid = str(t.get("channel_id") or t.get("id") or "")
+                        if cid.isdigit():
+                            ch = guild.get_channel(int(cid))
+                            if ch and isinstance(ch, discord.TextChannel):
+                                asyncio.create_task(close_ticket_flow(
+                                    guild, ch, executor,
+                                    reason="Geschlossene Tickets über Dashboard geleert",
+                                    final_status="deleted"
+                                ))
                 removed_count = len(ticket_cfg.get("closed_tickets", []))
                 ticket_cfg["closed_tickets"] = []
 
@@ -786,7 +875,7 @@ class ActionsMixin:
 
 
 
-    async def api_action_send_embed(self, request: web.Request):
+        async def api_action_send_embed(self, request: web.Request):
         guild_id_str = request.match_info.get("id")
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)

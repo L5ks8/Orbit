@@ -13,6 +13,12 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
     ticket_data = config.get("active_tickets", {}).get(str(channel.id))
     
     if not ticket_data:
+        for ct in config.get("closed_tickets", []):
+            if isinstance(ct, dict) and str(ct.get("channel_id") or ct.get("id")) == str(channel.id):
+                ticket_data = ct
+                break
+
+    if not ticket_data:
         creator_id = "Unknown"
         subject = "Unknown"
     else:
@@ -238,45 +244,63 @@ async def close_ticket_flow(guild: discord.Guild, channel: discord.TextChannel, 
     transcript_text = html_template + "\n".join(msgs_html) + "\n    </div>\n</body>\n</html>"
     transcript_bytes = transcript_text.encode("utf-8")
 
+    creator_obj = None
+    if creator_id != "Unknown":
+        try:
+            creator_obj = guild.get_member(int(creator_id))
+        except Exception:
+            pass
+
     log_ch_id = config.get("log_channel_id")
+    log_channel = None
     if log_ch_id:
-        log_channel = guild.get_channel(log_ch_id)
-        if log_channel:
-            creator_obj = None
-            if creator_id != "Unknown":
-                try:
-                    creator_obj = guild.get_member(int(creator_id))
-                except Exception:
-                    pass
+        try:
+            log_channel = guild.get_channel(int(log_ch_id))
+        except Exception:
+            log_channel = None
 
-            creator_mention = creator_obj.mention if creator_obj else f"<@{creator_id}>"
-            creator_username = f"@{creator_obj.name}" if creator_obj else f"@{creator_id}"
-            creator_id_str = str(creator_obj.id) if creator_obj else str(creator_id)
+    status_text = "Gelöst" if final_status == "resolved" else ("Abgelehnt" if final_status == "rejected" else ("Gelöscht" if final_status == "deleted" else "Closed"))
+    color = discord.Color.green() if final_status == "resolved" else (discord.Color.red() if final_status == "rejected" else discord.Color.dark_red())
+    
+    executor_mention = closed_by.mention if hasattr(closed_by, "mention") else f"@{closed_by}"
+    executor_username = f"@{closed_by.name}" if hasattr(closed_by, "name") and closed_by.name else str(closed_by)
+    executor_id_str = str(getattr(closed_by, "id", "Unknown"))
+    creator_mention = creator_obj.mention if creator_obj else f"<@{creator_id}>"
+    creator_username = f"@{creator_obj.name}" if creator_obj else f"@{creator_id}"
+    creator_id_str = str(creator_obj.id) if creator_obj else str(creator_id)
 
-            executor_mention = closed_by.mention
-            executor_username = f"@{closed_by.name}" if hasattr(closed_by, "name") and closed_by.name else str(closed_by)
-            executor_id_str = str(getattr(closed_by, "id", "Unknown"))
+    if log_channel:
+        embed = discord.Embed(title=f"Ticket {status_text}", description=f"{executor_mention} closed a ticket ({status_text}).", color=color)
+        embed.add_field(name="Ticket Info", value=f"Name: #{channel.name}\nID: {channel.id}\nStatus: {status_text}\nReason: {reason}", inline=False)
+        embed.add_field(name="Creator Info", value=f"Creator: {creator_mention}\nUsername: {creator_username}\nID: {creator_id_str}", inline=False)
+        embed.add_field(name="Executor Info", value=f"Executor: {executor_mention}\nUsername: {executor_username}\nID: {executor_id_str}", inline=False)
+        embed.set_footer(text="Orbit Ticket System")
+        try:
+            await log_channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+            file = discord.File(fp=io.BytesIO(transcript_bytes), filename=f"transcript-{channel.name}.html")
+            await log_channel.send(file=file)
+        except Exception as e:
+            print(f"[Tickets] Failed to send transcript to log channel: {e}", flush=True)
 
-            status_text = "Gelöst" if final_status == "resolved" else ("Abgelehnt" if final_status == "rejected" else "Closed")
-            color = discord.Color.green() if final_status == "resolved" else (discord.Color.red() if final_status == "rejected" else discord.Color.dark_red())
-            embed = discord.Embed(title=f"Ticket {status_text}", description=f"{executor_mention} closed a ticket ({status_text}).", color=color)
-            embed.add_field(name="Ticket Info", value=f"Name: {channel.name}\nID: {channel.id}\nStatus: {status_text}\nReason: {reason}", inline=False)
-            embed.add_field(name="Creator Info", value=f"Creator: {creator_mention}\nUsername: {creator_username}\nID: {creator_id_str}", inline=False)
-            embed.add_field(name="Executor Info", value=f"Executor: {executor_mention}\nUsername: {executor_username}\nID: {executor_id_str}", inline=False)
-            kwargs = {"embed": embed}
-            try:
-                await log_channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
-                file = discord.File(fp=io.BytesIO(transcript_bytes), filename=f"transcript-{channel.name}.html")
-                await log_channel.send(file=file)
-            except Exception:
-                pass
+    if creator_obj:
+        try:
+            dm_file = discord.File(fp=io.BytesIO(transcript_bytes), filename=f"transcript-{channel.name}.html")
+            dm_emb = discord.Embed(
+                title=f"🎫 Ticket {status_text}: #{channel.name}",
+                description=f"Dein Support-Ticket auf **{guild.name}** wurde geschlossen ({status_text}).\nHier ist dein Transkript.",
+                color=color
+            )
+            dm_emb.set_footer(text="Orbit Ticket System")
+            await creator_obj.send(embed=dm_emb, file=dm_file)
+        except Exception:
+            pass
 
     close_active_ticket(guild.id, channel.id, final_status=final_status)
     await asyncio.sleep(3)
     try:
         await channel.delete(reason=f"Ticket closed by {closed_by}: {reason}")
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[Tickets] Could not delete channel #{channel.name}: {e}", flush=True)
 
 class TicketOpenModal(Modal):
     def __init__(self, category_option: str = "General Support", slot_config: dict | None = None):
