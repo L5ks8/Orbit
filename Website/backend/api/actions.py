@@ -3102,3 +3102,174 @@ class ActionsMixin:
             return web.json_response({"success": True, "cleared": cleared})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
+    # ----------------------------------------------------
+    # Backups Management Endpoints
+    # ----------------------------------------------------
+    async def api_get_backups(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("is_admin"):
+            return web.json_response({"error": "Unauthorized: Admin permissions required"}, status=403)
+
+        from Components.Commands.Backup.storage import get_backups, get_backup_config, MAX_BACKUPS
+        backups = get_backups(guild_id)
+        config = get_backup_config(guild_id)
+
+        sanitized_backups = []
+        for b in backups:
+            channels = b.get("channels", [])
+            roles = b.get("roles", [])
+            categories = b.get("categories", [])
+            sanitized_backups.append({
+                "id": str(b.get("_id")),
+                "name": b.get("name") or "Server Backup",
+                "timestamp": b.get("timestamp", 0),
+                "channels_count": b.get("channels_count", len(channels)),
+                "roles_count": b.get("roles_count", len(roles)),
+                "members_count": b.get("members_count", guild.member_count if guild else 0),
+                "categories_count": len(categories),
+                "channels": channels,
+                "roles": roles,
+                "categories": categories
+            })
+
+        return web.json_response({
+            "backups": sanitized_backups,
+            "config": {
+                "enabled": bool(config.get("enabled", False)),
+                "interval": config.get("interval", "daily"),
+                "last_backup": config.get("last_backup"),
+                "next_backup": config.get("next_backup"),
+                "max_slots": MAX_BACKUPS
+            },
+            "max_slots": MAX_BACKUPS
+        })
+
+    async def api_create_backup(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("is_admin"):
+            return web.json_response({"error": "Unauthorized: Admin permissions required"}, status=403)
+
+        name = None
+        try:
+            body = await request.json()
+            name = body.get("name")
+        except Exception:
+            pass
+
+        try:
+            from Components.Commands.Backup.backup import create_backup_data
+            from Components.Commands.Backup.storage import save_backup, get_backup_config, save_backup_config, MAX_BACKUPS, get_backups
+            backup_data = await create_backup_data(guild, name=name)
+            save_backup(backup_data)
+
+            # Update last backup in config
+            cfg = get_backup_config(guild_id)
+            cfg["last_backup"] = int(time.time())
+            save_backup_config(guild_id, cfg)
+
+            total_count = len(get_backups(guild_id))
+            return web.json_response({
+                "success": True,
+                "backup": {
+                    "id": backup_data["_id"],
+                    "name": backup_data["name"],
+                    "timestamp": backup_data["timestamp"],
+                    "channels_count": backup_data.get("channels_count", len(backup_data.get("channels", []))),
+                    "roles_count": backup_data.get("roles_count", len(backup_data.get("roles", []))),
+                    "members_count": backup_data.get("members_count", 0),
+                    "channels": backup_data.get("channels", []),
+                    "roles": backup_data.get("roles", [])
+                },
+                "total_count": total_count,
+                "max_slots": MAX_BACKUPS
+            })
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_restore_backup(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        backup_id = request.match_info.get("backup_id")
+        if not guild_id_str or not guild_id_str.isdigit() or not backup_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("is_admin"):
+            return web.json_response({"error": "Unauthorized: Admin permissions required"}, status=403)
+
+        from Components.Commands.Backup.storage import get_backup
+        from Components.Commands.Backup.backup import restore_backup_data
+        backup_data = get_backup(backup_id)
+        if not backup_data or backup_data.get("guild_id") != guild_id:
+            return web.json_response({"error": "Backup not found"}, status=404)
+
+        try:
+            asyncio.create_task(restore_backup_data(guild, backup_data))
+            return web.json_response({"success": True, "message": f"Backup restoration started for '{backup_data.get('name')}'"})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_delete_backup(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        backup_id = request.match_info.get("backup_id")
+        if not guild_id_str or not guild_id_str.isdigit() or not backup_id:
+            return web.json_response({"error": "Invalid parameters"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("is_admin"):
+            return web.json_response({"error": "Unauthorized: Admin permissions required"}, status=403)
+
+        from Components.Commands.Backup.storage import get_backup, delete_backup
+        backup_data = get_backup(backup_id)
+        if not backup_data or backup_data.get("guild_id") != guild_id:
+            return web.json_response({"error": "Backup not found"}, status=404)
+
+        try:
+            delete_backup(backup_id)
+            return web.json_response({"success": True})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def api_save_backup_config(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        guild, user_perms = await self._check_guild_access(request, guild_id)
+        if not guild or not user_perms.get("is_admin"):
+            return web.json_response({"error": "Unauthorized: Admin permissions required"}, status=403)
+
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "Invalid JSON"}, status=400)
+
+        from Components.Commands.Backup.storage import get_backup_config, save_backup_config, calculate_next_backup_timestamp
+        cfg = get_backup_config(guild_id)
+
+        if "enabled" in body:
+            cfg["enabled"] = bool(body["enabled"])
+        if "interval" in body:
+            cfg["interval"] = str(body["interval"])
+
+        now = int(time.time())
+        if cfg.get("enabled"):
+            cfg["next_backup"] = calculate_next_backup_timestamp(cfg.get("interval", "daily"), now)
+        else:
+            cfg["next_backup"] = None
+
+        save_backup_config(guild_id, cfg)
+        return web.json_response({"success": True, "config": cfg})

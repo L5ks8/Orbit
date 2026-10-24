@@ -685,6 +685,36 @@ const API = {
     });
     this.invalidateCache(`giveaways_${guildId}`);
     return res;
+  },
+
+  async getBackups(guildId) {
+    return await this.request(`/api/server/${guildId}/backups`);
+  },
+
+  async createBackup(guildId, name = null) {
+    return await this.request(`/api/server/${guildId}/backups/create`, {
+      method: 'POST',
+      body: { name }
+    });
+  },
+
+  async restoreBackup(guildId, backupId) {
+    return await this.request(`/api/server/${guildId}/backups/${encodeURIComponent(backupId)}/restore`, {
+      method: 'POST'
+    });
+  },
+
+  async deleteBackup(guildId, backupId) {
+    return await this.request(`/api/server/${guildId}/backups/${encodeURIComponent(backupId)}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async saveBackupConfig(guildId, config) {
+    return await this.request(`/api/server/${guildId}/backups/config`, {
+      method: 'POST',
+      body: config
+    });
   }
 };
 

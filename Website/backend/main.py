@@ -212,6 +212,13 @@ def setup_web_app(bot) -> web.Application:
     app.router.add_post("/api/giveaways/{id}/{gw_id}/reroll", dashboard.api_reroll_giveaway)
     app.router.add_delete("/api/giveaways/{id}/{gw_id}", dashboard.api_delete_giveaway)
 
+    # Server Backups
+    app.router.add_get("/api/server/{id}/backups", dashboard.api_get_backups)
+    app.router.add_post("/api/server/{id}/backups/create", dashboard.api_create_backup)
+    app.router.add_post("/api/server/{id}/backups/config", dashboard.api_save_backup_config)
+    app.router.add_post("/api/server/{id}/backups/{backup_id}/restore", dashboard.api_restore_backup)
+    app.router.add_delete("/api/server/{id}/backups/{backup_id}", dashboard.api_delete_backup)
+
     app.router.add_get("/{tail:.*}", dashboard.handle_spa)
 
     return app
