@@ -533,6 +533,20 @@ CRITICAL INSTRUCTION - STRICT USER INTENT GATING (DO ONLY WHAT WAS ASKED):
     -> If actions are recorded: report the total volume, breakdown of action types (e.g. Warns, Timeouts, Bans), and top reasons clearly.
     -> If no actions are recorded: inform the user simply that no moderation cases or warnings are currently recorded on this server.
     -> ALWAYS leave `"actions": []` empty for history lookups!
+- GIVEAWAY CREATION (MANDATORY RULE - REAL INTERACTIVE GIVEAWAYS ONLY):
+  * When the user commands or asks to create, host, or start a giveaway / Gewinnspiel / Verlosung / raffle:
+    -> You MUST ALWAYS use the action type "create_giveaway"!
+    -> NEVER EVER use "send_message" for a giveaway!
+    -> Orbit features a native interactive Giveaway system with real Discord buttons (`[Enter]` / `[Leave]`), automated random winner drawing, countdown timers, and full synchronization with the Dashboard "Giveaways" tab.
+    -> Using "send_message" for a giveaway creates a static embed where users must manually react with emojis and it NEVER appears in the dashboard panel! That is strictly forbidden.
+    -> If the user didn't specify a channel, choose an appropriate channel from Text Channels (such as #giveaways, #giveaway, #events, #announcements, or #general) and specify its ID in "channel_id".
+    -> Always populate:
+       - "type": "create_giveaway"
+       - "prize": the prize being given away (e.g. "Discord Nitro", "10€ Paysafecard")
+       - "winners": number of winners (integer, default 1)
+       - "duration_seconds": duration in seconds (e.g. 3600 for 1h, 86400 for 24h/1 day, 604800 for 7 days)
+       - "channel_id": target text channel ID
+       - "description_text": instructions (e.g. "Click the Enter button below to participate!")
 - EXPLICIT ACTION COMMANDS ONLY:
   * ONLY populate the "actions" array when the user explicitly commands you to build, configure, setup, create, enable, disable, or modify a feature (e.g. "Create a giveaway for Nitro", "Setup ticket panel in #support", "Enable Anti-Spam", "Lock #general").
   * When executing an explicit user command, include the required action objects in "actions", and mention in "reply" that the user can review and click **Build** at the top right to apply the planned changes.
@@ -570,7 +584,7 @@ SERVER CONTEXT:
 - Roles & Exact Permissions ({len(guild.roles)} total):{roles_formatted}
 
 SUPPORTED ACTIONS (include in the "actions" array):
-1. create_giveaway: {{"type": "create_giveaway", "title": "Create Giveaway: <Prize> (<Winners> Winners, <Duration>)", "description": "Deploys an interactive giveaway message to #<channel>", "channel_id": "<channel_id>", "prize": "Discord Nitro", "winners": 1, "duration_seconds": 86400, "description_text": "Click the button to enter!", "required_role_id": "<optional_role_id>", "color": "#5865F2"}}
+1. create_giveaway: {{"type": "create_giveaway", "title": "Create Giveaway: <Prize> (<Winners> Winners, <Duration>)", "description": "Deploys an interactive giveaway message with Discord Enter/Leave buttons and registers it in the dashboard", "channel_id": "<channel_id>", "prize": "Discord Nitro", "winners": 1, "duration_seconds": 86400, "description_text": "Click the Enter button below to participate!", "required_role_id": "<optional_role_id>", "color": "#5865F2"}}
 2. create_ticket_panel: {{"type": "create_ticket_panel", "title": "Deploy Ticket Support Panel", "description": "Posts interactive support panel with dropdown options to #<channel>", "channel_id": "<channel_id>", "category_id": "<category_id>", "support_role_ids": ["<role_id>"], "panel_title": "Support Desk", "panel_description": "Click the button or select an option to open a ticket.", "panel_instructions": "> Select a department from the dropdown to open your private channel.", "options_slots": [{{"name": "General Support", "emoji": "🎫", "description": "General assistance"}}, {{"name": "Billing & Orders", "emoji": "💳", "description": "Order inquiries"}}], "color": "#5865F2"}}
 3. create_verification_panel: {{"type": "create_verification_panel", "title": "Setup Verification in #<channel>", "description": "Deploys an interactive verification panel assigning verified role", "channel_id": "<channel_id>", "role_id": "<role_id>", "remove_role_id": "<optional_role_id>", "verification_type": "captcha"|"oneclick"|"questionnaire", "embed_title": "Server Verification", "embed_description": "Click the button below to verify your account and gain access.", "button_label": "Verify Account", "button_style": "success", "color": "#22C55E"}}
 4. create_reaction_roles: {{"type": "create_reaction_roles", "title": "Deploy Reaction Role Menu in #<channel>", "description": "Posts self-assignable role buttons in #<channel>", "channel_id": "<channel_id>", "embed_title": "Self Roles", "embed_description": "Click buttons below to toggle your roles.", "roles": [{{"role_id": "<role_id>", "label": "Updates", "emoji": "📢", "style": "primary"}}], "color": "#5865F2"}}
@@ -586,7 +600,7 @@ SUPPORTED ACTIONS (include in the "actions" array):
 14. configure_logs: {{"type": "configure_logs", "title": "...", "description": "...", "settings": {{"enabled": true, "default_channel_id": "..."}}}}
 15. configure_tempvoice: {{"type": "configure_tempvoice", "title": "...", "description": "...", "settings": {{"enabled": true, "trigger_channel_id": "...", "category_id": "...", "default_name": "🔊 {{user}}'s Channel", "default_limit": 0}}}}
 16. configure_invites: {{"type": "configure_invites", "title": "...", "description": "...", "settings": {{"enabled": true, "track_leaves": true, "count_rejoins": false}}}}
-17. send_message: {{"type": "send_message", "title": "...", "description": "...", "channel_id": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#5865F2"}}
+17. send_message: {{"type": "send_message", "title": "...", "description": "...", "channel_id": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#5865F2"}} (FOR GENERAL NOTICES ONLY! NEVER use send_message for giveaways, raffles, tickets, or verification - use create_giveaway instead!)
 
 RESPONSE FORMAT (STRICTLY PURE JSON):
 Always respond exclusively with a valid JSON object:
@@ -890,6 +904,33 @@ ALWAYS use real IDs from the server context above!"""
             act["id"] = act.get("id") or secrets.token_hex(6)
             clean_actions.append(act)
 
+        # Automatic conversion: if the AI generated a send_message action for a giveaway/raffle,
+        # convert it into a real interactive create_giveaway action!
+        processed_actions = []
+        for act in clean_actions:
+            atype = str(act.get("type") or "").strip()
+            if atype == "send_message":
+                combined_text = f"{act.get('title', '')} {act.get('embed_title', '')} {act.get('embed_description', '')} {act.get('content', '')} {act.get('message', '')}".lower()
+                user_msg_lower = user_message.lower()
+                is_gw = any(k in combined_text for k in ["giveaway", "gewinnspiel", "verlosung", "raffle", "🎉"]) or any(k in user_msg_lower for k in ["giveaway", "gewinnspiel", "verlosung", "raffle"])
+                if is_gw:
+                    raw_prize = str(act.get("embed_title") or act.get("title") or "").strip()
+                    for prefix in ["giveaway:", "giveaway -", "giveaway", "gewinnspiel:", "gewinnspiel -", "gewinnspiel", "verlosung:", "verlosung", "🎉"]:
+                        if raw_prize.lower().startswith(prefix):
+                            raw_prize = raw_prize[len(prefix):].strip(" -:!🎉")
+                    prize = raw_prize if raw_prize else "Giveaway Prize"
+
+                    act["type"] = "create_giveaway"
+                    act["title"] = f"Create Giveaway: {prize}"
+                    act["prize"] = prize
+                    act["description"] = act.get("embed_description") or act.get("description") or "Click the Enter button below to participate!"
+                    act["description_text"] = act.get("embed_description") or act.get("description_text") or "Click the Enter button below to participate!"
+                    act["winners"] = int(act.get("winners") or act.get("winners_count") or 1)
+                    act["duration_seconds"] = int(act.get("duration_seconds") or 86400)
+                    act["color"] = act.get("embed_color") or act.get("color") or "#5865F2"
+            processed_actions.append(act)
+        clean_actions = processed_actions
+
         # Safety Intent Gating: If the user asked a question, requested history/cases/stats,
         # or asked for information without an explicit command to build/configure/create,
         # discard any hallucinated actions so the bot strictly does only what it was asked to do.
@@ -897,6 +938,7 @@ ALWAYS use real IDs from the server context above!"""
         action_intent_words = [
             "create", "build", "setup", "set up", "configure", "apply", "enable", "disable",
             "turn on", "turn off", "lock", "unlock", "delete", "remove", "add", "deploy", "update",
+            "giveaway", "verlosung", "gewinnspiel", "raffle", "verlose", "starte",
             "erstelle", "erstell", "bau", "bauen", "einrichten", "richte ein", "konfigurieren", "konfiguriere",
             "aktiviere", "aktivier", "deaktiviere", "schalte ein", "schalte aus", "sperre", "entsperre", "lösche", "entferne", "setze", "änder", "ändere"
         ]
@@ -940,7 +982,7 @@ ALWAYS use real IDs from the server context above!"""
             "chats": chats
         })
 
-    async def _execute_actions_list(self, guild: discord.Guild, actions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _execute_actions_list(self, guild: discord.Guild, actions: List[Dict[str, Any]], author_id: int = 0) -> Dict[str, Any]:
         guild_id = guild.id
         applied_summaries = []
         errors = []
@@ -1208,6 +1250,15 @@ ALWAYS use real IDs from the server context above!"""
                         cn = str(act.get("channel_name")).lstrip("#").strip().lower()
                         channel = discord.utils.get(guild.text_channels, name=cn)
                     if not channel:
+                        # Fallback: search for giveaway-friendly channels or the first text channel
+                        preferred_names = ["giveaway", "giveaways", "gewinnspiel", "gewinnspiele", "verlosung", "verlosungen", "events", "announcements", "general", "chat", "main"]
+                        for pref in preferred_names:
+                            channel = discord.utils.get(guild.text_channels, name=pref)
+                            if channel:
+                                break
+                        if not channel and guild.text_channels:
+                            channel = guild.text_channels[0]
+                    if not channel:
                         errors.append(f"Giveaway channel '{ch_id_raw or act.get('channel_name')}' not found on server.")
                         continue
 
@@ -1242,14 +1293,14 @@ ALWAYS use real IDs from the server context above!"""
                         "channel_id": channel.id,
                         "message_id": 0,
                         "prize": prize,
-                        "description": str(act.get("description_text") or act.get("description") or "Click the button below to participate!"),
+                        "description": str(act.get("description_text") or act.get("description") or "Click the Enter button below to participate!"),
                         "winners": winners,
                         "winners_count": winners,
                         "end_timestamp": end_time,
                         "entries": [],
                         "ended": False,
                         "draft": False,
-                        "author_id": 0,
+                        "author_id": author_id or (guild.me.id if guild.me else 0),
                         "required_role_id": req_role_int,
                         "color": color_val,
                         "created_at": now_ts
@@ -1570,7 +1621,9 @@ ALWAYS use real IDs from the server context above!"""
         if not isinstance(actions, list) or not actions:
             return web.json_response({"error": "No changes to apply."}, status=400)
 
-        res = await self._execute_actions_list(guild, actions)
+        session = await self.get_user_session(request)
+        author_id = int(session["id"]) if session and str(session.get("id", "")).isdigit() else 0
+        res = await self._execute_actions_list(guild, actions, author_id=author_id)
         return web.json_response(res)
 
     async def api_ai_helper_undo(self, request: web.Request):
@@ -1609,6 +1662,17 @@ ALWAYS use real IDs from the server context above!"""
                     if gw_id in gw_data:
                         del gw_data[gw_id]
                         save_giveaways(guild_id, gw_data)
+                    ch_id = entry.get("channel_id")
+                    msg_id = entry.get("message_id")
+                    if ch_id and msg_id:
+                        ch = guild.get_channel(int(ch_id))
+                        if ch:
+                            try:
+                                m = await ch.fetch_message(int(msg_id))
+                                if m:
+                                    await m.delete()
+                            except Exception:
+                                pass
                     reverted.append(f"Giveaway {gw_id} removed")
                 elif etype == "restore_config":
                     mod = entry.get("module")
@@ -1664,5 +1728,7 @@ ALWAYS use real IDs from the server context above!"""
             return web.json_response({"error": "Nothing to redo."}, status=400)
 
         batch = redo_stack.pop()
-        res = await self._execute_actions_list(guild, batch.get("actions", []))
+        session = await self.get_user_session(request)
+        author_id = int(session["id"]) if session and str(session.get("id", "")).isdigit() else 0
+        res = await self._execute_actions_list(guild, batch.get("actions", []), author_id=author_id)
         return web.json_response(res)
