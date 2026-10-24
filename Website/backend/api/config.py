@@ -1292,7 +1292,7 @@ class ConfigMixin:
                                 if discord_ch and isinstance(discord_ch, discord.TextChannel):
                                     from Components.Systems.Tickets._views import close_ticket_flow
                                     status_label = "Resolved" if new_status == "resolved" else "Rejected"
-                                    color = discord.Color.green() if new_status == "resolved" else discord.Color.red()
+                                    color = discord.Color(0x5865F2) if new_status == "resolved" else discord.Color.red()
                                     mention_txt = executor.mention if hasattr(executor, "mention") else "Support Team"
                                     emb = discord.Embed(
                                         title=f"🎫 Ticket {status_label}",

@@ -748,7 +748,7 @@ class ActionsMixin:
 
                 if discord_ch:
                     mention_txt = executor.mention if hasattr(executor, "mention") else "Support Team"
-                    color = discord.Color.green() if is_resolved else discord.Color.red()
+                    color = discord.Color(0x5865F2) if is_resolved else discord.Color.red()
                     emb = discord.Embed(
                         title=f"🎫 Ticket {status_label}",
                         description=f"This ticket was marked as **{status_label}** via Dashboard by {mention_txt} and is now being closed.",
