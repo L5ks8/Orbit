@@ -735,21 +735,46 @@
                           ${actionsCount > 0 ? modActivity.map(act => {
                             const actType = (act.action || 'warn').toLowerCase();
                             let badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                            let iconBoxClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
                             let iconSvg = SVGS.alertTriangle;
-                            if (actType.includes('ban')) {
+
+                            if (actType.includes('unban')) {
+                              badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                              iconBoxClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                              iconSvg = SVGS.shield;
+                            } else if (actType.includes('ban')) {
                               badgeClass = 'bg-red-500/10 text-red-400 border-red-500/20';
+                              iconBoxClass = 'bg-red-500/10 text-red-400 border border-red-500/20';
                               iconSvg = SVGS.ban;
                             } else if (actType.includes('kick')) {
                               badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+                              iconBoxClass = 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
                               iconSvg = SVGS.doorOpen;
+                            } else if (actType.includes('unmute') || actType.includes('untimeout')) {
+                              badgeClass = 'bg-teal-500/10 text-teal-400 border-teal-500/20';
+                              iconBoxClass = 'bg-teal-500/10 text-teal-400 border border-teal-500/20';
+                              iconSvg = SVGS.shield;
                             } else if (actType.includes('timeout') || actType.includes('mute')) {
                               badgeClass = 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+                              iconBoxClass = 'bg-orange-500/10 text-orange-400 border border-orange-500/20';
                               iconSvg = SVGS.timer;
+                            } else if (actType.includes('purge') || actType.includes('delete') || actType.includes('clear')) {
+                              badgeClass = 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+                              iconBoxClass = 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+                              iconSvg = SVGS.trash2;
+                            } else if (actType.includes('jail') || actType.includes('lock')) {
+                              badgeClass = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+                              iconBoxClass = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+                              iconSvg = SVGS.lock;
+                            } else if (!actType.includes('warn')) {
+                              badgeClass = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+                              iconBoxClass = 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
+                              iconSvg = SVGS.gavel;
                             }
 
                             return `
                               <div class="flex items-start gap-3 px-4 sm:px-5 py-3 hover:bg-neutral-800/20 transition-[background-color] duration-150 ease-out">
-                                <div class="grid place-items-center w-8 h-8 rounded-lg bg-amber-500/10 flex-shrink-0 mt-0.5">
+                                <div class="grid place-items-center w-8 h-8 rounded-lg ${iconBoxClass} flex-shrink-0 mt-0.5">
                                   ${iconSvg}
                                 </div>
                                 <div class="flex-1 min-w-0">
