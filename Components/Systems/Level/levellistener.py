@@ -1,5 +1,6 @@
 import time
 import re
+import asyncio
 import discord
 from discord.ext import commands, tasks
 from Components.Systems.Level._storage import (
@@ -318,10 +319,11 @@ class LevelListenerCog(commands.Cog):
 
     @tasks.loop(seconds=60)
     async def voice_xp_loop(self):
-        for guild in self.bot.guilds:
+        for guild in list(self.bot.guilds):
             try:
-                config = load_level_config(guild.id)
+                config = await asyncio.to_thread(load_level_config, guild.id)
                 if not config.get("enabled", False) or not config.get("voice_xp_enabled", False):
+                    await asyncio.sleep(0.01)
                     continue
 
                 ignore_muted = config.get("voice_xp_ignore_muted", True)
@@ -367,6 +369,7 @@ class LevelListenerCog(commands.Cog):
                             pass
             except Exception as guild_e:
                 pass
+            await asyncio.sleep(0.05)
 
     @voice_xp_loop.before_loop
     async def before_voice_xp_loop(self):
@@ -427,54 +430,60 @@ class LevelListenerCog(commands.Cog):
     # ─── Hourly Leaderboard ───────────────────────────────────────────────────
     @tasks.loop(hours=1)
     async def leaderboard_loop(self):
-        for guild in self.bot.guilds:
-            config = load_level_config(guild.id)
-            if not config.get("enabled", False):
-                continue
-
-            lb_channel_id = config.get("leaderboard_channel", "")
-            if not lb_channel_id:
-                continue
-
+        for guild in list(self.bot.guilds):
             try:
-                channel = guild.get_channel(int(lb_channel_id))
-            except (ValueError, TypeError):
-                continue
+                config = await asyncio.to_thread(load_level_config, guild.id)
+                if not config.get("enabled", False):
+                    await asyncio.sleep(0.01)
+                    continue
 
-            if not channel:
-                continue
+                lb_channel_id = config.get("leaderboard_channel", "")
+                if not lb_channel_id:
+                    await asyncio.sleep(0.01)
+                    continue
 
-            top = get_leaderboard(guild.id, 10)
-            if not top:
-                continue
+                try:
+                    channel = guild.get_channel(int(lb_channel_id))
+                except (ValueError, TypeError):
+                    continue
 
-            color_hex = config.get("leaderboard_color", "#3B82F6")
-            try:
-                color = int(color_hex.lstrip("#"), 16)
-            except ValueError:
-                color = 0x3B82F6
+                if not channel:
+                    continue
 
-            desc_lines = []
-            for i, entry in enumerate(top, 1):
-                uid = entry.get("user_id")
-                xp = entry.get("total_xp", 0)
-                lvl = level_from_xp(xp)
-                member = guild.get_member(uid)
-                name = member.display_name if member else f"User#{uid}"
-                medal = f"`#{i}`"
-                desc_lines.append(f"{medal} **{name}** — Level {lvl} • {xp:,} XP")
+                top = await asyncio.to_thread(get_leaderboard, guild.id, 10)
+                if not top:
+                    continue
 
-            embed = discord.Embed(
-                title="XP Leaderboard",
-                description="\n".join(desc_lines),
-                color=color
-            )
-            embed.set_footer(text=f"Updated hourly • {guild.name}")
+                color_hex = config.get("leaderboard_color", "#3B82F6")
+                try:
+                    color = int(color_hex.lstrip("#"), 16)
+                except ValueError:
+                    color = 0x3B82F6
 
-            try:
-                await channel.send(embed=embed)
+                desc_lines = []
+                for i, entry in enumerate(top, 1):
+                    uid = entry.get("user_id")
+                    xp = entry.get("total_xp", 0)
+                    lvl = level_from_xp(xp)
+                    member = guild.get_member(uid)
+                    name = member.display_name if member else f"User#{uid}"
+                    medal = f"`#{i}`"
+                    desc_lines.append(f"{medal} **{name}** — Level {lvl} • {xp:,} XP")
+
+                embed = discord.Embed(
+                    title="XP Leaderboard",
+                    description="\n".join(desc_lines),
+                    color=color
+                )
+                embed.set_footer(text=f"Updated hourly • {guild.name}")
+
+                try:
+                    await channel.send(embed=embed)
+                except Exception:
+                    pass
             except Exception:
                 pass
+            await asyncio.sleep(0.05)
 
     @leaderboard_loop.before_loop
     async def before_leaderboard_loop(self):

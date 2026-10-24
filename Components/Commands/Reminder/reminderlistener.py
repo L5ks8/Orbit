@@ -1,4 +1,5 @@
 import time
+import asyncio
 import discord
 from Components.Commands._utils import ORBIT_COLOR, make_v2_card
 from Components.emojis import Emojis
@@ -17,10 +18,10 @@ class ReminderListener(commands.Cog):
     @tasks.loop(seconds=10.0)
     async def reminder_loop(self):
         now = int(time.time())
-        all_rems = load_reminders()
+        all_rems = await asyncio.to_thread(load_reminders)
         for r in all_rems:
             if now >= r.get("expires_at", 0):
-                remove_reminder(r["id"])
+                await asyncio.to_thread(remove_reminder, r["id"])
                 await self._deliver_alert(r)
 
     @reminder_loop.before_loop

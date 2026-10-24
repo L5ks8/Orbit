@@ -8,7 +8,7 @@ _client: Optional[MongoClient] = None
 _db = None
 _config_cache: Dict[tuple, tuple[float, Dict[str, Any]]] = {}
 _cache_lock = threading.Lock()
-CONFIG_CACHE_TTL = 15.0  # seconds
+CONFIG_CACHE_TTL = 60.0  # seconds
 
 def get_db():
     global _client, _db
@@ -43,31 +43,23 @@ def get_db():
     return _db
 
 def _query_collection_doc(collection, guild_id):
-    """Fast primary key query hitting B-Tree indexed _id first, then guild_id, without throwing ValueError."""
+    """Fast indexed query using $in to test str and int _id in 1 query, then secondary guild_id."""
     if collection is None:
         return None
     gid_str = str(guild_id)
-    is_num = gid_str.isdigit()
+    if gid_str.isdigit():
+        gid_num = int(guild_id)
+        # 1. Direct index lookup on _id (B-Tree clustered index, single query)
+        doc = collection.find_one({"_id": {"$in": [gid_str, gid_num]}})
+        if doc:
+            return doc
+        # 2. Secondary lookup on guild_id field
+        return collection.find_one({"guild_id": {"$in": [gid_str, gid_num]}})
 
-    # 1. Direct index lookup on _id (fastest, MongoDB clustered index <1ms)
     doc = collection.find_one({"_id": gid_str})
     if doc:
         return doc
-    if is_num:
-        doc = collection.find_one({"_id": int(guild_id)})
-        if doc:
-            return doc
-
-    # 2. Secondary lookup on guild_id field
-    doc = collection.find_one({"guild_id": gid_str})
-    if doc:
-        return doc
-    if is_num:
-        doc = collection.find_one({"guild_id": int(guild_id)})
-        if doc:
-            return doc
-
-    return None
+    return collection.find_one({"guild_id": gid_str})
 
 def get_config(collection_name: str, guild_id: Any, default_config: Dict[str, Any] = None) -> Dict[str, Any]:
     cache_key = (collection_name, str(guild_id))
@@ -89,39 +81,11 @@ def get_config(collection_name: str, guild_id: Any, default_config: Dict[str, An
             collection = db[collection_name]
             doc = _query_collection_doc(collection, guild_id)
 
-            # 2. Query alternate casings if not found
-            if not doc:
-                alt_names = []
-                c_low = collection_name.lower()
-                c_cap = collection_name.capitalize()
-                if c_low != collection_name:
-                    alt_names.append(c_low)
-                if c_cap != collection_name and c_cap not in alt_names:
-                    alt_names.append(c_cap)
-                for alt in alt_names:
-                    doc = _query_collection_doc(db[alt], guild_id)
-                    if doc:
-                        break
-
-            # 3. Query candidate databases (orbit, OrbitBot, Orbit) if not found
-            if not doc and _client is not None:
-                target_dbs = ["orbit", "OrbitBot", "Orbit"]
-                for db_name in target_dbs:
-                    if db is not None and db.name == db_name:
-                        continue
-                    try:
-                        cand_db = _client[db_name]
-                        doc = _query_collection_doc(cand_db[collection_name], guild_id)
-                        if doc:
-                            break
-                        for alt in [collection_name.lower(), collection_name.capitalize()]:
-                            doc = _query_collection_doc(cand_db[alt], guild_id)
-                            if doc:
-                                break
-                        if doc:
-                            break
-                    except Exception:
-                        pass
+            # 2. Fast casing fallback (lowercase or capitalized) if not found
+            if not doc and collection_name.lower() != collection_name:
+                doc = _query_collection_doc(db[collection_name.lower()], guild_id)
+            if not doc and collection_name.capitalize() != collection_name and collection_name.capitalize() != collection_name.lower():
+                doc = _query_collection_doc(db[collection_name.capitalize()], guild_id)
     except Exception as e:
         print(f"[MongoDB] Query error for {collection_name}:{guild_id}: {e}")
         doc = None

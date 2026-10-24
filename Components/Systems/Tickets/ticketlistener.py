@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 import time
+import asyncio
 from Components.Systems.Tickets._views import PersistentTicketPanelLayout, TicketControlLayout, close_ticket_flow
 from Components.Systems.Tickets._storage import load_ticket_config
 
@@ -14,36 +15,42 @@ class TicketListenerCog(commands.Cog):
 
     @tasks.loop(minutes=5)
     async def ticket_auto_close_loop(self):
-        for guild in self.bot.guilds:
-            config = load_ticket_config(guild.id)
-            if not config.get("enabled", False):
-                continue
-            
-            auto_close_enabled = config.get("auto_close_time_enabled", False)
-            if not auto_close_enabled:
-                continue
-                
-            auto_close_hours = config.get("auto_close_time_hours", 24)
-            auto_close_seconds = auto_close_hours * 3600
-            
-            active_tickets = config.get("active_tickets", {})
-            for channel_id_str, ticket_data in list(active_tickets.items()):
-                channel = guild.get_channel(int(channel_id_str))
-                if not channel or not isinstance(channel, discord.TextChannel):
+        for guild in list(self.bot.guilds):
+            try:
+                config = await asyncio.to_thread(load_ticket_config, guild.id)
+                if not config.get("enabled", False):
+                    await asyncio.sleep(0.01)
                     continue
                 
-                try:
-                    last_message_time = ticket_data.get("created_at", time.time())
-                    async for msg in channel.history(limit=1):
-                        last_message_time = msg.created_at.timestamp()
-                        break
+                auto_close_enabled = config.get("auto_close_time_enabled", False)
+                if not auto_close_enabled:
+                    await asyncio.sleep(0.01)
+                    continue
                     
-                    if time.time() - last_message_time > auto_close_seconds:
-                        await close_ticket_flow(guild, channel, self.bot.user, reason=f"Auto-closed due to {auto_close_hours} hours of inactivity")
-                except discord.Forbidden:
-                    pass
-                except Exception as e:
-                    print(f"[Tickets] Error in auto-close loop for channel {channel_id_str}: {e}")
+                auto_close_hours = config.get("auto_close_time_hours", 24)
+                auto_close_seconds = auto_close_hours * 3600
+                
+                active_tickets = config.get("active_tickets", {})
+                for channel_id_str, ticket_data in list(active_tickets.items()):
+                    channel = guild.get_channel(int(channel_id_str))
+                    if not channel or not isinstance(channel, discord.TextChannel):
+                        continue
+                    
+                    try:
+                        last_message_time = ticket_data.get("created_at", time.time())
+                        async for msg in channel.history(limit=1):
+                            last_message_time = msg.created_at.timestamp()
+                            break
+                        
+                        if time.time() - last_message_time > auto_close_seconds:
+                            await close_ticket_flow(guild, channel, self.bot.user, reason=f"Auto-closed due to {auto_close_hours} hours of inactivity")
+                    except discord.Forbidden:
+                        pass
+                    except Exception as e:
+                        print(f"[Tickets] Error in auto-close loop for channel {channel_id_str}: {e}")
+            except Exception as e:
+                print(f"[Tickets] Error in auto-close loop for guild {guild.id}: {e}")
+            await asyncio.sleep(0.05)
 
     @ticket_auto_close_loop.before_loop
     async def before_ticket_auto_close_loop(self):

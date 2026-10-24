@@ -1,4 +1,5 @@
 import time
+import asyncio
 from datetime import datetime, timezone
 import discord
 from discord.ext import commands, tasks
@@ -352,22 +353,27 @@ class JoinRoleListener(commands.Cog):
 
         for guild in list(self.bot.guilds):
             try:
-                config = load_join_roles(guild.id)
+                config = await asyncio.to_thread(load_join_roles, guild.id)
                 tenure_rules = config.get("tenure_roles", [])
                 activity_rules = config.get("activity_roles", [])
                 booster_cfg = config.get("booster_role", {})
 
                 if not tenure_rules and not activity_rules and not booster_cfg.get("enabled"):
+                    await asyncio.sleep(0.01)
                     continue
 
                 # Load activity map if needed
                 activity_map = {}
                 if activity_rules:
-                    cursor = db["MemberActivity"].find({"guild_id": str(guild.id)})
-                    for doc in cursor:
-                        uid = doc.get("user_id")
-                        if uid and str(uid).isdigit():
-                            activity_map[int(uid)] = float(doc.get("last_active", 0))
+                    def _fetch_act():
+                        m = {}
+                        cursor = db["MemberActivity"].find({"guild_id": str(guild.id)})
+                        for doc in cursor:
+                            uid = doc.get("user_id")
+                            if uid and str(uid).isdigit():
+                                m[int(uid)] = float(doc.get("last_active", 0))
+                        return m
+                    activity_map = await asyncio.to_thread(_fetch_act)
 
                 for member in list(guild.members):
                     if member.bot:
@@ -425,6 +431,7 @@ class JoinRoleListener(commands.Cog):
                             pass
             except Exception:
                 pass
+            await asyncio.sleep(0.05)
 
     @role_automations_loop.before_loop
     async def before_role_automations_loop(self):

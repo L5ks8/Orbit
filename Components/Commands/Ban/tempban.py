@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import re
 import time
+import asyncio
 from Components.Commands.Cases._storage import create_case
 from Components.Commands.ModLog._modlog_storage import add_modlog
 from Components.Database.mongodb import get_db
@@ -88,7 +89,7 @@ class TempBanCog(commands.Cog):
             return
             
         current_time = int(time.time())
-        expired_bans = list(db["Tempbans"].find({"unban_time": {"$lte": current_time}}))
+        expired_bans = await asyncio.to_thread(lambda: list(db["Tempbans"].find({"unban_time": {"$lte": current_time}})))
         
         for record in expired_bans:
             try:
@@ -102,7 +103,8 @@ class TempBanCog(commands.Cog):
             except Exception:
                 pass
                 
-            db["Tempbans"].delete_one({"_id": record["_id"]})
+            await asyncio.to_thread(db["Tempbans"].delete_one, {"_id": record["_id"]})
+            await asyncio.sleep(0.05)
 
     @check_tempbans.before_loop
     async def before_check_tempbans(self):
