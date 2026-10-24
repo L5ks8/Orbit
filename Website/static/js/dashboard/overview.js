@@ -10,6 +10,8 @@
  * - Real Recent Mod Activity feed from MongoDB (ModLogs, Cases, Warns, Bans)
  */
 
+DashboardTabs._overviewDataCache = DashboardTabs._overviewDataCache || {};
+
 DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = null) {
   if (DashboardTabs._overviewPollTimer) {
     clearInterval(DashboardTabs._overviewPollTimer);
@@ -371,11 +373,7 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
 
   container.innerHTML = `
     <div id="overview-container" class="space-y-6 pb-10">
-      <div id="overview-loading" class="flex items-center justify-center p-12 text-neutral-500 text-sm">
-        <svg class="animate-spin mr-3 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        Loading overview...
-      </div>
-      <div id="overview-content" class="hidden space-y-6"></div>
+      <div id="overview-content" class="space-y-6"></div>
     </div>
   `;
 
@@ -410,16 +408,30 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
   ]);
 
   try {
-    const cachedConfig = API.getCache ? API.getCache(`config_${guildId}`) : null;
-    const cachedStats = API.getCache ? API.getCache(`guild_stats_${guildId}_7_7`) : null;
+    // Instant cache check (0ms response)
+    const memCache = DashboardTabs._overviewDataCache[guildId];
+    const cachedConfig = memCache?.configData || (API.getCache ? API.getCache(`config_${guildId}`) : null);
+    const cachedStats = memCache?.statsData || (API.getCache ? (API.getCache(`guild_stats_${guildId}_7_7`) || API.getCache(`guild_stats_${guildId}_7_null`)) : null);
+    const cachedLive = memCache?.liveData || (API.getCache ? API.getCache(`guild_stats_live_${guildId}`) : null);
+    const cachedMod = memCache?.modActivity || null;
     const cachedGuilds = API.getCache ? API.getCache('guilds') : null;
 
-    const [configData, statsData, liveData, modActivity] = await Promise.all([
-      cachedConfig ? Promise.resolve(cachedConfig) : withTimeout(API.getConfig(guildId).catch(() => ({})), 2500, {}),
-      cachedStats ? Promise.resolve(cachedStats) : withTimeout(API.getGuildStats(guildId, 7, 7).catch(() => ({})), 2500, {}),
-      withTimeout(API.getGuildStatsLive(guildId).catch(() => ({})), 1800, {}),
-      withTimeout(API.getModActivity(guildId).catch(() => ([])), 1800, [])
-    ]);
+    let configData = cachedConfig || {};
+    let statsData = cachedStats || {};
+    let liveData = cachedLive || {};
+    let modActivity = cachedMod || [];
+
+    // Trigger fast background fetch if cache is missing
+    const needsFetch = !memCache || !cachedStats;
+    let backgroundPromise = null;
+    if (needsFetch) {
+      backgroundPromise = Promise.all([
+        cachedConfig ? Promise.resolve(cachedConfig) : withTimeout(API.getConfig(guildId).catch(() => ({})), 1800, {}),
+        cachedStats ? Promise.resolve(cachedStats) : withTimeout(API.getGuildStats(guildId, 7, 7).catch(() => ({})), 1800, {}),
+        withTimeout(API.getGuildStatsLive(guildId).catch(() => ({})), 1200, {}),
+        withTimeout(API.getModActivity(guildId).catch(() => ([])), 1200, [])
+      ]);
+    }
 
     const guilds = Array.isArray(cachedGuilds) ? cachedGuilds : [];
     const guild = currentGuildInfo || guilds.find(g => String(g.id) === String(guildId)) || {
@@ -1631,8 +1643,22 @@ DashboardTabs.Overview = async function(container, guildId, currentGuildInfo = n
       refreshOverviewData(false);
     }, 30000);
 
-    loading.classList.add('hidden');
-    content.classList.remove('hidden');
+    // Store in memory cache
+    DashboardTabs._overviewDataCache[guildId] = { configData, statsData, liveData, modActivity };
+
+    // If background fetch is pending, update in-place as soon as fresh data arrives
+    if (backgroundPromise) {
+      backgroundPromise.then(([freshConfig, freshStats, freshLive, freshMod]) => {
+        if (!document.getElementById('overview-content')) return;
+        DashboardTabs._overviewDataCache[guildId] = {
+          configData: freshConfig || configData,
+          statsData: freshStats || statsData,
+          liveData: freshLive || liveData,
+          modActivity: freshMod || modActivity
+        };
+        refreshOverviewData(false);
+      }).catch(() => {});
+    }
 
   } catch (err) {
     console.error('[OverviewTab] Error loading overview:', err);

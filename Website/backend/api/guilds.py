@@ -366,7 +366,7 @@ class GuildsMixin:
         import time as _t_stats
         _s_key = f"{guild_id}_{raw_days}_{raw_channels_days}"
         _s_cached = self._guild_stats_cache.get(_s_key)
-        if _s_cached and (_t_stats.time() - _s_cached["time"] < 45):
+        if _s_cached and (_t_stats.time() - _s_cached["time"] < 60):
             return web.json_response(_s_cached["data"])
             
         from Components.Database.mongodb import get_db
@@ -381,13 +381,18 @@ class GuildsMixin:
         doc_map = {}
         if db is not None:
             try:
+                # Fast direct indexed lookup
                 all_docs = list(db["GuildStats"].find({
                     "$or": [
                         {"guild_id": guild_id},
-                        {"guild_id": str(guild_id)},
-                        {"_id": {"$regex": f"^{guild_id}_"}}
+                        {"guild_id": str(guild_id)}
                     ]
-                }))
+                }).limit(365))
+                if not all_docs:
+                    # Fallback only if no direct guild_id field found
+                    all_docs = list(db["GuildStats"].find({
+                        "_id": {"$regex": f"^{guild_id}_"}
+                    }).limit(365))
                 for doc in all_docs:
                     d_str = doc.get("date")
                     if not d_str and isinstance(doc.get("_id"), str) and "_" in doc["_id"]:
@@ -535,7 +540,7 @@ class GuildsMixin:
         # Fallback to LevelData if GuildStats has 0 messages/voice (e.g. historical data in LevelData)
         if db is not None and week_messages == 0 and week_voice_minutes == 0 and not doc_map:
             try:
-                level_docs = list(db["LevelData"].find({"$or": [{"guild_id": guild_id}, {"guild_id": str(guild_id)}]}))
+                level_docs = list(db["LevelData"].find({"$or": [{"guild_id": guild_id}, {"guild_id": str(guild_id)}]}, {"message_count": 1, "voice_minutes": 1, "user_id": 1}).limit(200))
                 if level_docs:
                     lvl_msgs = sum(int(d.get("message_count", 0) or 0) for d in level_docs)
                     lvl_voice = sum(int(d.get("voice_minutes", 0) or 0) for d in level_docs)
@@ -627,6 +632,13 @@ class GuildsMixin:
         if not guild_id_str.isdigit():
             return web.json_response({"error": "Invalid guild ID"}, status=400)
         guild_id = int(guild_id_str)
+
+        import time as _t_live
+        if not hasattr(self, "_guild_live_cache"):
+            self._guild_live_cache = {}
+        cached_live = self._guild_live_cache.get(guild_id)
+        if cached_live and (_t_live.time() - cached_live["time"] < 20):
+            return web.json_response(cached_live["data"])
         
         guild, user_perms = await self._check_guild_access(request, guild_id)
         if not guild:
