@@ -123,7 +123,14 @@ class PollListener(commands.Cog):
                     kwargs = build_poll_kwargs(updated_entry, ended=False)
                     await interaction.message.edit(**kwargs)
                 except Exception as e:
-                    print(f"[Poll] Failed to update message on vote change: {e}")
+                    print(f"[Poll] Failed to update message on vote change ({e}), falling back to embed+view")
+                    try:
+                        from Components.Commands.Poll.poll import build_poll_embed, build_poll_view
+                        fb_embed = build_poll_embed(updated_entry, ended=False)
+                        fb_view = build_poll_view(updated_entry, ended=False)
+                        await interaction.message.edit(content=None, embed=fb_embed, view=fb_view)
+                    except Exception as e2:
+                        print(f"[Poll] Fallback edit failed: {e2}")
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(PollListener(bot))

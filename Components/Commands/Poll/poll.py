@@ -276,14 +276,6 @@ def build_poll_v2_view(entry: dict, ended: bool = False):
     return view
 
 def build_poll_kwargs(entry: dict, ended: bool = False, closed_by: int | None = None) -> dict:
-    if HAS_V2:
-        try:
-            v2_view = build_poll_v2_view(entry, ended=ended)
-            if v2_view:
-                return {"view": v2_view}
-        except Exception as e:
-            print(f"[Poll] V2 view build failed ({e}), falling back to embed.")
-
     embed = build_poll_embed(entry, ended=ended, closed_by=closed_by)
     view = build_poll_view(entry, ended=ended)
     return {"embed": embed, "view": view}

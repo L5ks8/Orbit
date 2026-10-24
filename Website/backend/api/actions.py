@@ -2057,7 +2057,7 @@ class ActionsMixin:
         cid_str = str(cid_val) if cid_val and str(cid_val) != "0" else ""
         ch_name = ""
         if cid_str and cid_str.isdigit() and guild:
-            ch_obj = guild.get_channel(int(cid_str))
+            ch_obj = guild.get_channel(int(cid_str)) or (self.bot.get_channel(int(cid_str)) if hasattr(self, 'bot') and self.bot else None)
             if ch_obj:
                 ch_name = ch_obj.name
 
@@ -2179,10 +2179,44 @@ class ActionsMixin:
             channel_id_str = str(data.get("channel_id") or "").strip()
             target_channel = None
             if channel_id_str and channel_id_str.isdigit():
-                target_channel = guild.get_channel(int(channel_id_str))
+                cid = int(channel_id_str)
+                target_channel = guild.get_channel(cid) or (self.bot.get_channel(cid) if hasattr(self, 'bot') and self.bot else None)
+                if not target_channel:
+                    try:
+                        target_channel = await guild.fetch_channel(cid)
+                    except Exception:
+                        try:
+                            if hasattr(self, 'bot') and self.bot:
+                                target_channel = await self.bot.fetch_channel(cid)
+                        except Exception:
+                            target_channel = None
+
+            if not is_draft and not target_channel:
+                target_channel = guild.system_channel
+                if not target_channel:
+                    me_user = guild.me or (guild.get_member(self.bot.user.id) if hasattr(self, 'bot') and self.bot and self.bot.user else None)
+                    for ch in guild.text_channels:
+                        if me_user:
+                            perms = ch.permissions_for(me_user)
+                            if perms.send_messages and perms.embed_links:
+                                target_channel = ch
+                                break
+                        else:
+                            target_channel = ch
+                            break
 
             if not is_draft and not target_channel:
                 return web.json_response({"error": "Bitte wähle einen gültigen Kanal aus."}, status=400)
+
+            # Check bot permissions in target channel
+            if not is_draft and target_channel:
+                me_user = guild.me or (guild.get_member(self.bot.user.id) if hasattr(self, 'bot') and self.bot and self.bot.user else None)
+                if me_user:
+                    ch_perms = target_channel.permissions_for(me_user)
+                    if not ch_perms.send_messages:
+                        return web.json_response({"error": f"Dem Bot fehlt die Berechtigung 'Nachrichten senden' in #{target_channel.name}."}, status=403)
+                    if not ch_perms.embed_links:
+                        return web.json_response({"error": f"Dem Bot fehlt die Berechtigung 'Links einbetten' in #{target_channel.name}."}, status=403)
 
             try:
                 dur_val = max(1, min(999, int(data.get("duration_value") or 1)))
@@ -2251,29 +2285,27 @@ class ActionsMixin:
             }
 
             if not is_draft and target_channel:
-                kwargs = build_poll_kwargs(entry, ended=False)
+                fb_embed = build_poll_embed(entry, ended=False)
+                fb_view = build_poll_view(entry, ended=False)
                 msg = None
                 existing_msg_id = entry.get("message_id")
                 if existing_msg_id:
                     try:
                         old_msg = await target_channel.fetch_message(int(existing_msg_id))
                         try:
-                            await old_msg.edit(**kwargs)
-                        except discord.HTTPException:
-                            fb_embed = build_poll_embed(entry, ended=False)
-                            fb_view = build_poll_view(entry, ended=False)
                             await old_msg.edit(content=None, embed=fb_embed, view=fb_view)
-                        msg = old_msg
+                            msg = old_msg
+                        except Exception as edit_err:
+                            print(f"[Poll] Failed editing existing message {existing_msg_id}: {edit_err}")
                     except Exception:
                         msg = None
 
                 if not msg:
                     try:
-                        msg = await target_channel.send(**kwargs, allowed_mentions=discord.AllowedMentions.none())
-                    except discord.HTTPException:
-                        fb_embed = build_poll_embed(entry, ended=False)
-                        fb_view = build_poll_view(entry, ended=False)
                         msg = await target_channel.send(embed=fb_embed, view=fb_view, allowed_mentions=discord.AllowedMentions.none())
+                    except Exception as send_err:
+                        print(f"[Poll] Error sending poll message to #{target_channel.name}: {send_err}")
+                        raise send_err
 
                 if msg:
                     entry["message_id"] = msg.id

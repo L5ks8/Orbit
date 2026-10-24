@@ -19,6 +19,13 @@ DashboardTabs.Polls = async function(container, guildId) {
       .replace(/'/g, '&#39;');
   }
 
+  function showNotify(msg, type = 'success') {
+    if (window.Toast && typeof Toast[type] === 'function') Toast[type](msg);
+    else if (window.Toast && typeof Toast.show === 'function') Toast.show(msg, type);
+    else if (window.Notifications && typeof Notifications.show === 'function') Notifications.show(msg, type);
+    else alert(msg);
+  }
+
   function formatRelativeTime(unixSeconds) {
     if (!unixSeconds) return 'Vor wenigen Sekunden';
     const nowSec = Math.floor(Date.now() / 1000);
@@ -363,7 +370,7 @@ DashboardTabs.Polls = async function(container, guildId) {
     document.addEventListener('click', docClickHandler);
 
     // =========================================================================
-    // POLL DETAILS MODAL (WHEN CLICKING AN ACTIVE OR ENDED POLL CARD)
+    // POLL DETAILS / RESULTS MODAL (1:1 EXACT SPEC WHEN CLICKING RESULTS)
     // =========================================================================
     function openPollDetailsModal(poll) {
       const existing = document.getElementById('orbit-poll-details-modal');
@@ -377,73 +384,81 @@ DashboardTabs.Polls = async function(container, guildId) {
       const optVotes = Array.isArray(poll.option_votes) ? poll.option_votes : [];
       const totalVotes = Number(poll.total_votes || 0);
       const maxVote = optVotes.length > 0 ? Math.max(...optVotes) : 0;
-      const chName = poll.channel_name || getChannelName(poll.channel_id);
 
       let badgeClass = 'bg-emerald-500/10 text-emerald-400';
       let badgeText = 'aktiv';
       if (poll.status === 'ended') {
-        badgeClass = 'bg-neutral-700/40 text-neutral-400';
+        badgeClass = 'bg-neutral-800 text-neutral-500';
         badgeText = 'beendet';
+      } else if (poll.status === 'draft') {
+        badgeClass = 'bg-amber-500/10 text-amber-400';
+        badgeText = 'entwurf';
       }
 
-      modal.innerHTML = `
-        <div role="dialog" aria-modal="true" class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg overflow-hidden flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
-          <div class="h-[3px]" style="background-color: ${escapeHtml(poll.color || '#5865F2')};"></div>
-          <div class="flex items-center justify-between px-5 py-4 border-b border-neutral-800">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#5865F2]/10">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart3 w-4 h-4 text-[#5865F2]"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
-              </div>
-              <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                  <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${badgeClass}">${badgeText}</span>
-                  <span class="text-xs text-neutral-500 truncate">#${escapeHtml(chName)}</span>
+      const optionsHtml = options.map((opt, idx) => {
+        const vCount = Number(optVotes[idx] || 0);
+        const pct = totalVotes > 0 ? Math.round((vCount / totalVotes) * 100) : 0;
+        const isLeading = totalVotes > 0 && vCount === maxVote && maxVote > 0;
+
+        if (isLeading) {
+          return `
+            <div class="relative rounded-xl overflow-hidden border transition-[border-color,background-color] duration-150 ease-out border-[#5865F2]/40 bg-[#5865F2]/[0.04]">
+              <div class="absolute inset-y-0 left-0 transition-[width] duration-700 bg-[#5865F2]/15" style="width: ${pct}%;"></div>
+              <div class="relative flex items-center justify-between px-4 py-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="text-sm font-medium truncate text-white">${escapeHtml(opt)}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle2 w-3.5 h-3.5 text-[#5865F2] flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
                 </div>
-                <p class="text-[11px] text-neutral-500 mt-0.5">Erstellt ${formatRelativeTime(poll.created_at)} · ID: ${escapeHtml(poll.id)}</p>
+                <div class="flex items-center gap-2 flex-shrink-0 ml-3">
+                  <span class="text-xs text-neutral-500 tabular-nums">${vCount}</span>
+                  <span class="text-sm font-semibold tabular-nums text-white">${pct}%</span>
+                </div>
               </div>
             </div>
-            <button type="button" id="poll-details-close" class="p-2 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-5 h-5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          `;
+        }
+
+        return `
+          <div class="relative rounded-xl overflow-hidden border transition-[border-color,background-color] duration-150 ease-out border-neutral-800 bg-neutral-800/30">
+            <div class="absolute inset-y-0 left-0 transition-[width] duration-700 bg-neutral-700/15" style="width: ${pct}%;"></div>
+            <div class="relative flex items-center justify-between px-4 py-3">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="text-sm font-medium truncate text-neutral-300">${escapeHtml(opt)}</span>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0 ml-3">
+                <span class="text-xs text-neutral-500 tabular-nums">${vCount}</span>
+                <span class="text-sm font-semibold tabular-nums text-neutral-400">${pct}%</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      modal.innerHTML = `
+        <div role="dialog" aria-modal="true" aria-label="Umfrageergebnisse" class="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+          <div class="flex items-start justify-between px-5 pt-5 pb-3 flex-shrink-0">
+            <div class="flex-1 min-w-0 pr-3">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${badgeClass}">${badgeText}</span>
+              </div>
+              <h2 class="text-base font-bold text-white leading-tight text-balance">${escapeHtml(poll.question || 'Umfrage')}</h2>
+            </div>
+            <button type="button" aria-label="Schließen" id="poll-details-close" class="p-1 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 flex-shrink-0 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
             </button>
           </div>
-
-          <div class="p-5 space-y-4 max-h-[70vh] overflow-y-auto" data-lenis-prevent>
-            <h3 class="text-base font-semibold text-white">${escapeHtml(poll.question)}</h3>
-
-            <div class="space-y-2">
-              ${options.map((opt, idx) => {
-                const vCount = Number(optVotes[idx] || 0);
-                const pct = totalVotes > 0 ? Math.round((vCount / totalVotes) * 100) : 0;
-                const isWinner = totalVotes > 0 && vCount === maxVote && maxVote > 0;
-                return `
-                  <div class="relative rounded-lg overflow-hidden bg-neutral-800/70 h-10 flex items-center border ${isWinner ? 'border-[#5865F2]/40' : 'border-neutral-800'}">
-                    <div class="absolute inset-y-0 left-0 transition-all duration-500 ${isWinner ? 'bg-[#5865F2]/30' : 'bg-neutral-700/40'}" style="width: ${pct}%;"></div>
-                    <div class="relative flex items-center justify-between w-full px-3.5">
-                      <span class="text-xs font-medium text-white truncate">${escapeHtml(opt)}</span>
-                      <span class="text-xs tabular-nums font-semibold ${isWinner ? 'text-white' : 'text-neutral-400'} ml-3 flex-shrink-0">${pct}% (${vCount})</span>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-
-            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-neutral-800 text-xs text-neutral-400">
-              <span>Gesamte Stimmen: <strong class="text-white">${totalVotes}</strong></span>
-              <span>${poll.no_time_limit ? 'Kein Zeitlimit' : (poll.status === 'ended' ? 'Abstimmung beendet' : `Dauer: ${poll.duration_value || 1} ${poll.duration_unit || 'Tage'}`)}</span>
-            </div>
+          <div class="px-5 pb-2 space-y-2.5 flex-1 min-h-0 overflow-y-auto" data-lenis-prevent>
+            ${optionsHtml}
           </div>
-
-          <div class="flex items-center justify-between gap-2 px-5 py-3.5 border-t border-neutral-800 bg-neutral-900/60">
-            <button type="button" id="poll-details-delete" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer">Löschen</button>
-            <div class="flex items-center gap-2">
-              <button type="button" id="poll-details-edit" class="px-4 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-xs font-semibold text-neutral-200 transition-colors cursor-pointer">
-                Duplizieren
-              </button>
-              ${poll.status === 'active' ? `
-                <button type="button" id="poll-details-end" class="px-4 py-2 rounded-lg bg-white hover:bg-neutral-200 text-xs font-semibold text-black transition-colors cursor-pointer">
-                  Frühes Ende
-                </button>
-              ` : ''}
+          <div class="flex items-center justify-between px-5 py-4 border-t border-neutral-800 mt-2 flex-shrink-0">
+            <div class="flex items-center gap-1.5 text-neutral-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span class="text-sm font-medium tabular-nums">${totalVotes} Abstimmung${totalVotes === 1 ? '' : 'en'}</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-neutral-500">
+              <span class="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye w-3.5 h-3.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg> ${poll.anonymous ? 'Anonym' : 'Öffentlich'}
+              </span>
             </div>
           </div>
         </div>
@@ -451,50 +466,17 @@ DashboardTabs.Polls = async function(container, guildId) {
 
       document.body.appendChild(modal);
 
-      modal.querySelector('#poll-details-close').onclick = () => modal.remove();
-      modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-
-      modal.querySelector('#poll-details-edit').onclick = () => {
+      const closeModal = () => {
+        document.removeEventListener('keydown', onKeyDown);
         modal.remove();
-        if (poll.status === 'ended') {
-          openCreatePollModal({ ...poll, id: '', poll_id: '', status: 'draft', draft: false, closed: false });
-        } else {
-          openCreatePollModal(poll);
-        }
       };
-
-      const endBtn = modal.querySelector('#poll-details-end');
-      if (endBtn) {
-        endBtn.onclick = async () => {
-          endBtn.disabled = true;
-          endBtn.textContent = 'Ending...';
-          try {
-            const res = await API.endPoll(guildId, poll.id);
-            if (res?.poll) {
-              polls = polls.map(p => String(p.id) === String(poll.id) ? res.poll : p);
-            }
-            Toast.success('Umfrage wurde beendet.');
-            modal.remove();
-            renderMainView();
-          } catch (err) {
-            Toast.error(err.message || 'Fehler beim Beenden der Umfrage.');
-            endBtn.disabled = false;
-            endBtn.textContent = 'End Poll';
-          }
-        };
-      }
-
-      modal.querySelector('#poll-details-delete').onclick = async () => {
-        try {
-          await API.deletePoll(guildId, poll.id);
-          polls = polls.filter(p => String(p.id) !== String(poll.id));
-          Toast.success('Umfrage gelöscht.');
-          modal.remove();
-          renderMainView();
-        } catch (err) {
-          Toast.error(err.message || 'Fehler beim Löschen der Umfrage.');
-        }
+      const onKeyDown = (e) => {
+        if (e.key === 'Escape') closeModal();
       };
+      document.addEventListener('keydown', onKeyDown);
+
+      modal.querySelector('#poll-details-close').onclick = closeModal;
+      modal.onclick = (e) => { if (e.target === modal) closeModal(); };
     }
 
     // =========================================================================
@@ -513,7 +495,7 @@ DashboardTabs.Polls = async function(container, guildId) {
         options: Array.isArray(existingPoll?.options) && existingPoll.options.length >= 2
           ? [...existingPoll.options]
           : ['', ''],
-        channel_id: existingPoll?.channel_id || '',
+        channel_id: existingPoll?.channel_id || (textChannels.length > 0 ? String(textChannels[0].id) : ''),
         duration_value: Number(existingPoll?.duration_value || 1),
         duration_unit: existingPoll?.duration_unit || 'days', // 'minutes' | 'hours' | 'days' | 'weeks'
         no_time_limit: Boolean(existingPoll?.no_time_limit),
@@ -1201,11 +1183,11 @@ DashboardTabs.Polls = async function(container, guildId) {
               polls.unshift(res.poll);
             }
           }
-          Toast.success(asDraft ? 'Entwurf gespeichert!' : 'Umfrage erfolgreich erstellt und in Discord gepostet!');
+          showNotify(asDraft ? 'Entwurf gespeichert!' : 'Umfrage erfolgreich erstellt und in Discord gepostet!', 'success');
           modal.remove();
           renderMainView();
         } catch (err) {
-          Toast.error(err.message || 'Fehler beim Speichern der Umfrage.');
+          showNotify(err.message || 'Fehler beim Speichern der Umfrage.', 'error');
           btn.disabled = false;
           btn.textContent = origText;
         }
