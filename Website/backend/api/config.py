@@ -552,6 +552,7 @@ class ConfigMixin:
                 "ping_custom_role_enabled": bool(ticket_cfg.get("ping_custom_role_enabled", False)),
                 "ping_custom_role_id": str(ticket_cfg.get("ping_custom_role_id")) if ticket_cfg.get("ping_custom_role_id") else "",
                 "claiming_enabled": bool(ticket_cfg.get("claiming_enabled", False)),
+                "ticket_panels": ticket_cfg.get("ticket_panels", []),
                 "options_slots": [
                     {
                         "id": str(slot.get("id") or f"type_{idx}"),
@@ -1178,6 +1179,9 @@ class ConfigMixin:
                             ticket_cfg["panel_channel_id"] = parsed_slots[0]["panel_channel_id"]
                         if not ticket_cfg.get("log_channel_id") and parsed_slots[0].get("log_channel_id"):
                             ticket_cfg["log_channel_id"] = parsed_slots[0]["log_channel_id"]
+
+                if "ticket_panels" in t_in and isinstance(t_in["ticket_panels"], list):
+                    ticket_cfg["ticket_panels"] = t_in["ticket_panels"]
 
                 # Support updating submission status from dashboard (claim / resolve / reject)
                 if "submission_action" in t_in and isinstance(t_in["submission_action"], dict):

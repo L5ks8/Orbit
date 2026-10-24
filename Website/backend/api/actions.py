@@ -562,6 +562,25 @@ class ActionsMixin:
                         matched_slot = s
                         break
 
+            panel_options = data.get("options") or data.get("options_slots") or ticket_cfg.get("options_slots", [])
+            p_title = data.get("panel_title") or ticket_cfg.get("panel_title", "Support Ticket Desk")
+            p_desc = data.get("panel_description") or ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team.")
+            p_instr = data.get("panel_instructions") or ticket_cfg.get("panel_instructions", "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel.")
+
+            p_color = ORBIT_COLOR
+            raw_c = data.get("color")
+            if raw_c:
+                try:
+                    if isinstance(raw_c, str) and raw_c.startswith("#"):
+                        p_color = int(raw_c.lstrip("#"), 16)
+                    elif isinstance(raw_c, str) and "rgb" in raw_c:
+                        import re
+                        m = re.findall(r"\d+", raw_c)
+                        if len(m) >= 3:
+                            p_color = discord.Color.from_rgb(int(m[0]), int(m[1]), int(m[2])).value
+                except Exception:
+                    pass
+
             if matched_slot and matched_slot.get("mode") != "panel" and not send_full_panel:
                 s_name = matched_slot.get("name") or "Support Ticket"
                 s_desc = matched_slot.get("description") or "Klicken Sie auf den Button unten, um ein Ticket oder Formular zu öffnen."
@@ -569,7 +588,7 @@ class ActionsMixin:
                 embed = discord.Embed(
                     title=s_name,
                     description=s_desc,
-                    color=ORBIT_COLOR
+                    color=p_color
                 )
                 view = discord.ui.View(timeout=None)
                 view.add_item(discord.ui.Button(
@@ -580,20 +599,32 @@ class ActionsMixin:
                 msg = await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
             else:
                 view = PersistentTicketPanelLayout(
-                    title=ticket_cfg.get("panel_title", "Support Ticket Desk"),
-                    description=ticket_cfg.get("panel_description", "Click the button below to open a direct support channel with our team."),
-                    instructions=ticket_cfg.get("panel_instructions", "> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket** to open your private channel."),
-                    options_slots=ticket_cfg.get("options_slots", [])
+                    title=p_title,
+                    description=p_desc,
+                    instructions=p_instr,
+                    options_slots=panel_options
                 )
+                desc_text = f"{view.panel_desc}\n\n{view.panel_instructions}" if view.panel_instructions else view.panel_desc
                 embed = discord.Embed(
                     title=view.panel_title,
-                    description=f"{view.panel_desc}\n\n{view.panel_instructions}",
-                    color=ORBIT_COLOR
+                    description=desc_text,
+                    color=p_color
                 )
                 msg = await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
 
             ticket_cfg["panel_channel_id"] = channel.id
             ticket_cfg["panel_message_id"] = msg.id
+            if panel_options:
+                ticket_cfg["options_slots"] = panel_options
+                ticket_cfg["options"] = [s.get("name", "Support") if isinstance(s, dict) else str(s) for s in panel_options]
+            
+            panel_id = data.get("panel_id")
+            if panel_id and isinstance(ticket_cfg.get("ticket_panels"), list):
+                for p in ticket_cfg["ticket_panels"]:
+                    if isinstance(p, dict) and str(p.get("id")) == str(panel_id):
+                        p["panel_channel_id"] = channel.id
+                        p["panel_message_id"] = msg.id
+                        break
             save_ticket_config(guild_id, ticket_cfg)
             
             return web.json_response({"success": True, "message_id": str(msg.id)})

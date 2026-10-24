@@ -1,8 +1,8 @@
 /**
  * Orbit Dashboard - Tickets Tab (/dashboard/:guildId/tickets)
- * 1:1 PeakBot Tickets UI with Stats Bar, Multi-Option Discord Ticket-Panel Preview & Deploy,
- * PeakBot Modal ("Fangen Sie bei Null an" + "Vorlagen"), 4-Step Wizard, Searchable Dropdowns (z-[99999]),
- * Einreichungen Filter & Einstellungen
+ * 1:1 PeakBot Tickets UI with Stats Bar, Ticketarten Cards Grid,
+ * Multi-Option Modal Builder (Grundlagen -> Aufstellen/Optionen -> Rezension & Live Preview),
+ * Submissions Filter & Global Settings.
  */
 
 DashboardTabs.Tickets = async function (container, guildId) {
@@ -53,102 +53,71 @@ DashboardTabs.Tickets = async function (container, guildId) {
     const getCategoryById = (id) => allCategories.find(c => String(c.id) === String(id));
     const getMemberById = (id) => allMembers.find(m => String(m.id) === String(id));
 
-    const MODE_META = {
-      channel: { label: 'Kanal', badgeClass: 'bg-indigo-500/10 text-indigo-400', color: 'rgb(88, 101, 242)' },
-      form: { label: 'Bilden', badgeClass: 'bg-emerald-500/10 text-emerald-400', color: 'rgb(36, 128, 70)' },
-      form_channel: { label: 'Formular → Kanal', badgeClass: 'bg-amber-500/10 text-amber-400', color: 'rgb(240, 178, 50)' },
-      panel: { label: 'Panel', badgeClass: 'bg-purple-500/10 text-purple-400', color: 'rgb(168, 85, 247)' }
-    };
+    // Initial parsing of ticket panels
+    const rawPanels = Array.isArray(tCfg.ticket_panels) && tCfg.ticket_panels.length > 0
+      ? tCfg.ticket_panels
+      : null;
 
-    const TEMPLATES = {
-      bug_report: {
-        name: 'Fehlerbericht',
-        mode: 'form',
-        template_key: 'bug_report',
-        color: 'rgb(218, 55, 60)',
-        description: 'Melden Sie einen Fehler mit Reproduktionsschritten und Schweregrad.',
-        button_label: 'Fehler melden',
-        require_proof: false,
-        questions: [
-          { label: 'Zusammenfassung des Fehlers', placeholder: 'Kurze Beschreibung des Problems...', style: 'short', required: true },
-          { label: 'Schritte zur Reproduktion', placeholder: '1. Gehe zu...\n2. Klicke auf...', style: 'paragraph', required: true },
-          { label: 'Schweregrad (Niedrig / Mittel / Kritisch)', placeholder: 'z. B. Kritisch', style: 'short', required: true }
+    let initialPanels = [];
+    if (rawPanels) {
+      initialPanels = rawPanels.map((p, pIdx) => ({
+        id: String(p.id || `panel_${Date.now()}_${pIdx}`),
+        name: String(p.name || p.title || 'Support Ticket'),
+        title: String(p.title || p.name || 'Support Ticket'),
+        description: String(p.description || 'Öffnen Sie ein Ticket, um mit unserem Team zu sprechen.'),
+        instructions: String(p.instructions || '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.'),
+        color: String(p.color || '#5865F2'),
+        panel_channel_id: String(p.panel_channel_id || tCfg.panel_channel_id || ''),
+        log_channel_id: String(p.log_channel_id || tCfg.log_channel_id || ''),
+        category_id: String(p.category_id || ''),
+        role_id: String(p.role_id || ''),
+        button_label: String(p.button_label || 'Ticket öffnen'),
+        options: Array.isArray(p.options) && p.options.length > 0 ? p.options.map((opt, oIdx) => ({
+          id: String(opt.id || `opt_${pIdx}_${oIdx}`),
+          name: String(opt.name || 'Allgemeine Unterstützung'),
+          description: String(opt.description || 'Öffnen Sie einen privaten 1-zu-1 Support-Kanal mit unserem Team.'),
+          color: String(opt.color || '#5865F2'),
+          category_id: String(opt.category_id || ''),
+          role_id: String(opt.role_id || '')
+        })) : [
+          {
+            id: `opt_${pIdx}_0`,
+            name: 'Allgemeine Unterstützung',
+            description: 'Öffnen Sie einen privaten 1-zu-1 Support-Kanal mit unserem Team.',
+            color: '#5865F2',
+            category_id: String(p.category_id || ''),
+            role_id: String(p.role_id || '')
+          }
         ]
-      },
-      general_support: {
-        name: 'Allgemeine Unterstützung',
-        mode: 'channel',
-        template_key: 'general_support',
-        color: 'rgb(88, 101, 242)',
-        description: 'Öffnen Sie einen privaten 1-zu-1 Support-Kanal mit unserem Team.',
+      }));
+    } else if (Array.isArray(tCfg.options_slots) && tCfg.options_slots.length > 0) {
+      // Migrate legacy options_slots into 1 central panel with multiple options
+      initialPanels = [{
+        id: 'panel_default',
+        name: String(tCfg.panel_title || 'Support Ticket'),
+        title: String(tCfg.panel_title || 'Support Ticket'),
+        description: String(tCfg.panel_description || 'Öffnen Sie ein Ticket, um mit unserem Team zu sprechen.'),
+        instructions: String(tCfg.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.'),
+        color: '#5865F2',
+        panel_channel_id: String(tCfg.panel_channel_id || (tCfg.options_slots[0]?.panel_channel_id || '')),
+        log_channel_id: String(tCfg.log_channel_id || (tCfg.options_slots[0]?.log_channel_id || '')),
+        category_id: String(tCfg.options_slots[0]?.category_id || ''),
+        role_id: String(tCfg.options_slots[0]?.role_id || ''),
         button_label: 'Ticket öffnen',
-        require_proof: false,
-        questions: [
-          { label: 'Betreff', placeholder: 'Worum geht es in Ihrer Anfrage?', style: 'short', required: true },
-          { label: 'Beschreibung', placeholder: 'Bitte beschreiben Sie Ihr Anliegen so genau wie möglich...', style: 'paragraph', required: true }
-        ]
-      },
-      player_report: {
-        name: 'Spielerbericht',
-        mode: 'form',
-        template_key: 'player_report',
-        color: 'rgb(240, 178, 50)',
-        description: 'Melden Sie Regelverstöße eines Spielers inklusive Beweisen.',
-        button_label: 'Spieler melden',
-        require_proof: true,
-        questions: [
-          { label: 'Gemeldeter Benutzer / ID', placeholder: 'Benutzername oder Discord-ID...', style: 'short', required: true },
-          { label: 'Grund der Meldung', placeholder: 'Was ist vorgefallen?', style: 'paragraph', required: true },
-          { label: 'Beweise (Screenshot-/Video-Links)', placeholder: 'Links zu Screenshots oder Clips...', style: 'short', required: true }
-        ]
-      },
-      staff_application: {
-        name: 'Personalbewerbung',
-        mode: 'form',
-        template_key: 'staff_application',
-        color: 'rgb(36, 128, 70)',
-        description: 'Bewerben Sie sich über unser Antragsformular für das Server-Team.',
-        button_label: 'Jetzt bewerben',
-        require_proof: false,
-        questions: [
-          { label: 'Alter & Zeitzone', placeholder: 'z. B. 19, MEZ (UTC+1)', style: 'short', required: true },
-          { label: 'Bisherige Moderationserfahrung', placeholder: 'Auf welchen Servern haben Sie bereits moderiert?', style: 'paragraph', required: true },
-          { label: 'Warum möchten Sie ins Team?', placeholder: 'Erzählen Sie uns etwas über Ihre Motivation...', style: 'paragraph', required: true }
-        ]
-      }
-    };
-
-    const initialSlots = Array.isArray(tCfg.options_slots) ? tCfg.options_slots.map((s, idx) => ({
-      id: String(s.id || `type_${Date.now()}_${idx}`),
-      name: String(s.name || 'Allgemeine Unterstützung'),
-      mode: String(s.mode || 'channel'),
-      template_key: String(s.template_key || ''),
-      color: String(s.color || (MODE_META[s.mode]?.color || 'rgb(88, 101, 242)')),
-      description: String(s.description || 'Öffnen Sie ein Ticket, um mit unserem Team zu sprechen.'),
-      button_label: String(s.button_label || s.name || 'Ticket öffnen'),
-      panel_channel_id: String(s.panel_channel_id || tCfg.panel_channel_id || ''),
-      log_channel_id: String(s.log_channel_id || tCfg.log_channel_id || ''),
-      role_id: String(s.role_id || ''),
-      category_id: String(s.category_id || ''),
-      require_proof: Boolean(s.require_proof),
-      questions: Array.isArray(s.questions) && s.questions.length > 0 ? s.questions.map(q => ({
-        label: String(q.label || 'Frage'),
-        placeholder: String(q.placeholder || ''),
-        style: q.style === 'paragraph' ? 'paragraph' : 'short',
-        required: q.required !== false
-      })) : [
-        { label: 'Betreff', placeholder: 'Kurze Zusammenfassung...', style: 'short', required: true },
-        { label: 'Beschreibung', placeholder: 'Bitte beschreiben Sie Ihr Anliegen...', style: 'paragraph', required: true }
-      ]
-    })) : [];
+        options: tCfg.options_slots.map((s, idx) => ({
+          id: String(s.id || `opt_${idx}`),
+          name: String(s.name || 'Option'),
+          description: String(s.description || 'Öffnen Sie ein Ticket.'),
+          color: String(s.color || '#5865F2'),
+          category_id: String(s.category_id || ''),
+          role_id: String(s.role_id || '')
+        }))
+      }];
+    }
 
     const state = {
-      enabled: Boolean(tCfg.enabled),
-      panel_title: tCfg.panel_title || 'Support Ticket',
-      panel_description: tCfg.panel_description || 'Select the Correct option Before Openign a ticket',
-      panel_instructions: tCfg.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.',
-      panel_channel_id: String(tCfg.panel_channel_id || (initialSlots[0]?.panel_channel_id || '')),
-      log_channel_id: String(tCfg.log_channel_id || (initialSlots[0]?.log_channel_id || '')),
+      enabled: initialPanels.length > 0 || Boolean(tCfg.enabled),
+      panels: initialPanels,
       auto_close_time_enabled: Boolean(tCfg.auto_close_time_enabled),
       auto_close_time_hours: parseInt(tCfg.auto_close_time_hours, 10) || 24,
       max_open_tickets: parseInt(tCfg.max_open_tickets, 10) || 3,
@@ -158,7 +127,6 @@ DashboardTabs.Tickets = async function (container, guildId) {
       ping_custom_role_enabled: Boolean(tCfg.ping_custom_role_enabled),
       ping_custom_role_id: String(tCfg.ping_custom_role_id || ''),
       claiming_enabled: Boolean(tCfg.claiming_enabled),
-      ticketTypes: initialSlots,
       activeTickets: Array.isArray(tCfg.active_tickets_list) ? tCfg.active_tickets_list : [],
       closedTickets: Array.isArray(tCfg.closed_tickets_list) ? tCfg.closed_tickets_list : [],
       stats: tCfg.stats || { open: 0, claimed: 0, resolved: 0, avg_resolution: '<1Std' },
@@ -183,16 +151,35 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
       const execSave = async () => {
         try {
-          const primaryPanelChannel = state.panel_channel_id || state.ticketTypes[0]?.panel_channel_id || '';
-          const primaryLogChannel = state.log_channel_id || state.ticketTypes[0]?.log_channel_id || '';
+          // Construct flattened options_slots from all panels for bot backwards-compatibility
+          const allSlots = [];
+          state.panels.forEach(p => {
+            (p.options || []).forEach(opt => {
+              allSlots.push({
+                id: opt.id,
+                name: opt.name,
+                description: opt.description,
+                color: opt.color || p.color,
+                panel_channel_id: p.panel_channel_id,
+                log_channel_id: p.log_channel_id,
+                category_id: opt.category_id || p.category_id,
+                role_id: opt.role_id || p.role_id,
+                button_label: p.button_label || 'Ticket öffnen'
+              });
+            });
+          });
+
+          const primaryPanel = state.panels[0] || {};
           await API.saveConfig(guildId, {
             ticket: {
-              enabled: state.ticketTypes.length > 0 ? true : state.enabled,
-              panel_title: state.panel_title,
-              panel_description: state.panel_description,
-              panel_instructions: state.panel_instructions,
-              panel_channel_id: primaryPanelChannel,
-              log_channel_id: primaryLogChannel,
+              enabled: state.panels.length > 0 ? true : state.enabled,
+              ticket_panels: state.panels,
+              options_slots: allSlots,
+              panel_title: primaryPanel.title || primaryPanel.name || 'Support Ticket',
+              panel_description: primaryPanel.description || '',
+              panel_instructions: primaryPanel.instructions || '',
+              panel_channel_id: primaryPanel.panel_channel_id || '',
+              log_channel_id: primaryPanel.log_channel_id || '',
               auto_close_time_enabled: state.auto_close_time_enabled,
               auto_close_time_hours: state.auto_close_time_hours,
               max_open_tickets: state.max_open_tickets,
@@ -202,7 +189,6 @@ DashboardTabs.Tickets = async function (container, guildId) {
               ping_custom_role_enabled: state.ping_custom_role_enabled,
               ping_custom_role_id: state.ping_custom_role_id,
               claiming_enabled: state.claiming_enabled,
-              options_slots: state.ticketTypes,
               ...extraTicketFields
             }
           });
@@ -250,13 +236,15 @@ DashboardTabs.Tickets = async function (container, guildId) {
       return { openCount, claimedCount, resolved7d, avgStr };
     };
 
-    // Main Render
+    const closeAllDropdowns = () => {
+      document.querySelectorAll('.orbit-dropdown-menu').forEach(m => m.classList.add('hidden'));
+    };
+
+    // Main Render Function
     const renderMain = () => {
       const { openCount, claimedCount, resolved7d, avgStr } = computeLiveStats();
-      const typeCount = state.ticketTypes.length;
-      const progressPct = Math.min(100, typeCount > 0 ? Math.max(4, (typeCount / 10) * 100) : 0);
-      const panelChannel = getChannelById(state.panel_channel_id);
-      const logChannel = getChannelById(state.log_channel_id);
+      const count = state.panels.length;
+      const progressPct = Math.min(100, count > 0 ? Math.max(4, (count / 10) * 100) : 0);
 
       container.innerHTML = `
         <div>
@@ -274,7 +262,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           </div>
 
           <div class="mt-6">
-            <!-- Top KPI Strip -->
+            <!-- Top Stats KPI Strip -->
             <div class="flex items-center gap-3 mb-6">
               <div class="flex flex-wrap items-center gap-2.5 flex-1">
                 <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 whitespace-nowrap shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
@@ -300,238 +288,23 @@ DashboardTabs.Tickets = async function (container, guildId) {
               </button>
             </div>
 
-            <!-- Multi-Option Ticket-Panel Section (Orbit Multi-Option Ticket Layout & Live Discord Preview) -->
-            <div class="mb-8">
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <div>
-                  <h3 class="text-sm font-semibold text-white text-balance flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                    Ticket-Panel (Discord Live-Vorschau)
-                  </h3>
-                  <p class="text-xs text-neutral-400 mt-0.5">Das zentrale Ticket-Panel in Discord mit Auswahl-Dropdown für alle konfigurierten Kategorien und 'Create Ticket' Button.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-1 rounded-lg bg-neutral-800 text-[11px] font-medium text-neutral-300 border border-neutral-700/60 tabular-nums">
-                    ${typeCount} Menü-Option${typeCount === 1 ? '' : 'en'}
-                  </span>
-                  <button type="button" id="btn-send-multi-panel-top" class="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl h-9 px-3.5 transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] shadow-sm cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-                    Panel in Discord senden
-                  </button>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                <!-- Left: Panel Settings (7 cols) -->
-                <div class="lg:col-span-7 bg-neutral-900 rounded-2xl border border-neutral-800 p-5 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <!-- Panel Channel Dropdown -->
-                    <div class="w-full relative">
-                      <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Kanal *</label>
-                      <div class="relative">
-                        <button type="button" id="main-dd-panel-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
-                          <span id="main-dd-panel-ch-label" class="min-w-0 truncate ${panelChannel ? 'text-white' : 'text-neutral-500'}">
-                            ${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Panel-Kanal wählen...'}
-                          </span>
-                          <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                        </button>
-                        <div id="main-dd-panel-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
-                          <!-- Sticky Search Bar -->
-                          <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                            <div class="relative w-full">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                              <input type="text" id="main-search-panel-ch" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
-                            </div>
-                          </div>
-                          <!-- Items List -->
-                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="main-list-panel-ch">
-                            ${allChannels.map(c => `
-                              <button type="button" data-main-panel-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(state.panel_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
-                                <span class="truncate">#${escapeHtml(c.name)}</span>
-                              </button>
-                            `).join('')}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Log Channel Dropdown -->
-                    <div class="w-full relative">
-                      <label class="block text-xs font-medium text-neutral-300 mb-1.5">Mitarbeiter-/Log-Kanal</label>
-                      <div class="relative">
-                        <button type="button" id="main-dd-log-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
-                          <span id="main-dd-log-ch-label" class="min-w-0 truncate ${logChannel ? 'text-white' : 'text-neutral-500'}">
-                            ${logChannel ? `#${escapeHtml(logChannel.name)}` : 'Kein Log-Kanal'}
-                          </span>
-                          <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                        </button>
-                        <div id="main-dd-log-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
-                          <!-- Sticky Search Bar -->
-                          <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                            <div class="relative w-full">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                              <input type="text" id="main-search-log-ch" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
-                            </div>
-                          </div>
-                          <!-- Items List -->
-                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="main-list-log-ch">
-                            <button type="button" data-main-log-ch="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Kein Log-Kanal</button>
-                            ${allChannels.map(c => `
-                              <button type="button" data-main-log-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(state.log_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
-                                <span class="truncate">#${escapeHtml(c.name)}</span>
-                              </button>
-                            `).join('')}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Panel Title Input -->
-                  <div>
-                    <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Titel</label>
-                    <input type="text" id="input-multi-panel-title" value="${escapeHtml(state.panel_title)}" placeholder="Support Ticket" class="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
-                  </div>
-
-                  <!-- Panel Description Input -->
-                  <div>
-                    <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Beschreibung</label>
-                    <input type="text" id="input-multi-panel-desc" value="${escapeHtml(state.panel_description)}" placeholder="Select the Correct option Before Openign a ticket" class="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
-                  </div>
-
-                  <!-- Panel Instructions (Quote Block) Input -->
-                  <div>
-                    <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Anweisungen (Blockquote)</label>
-                    <textarea id="input-multi-panel-instr" rows="2" placeholder="> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">${escapeHtml(state.panel_instructions)}</textarea>
-                  </div>
-
-                  <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-800/80">
-                    <button type="button" id="btn-add-ticket-type-shortcut" class="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                      Option für Dropdown hinzufügen
-                    </button>
-                    <button type="button" id="btn-send-multi-panel-bottom" class="flex items-center gap-1.5 bg-white text-black hover:bg-neutral-200 font-medium text-xs rounded-xl h-9 px-4 transition-transform duration-150 active:scale-[0.96] cursor-pointer">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-                      Panel in Discord senden
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Right: Discord Live Preview (5 cols) - 1:1 Discord Layout -->
-                <div class="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-[#313338] border border-[#232428] p-4 text-white font-sans text-sm select-none shadow-xl">
-                  <div>
-                    <div class="flex items-center justify-between pb-3 border-b border-[#232428] mb-3">
-                      <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <span class="size-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Discord Live-Vorschau
-                      </span>
-                      <span class="text-[11px] text-neutral-400 font-mono">${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Kein Kanal'}</span>
-                    </div>
-
-                    <!-- Bot Message Header -->
-                    <div class="flex items-start gap-3">
-                      <div class="size-9 rounded-full bg-[#5865F2] flex items-center justify-center font-bold text-white text-sm shadow-sm shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
-                      </div>
-                      <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                          <span class="font-semibold text-white text-sm">Orbit</span>
-                          <span class="bg-[#5865F2] text-white text-[9px] font-bold px-1 rounded leading-tight">BOT</span>
-                          <span class="text-neutral-400 text-[11px] ml-1">Heute um 12:00 Uhr</span>
-                        </div>
-
-                        <!-- Discord Embed Card -->
-                        <div class="mt-2.5 rounded bg-[#2b2d31] border-l-4 border-l-[#248046] p-3.5 space-y-2 shadow-md">
-                          <div id="pv-panel-title" class="font-bold text-white text-sm leading-snug">
-                            ${escapeHtml(state.panel_title || 'Support Ticket')}
-                          </div>
-                          <div id="pv-panel-desc" class="text-xs text-neutral-300 leading-relaxed">
-                            ${escapeHtml(state.panel_description || 'Select the Correct option Before Openign a ticket')}
-                          </div>
-                          <div class="border-l-[3px] border-[#4e5058] pl-2.5 py-0.5">
-                            <p id="pv-panel-instructions" class="text-xs text-neutral-300 leading-relaxed font-normal">
-                              ${escapeHtml(state.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.')}
-                            </p>
-                          </div>
-                        </div>
-
-                        <!-- Discord Select Menu Preview Component (Interactive 1:1 Discord Select Menu) -->
-                        <div class="mt-3 relative" id="pv-select-container">
-                          <button type="button" id="pv-select-btn" class="w-full rounded bg-[#2b2d31] hover:bg-[#35373c] border border-[#1e1f22] p-2.5 flex items-center justify-between cursor-pointer transition-colors shadow-inner text-left focus:outline-none">
-                            <div class="flex items-center gap-2 min-w-0" id="pv-select-display">
-                              <span class="text-xs text-neutral-300 truncate" id="pv-select-text">Select a category...</span>
-                            </div>
-                            <svg id="pv-select-arrow" class="w-3.5 h-3.5 text-neutral-400 shrink-0 transition-transform duration-150" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                          </button>
-
-                          <!-- Discord Dropdown Popover List -->
-                          <div id="pv-select-menu" class="hidden absolute left-0 right-0 top-full mt-1 bg-[#2b2d31] border border-[#1e1f22] rounded-lg shadow-2xl z-30 max-h-56 overflow-y-auto p-1 divide-y divide-[#35373c]/60">
-                            <button type="button" data-pv-opt="" class="w-full p-2 rounded text-left hover:bg-[#35373c] flex items-center justify-between group transition-colors">
-                              <span class="text-xs text-neutral-400">Select a category... (Standard)</span>
-                            </button>
-                            ${state.ticketTypes.length > 0 ? state.ticketTypes.map(t => `
-                              <button type="button" data-pv-opt="${escapeHtml(t.id)}" class="w-full p-2 rounded text-left hover:bg-[#35373c] flex items-center justify-between group transition-colors">
-                                <div class="min-w-0 flex items-center gap-2.5">
-                                  <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${t.color || '#5865F2'}"></span>
-                                  <div class="min-w-0">
-                                    <div class="text-xs font-medium text-white truncate">${escapeHtml(t.name)}</div>
-                                    ${t.description ? `<div class="text-[10px] text-neutral-400 truncate max-w-[220px]">${escapeHtml(t.description)}</div>` : ''}
-                                  </div>
-                                </div>
-                              </button>
-                            `).join('') : `
-                              <button type="button" data-pv-opt="default" class="w-full p-2 rounded text-left hover:bg-[#35373c] flex items-center gap-2 group transition-colors">
-                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0"></span>
-                                <span class="text-xs font-medium text-white">General Support</span>
-                              </button>
-                            `}
-                          </div>
-                        </div>
-
-                        <!-- Discord Button Component (Single Button as in Discord) -->
-                        <div class="mt-2.5">
-                          <button type="button" class="bg-[#5865F2] hover:bg-[#4752C4] text-white font-medium text-xs rounded-md px-4 py-2 flex items-center gap-2 shadow transition-colors pointer-events-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
-                            Create Ticket
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="mt-4 pt-3 border-t border-[#232428] flex items-center justify-between text-xs text-neutral-400">
-                    <span class="text-[11px] flex items-center gap-1.5 text-neutral-300">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-                      1 Zentrales Ticket-Panel
-                    </span>
-                    <button type="button" id="btn-quick-send-preview" class="px-3 py-1.5 rounded-lg bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-medium transition-[transform,background-color] active:scale-[0.96] cursor-pointer">
-                      Jetzt posten
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Optionen im Ticket-Menü Section -->
+            <!-- Ticketarten Section (Clean PeakBot Layout) -->
             <div data-tour="tickets-roles" class="mb-8 scroll-mt-24">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <div>
-                  <h3 class="text-sm font-semibold text-white text-balance flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
-                    Optionen im Ticket-Menü
-                  </h3>
-                  <p class="text-xs text-neutral-400 mt-0.5">Kategorien & Optionen für das zentrale Ticket-Panel mit individueller Support-Rolle, Ticket-Kategorie & Log-Kanal.</p>
+                  <h3 class="text-sm font-semibold text-white text-balance">Ticketarten</h3>
+                  <p class="text-xs text-neutral-400 mt-0.5">Erstellen und verwalten Sie verschiedene Ticketarten für Ihren Server.</p>
                 </div>
                 <div class="flex items-center flex-wrap gap-2.5">
                   <div class="flex items-center gap-3">
-                    <span id="tkt-types-counter" class="text-xs tabular-nums text-neutral-500">${typeCount} Option${typeCount === 1 ? '' : 'en'}</span>
+                    <span id="tkt-types-counter" class="text-xs tabular-nums text-neutral-500">${count}/999 Typen</span>
                     <div class="w-16 h-1 rounded-full bg-neutral-800 overflow-hidden">
                       <div id="tkt-types-progress" class="h-full rounded-full transition-all bg-white/60" style="width: ${progressPct}%;"></div>
                     </div>
                   </div>
-                  <button type="button" id="btn-create-ticket-type-top" data-tour="tickets-create" class="flex items-center gap-1.5 bg-white text-black font-medium text-sm rounded-xl h-10 pl-3.5 pr-4 hover:bg-neutral-200 whitespace-nowrap transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed scroll-mt-24">
+                  <button type="button" id="btn-create-ticket-top" data-tour="tickets-create" class="flex items-center gap-1.5 bg-white text-black font-medium text-sm rounded-xl h-10 pl-3.5 pr-4 hover:bg-neutral-200 whitespace-nowrap transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 cursor-pointer scroll-mt-24">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-4 h-4 flex-shrink-0"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                    Option hinzufügen
+                    Ticket-Typ erstellen
                   </button>
                 </div>
               </div>
@@ -589,11 +362,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                     <p class="text-sm font-medium text-white min-w-0 truncate">Maximale offene Tickets pro Benutzer</p>
                   </div>
                   <div class="w-20 flex-shrink-0">
-                    <div class="w-full">
-                      <div class="relative">
-                        <input id="tkt-input-max-open" autocomplete="off" class="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600" min="1" max="25" placeholder="3" type="number" value="${state.max_open_tickets}">
-                      </div>
-                    </div>
+                    <input id="tkt-input-max-open" autocomplete="off" class="w-full px-4 py-2.5 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 text-center text-sm" min="1" max="25" placeholder="3" type="number" value="${state.max_open_tickets}">
                   </div>
                 </div>
 
@@ -607,12 +376,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
                     </div>
                     <p class="text-sm font-medium text-white min-w-0 truncate">Format des Kanalnamens</p>
                   </div>
-                  <div class="w-52 flex-shrink-0">
-                    <div class="w-full">
-                      <div class="relative">
-                        <input id="tkt-input-naming-format" autocomplete="off" class="w-full px-4 py-3 sm:py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-black dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600" placeholder="{Typ}-{Nummer} · {Benutzer}" value="${escapeHtml(state.naming_format)}">
-                      </div>
-                    </div>
+                  <div class="w-60 flex-shrink-0">
+                    <input id="tkt-input-naming-format" autocomplete="off" class="w-full px-4 py-2 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 text-xs sm:text-sm" placeholder="{Typ}-{Nummer} · {Benutzer}" value="${escapeHtml(state.naming_format)}">
                   </div>
                 </div>
 
@@ -672,11 +437,11 @@ DashboardTabs.Tickets = async function (container, guildId) {
                         <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                       </button>
                       <div id="tkt-dd-ping-role-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute right-0 top-full mt-1.5 w-60 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
-                        <!-- Sticky Search -->
+                        <!-- Search Bar -->
                         <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
                           <div class="relative w-full">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                            <input type="text" id="tkt-search-ping-role" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                            <input type="text" id="tkt-search-ping-role" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
                           </div>
                         </div>
                         <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="tkt-list-ping-role">
@@ -717,7 +482,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           </div>
         </div>
 
-        <!-- Modal Mount Point -->
+        <!-- Builder Modal Mount Point -->
         <div id="tickets-modal-root"></div>
       `;
 
@@ -726,58 +491,116 @@ DashboardTabs.Tickets = async function (container, guildId) {
       bindMainEvents();
     };
 
-    // Render Optionen im Ticket-Menü Grid
+    // Render Ticketarten Grid (PeakBot Cards)
     const renderTicketTypesGrid = () => {
       const grid = document.getElementById('tickets-types-grid');
       const counterEl = document.getElementById('tkt-types-counter');
       const progressEl = document.getElementById('tkt-types-progress');
       if (!grid) return;
 
-      const count = state.ticketTypes.length;
-      if (counterEl) counterEl.textContent = `${count} Option${count === 1 ? '' : 'en'}`;
+      const count = state.panels.length;
+      if (counterEl) counterEl.textContent = `${count}/999 Typen`;
       if (progressEl) progressEl.style.width = `${Math.min(100, count > 0 ? Math.max(4, (count / 10) * 100) : 0)}%`;
 
-      const cards = state.ticketTypes.map((t) => {
-        const modeInfo = MODE_META[t.mode] || MODE_META.channel;
-        const pCh = getChannelById(t.panel_channel_id || state.panel_channel_id);
-        const lCh = getChannelById(t.log_channel_id || state.log_channel_id);
-        const sRole = getRoleById(t.role_id);
-        const sCat = getCategoryById(t.category_id);
-        const qCount = Array.isArray(t.questions) ? t.questions.length : 0;
+      if (count === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full p-8 text-center bg-neutral-900 border border-neutral-800 rounded-2xl">
+            <div class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center mx-auto mb-3 text-neutral-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
+            </div>
+            <p class="text-sm font-medium text-neutral-300">Keine Ticketarten vorhanden</p>
+            <p class="text-xs text-neutral-500 mt-1">Erstellen Sie Ihren ersten Ticket-Typ, um zu beginnen.</p>
+            <button type="button" id="btn-create-first-ticket" class="mt-4 px-4 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-transform active:scale-[0.96] cursor-pointer">
+              + Jetzt Ticket-Typ erstellen
+            </button>
+          </div>
+        `;
+        document.getElementById('btn-create-first-ticket')?.addEventListener('click', () => openTicketBuilderModal(null));
+        return;
+      }
+
+      const cards = state.panels.map((p) => {
+        const pCh = getChannelById(p.panel_channel_id);
+        const optCount = Array.isArray(p.options) ? p.options.length : 1;
+        // Count unique roles
+        const roleSet = new Set();
+        if (p.role_id) roleSet.add(p.role_id);
+        (p.options || []).forEach(o => { if (o.role_id) roleSet.add(o.role_id); });
+        const rolesCount = roleSet.size;
 
         return `
-          <div class="group rounded-xl border border-neutral-800 hover:border-neutral-600 bg-neutral-900 p-4 flex flex-col justify-between gap-3 min-h-[160px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] transition-all cursor-pointer" data-edit-ticket-type="${escapeHtml(t.id)}">
-            <div>
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="grid place-items-center size-9 rounded-xl shrink-0" style="background-color: ${t.color ? t.color.replace('rgb(', 'rgba(').replace(')', ', 0.12)') : 'rgba(88, 101, 242, 0.12)'}">
-                    <span class="w-3 h-3 rounded-full" style="background-color: ${t.color || '#5865F2'}"></span>
+          <div class="group bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden hover:border-neutral-600 hover:bg-neutral-900/80 hover:shadow-lg hover:shadow-black/20 transition-[transform,border-color,background-color,box-shadow] duration-200 ease-out cursor-pointer min-h-[160px] hover:-translate-y-0.5 active:scale-[0.96] active:translate-y-0 flex flex-col justify-between" data-open-panel-edit="${escapeHtml(p.id)}">
+            <div class="h-[3px]" style="background-color: ${p.color || '#5865F2'};"></div>
+            <div class="p-4 h-full flex flex-col flex-1 justify-between">
+              <div>
+                <div class="flex items-start gap-3 mb-2.5">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ring-1 ring-inset ring-white/10 shadow-sm shadow-black/20" style="background-color: ${p.color ? p.color.replace('rgb(', 'rgba(').replace(')', ', 0.125)') : 'rgba(88, 101, 242, 0.125)'};">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text w-[18px] h-[18px]" style="color: ${p.color || '#5865F2'};"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
                   </div>
-                  <div class="min-w-0">
-                    <h4 class="text-sm font-semibold text-white truncate">${escapeHtml(t.name)}</h4>
-                    <p class="text-[11px] text-neutral-400 truncate mt-0.5">${sCat ? `📁 ${escapeHtml(sCat.name)}` : 'Automatische Kategorie'}</p>
+                  <div class="flex-1 min-w-0 pt-0.5">
+                    <h3 class="text-sm font-semibold text-white truncate leading-tight text-balance">${escapeHtml(p.name || p.title || 'Ticket')}</h3>
+                    <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[4px] text-[10px] font-medium bg-neutral-800 text-neutral-400 ring-1 ring-inset ring-white/10 whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-2.5 h-2.5 flex-shrink-0"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
+                        ${pCh ? escapeHtml(pCh.name) : 'Kanal'}
+                      </span>
+                      <span class="px-1.5 py-0.5 rounded-[4px] text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap bg-emerald-500/10 text-emerald-400">
+                        Aktiv
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 flex-shrink-0 -mr-1 -mt-1 relative">
+                    <button type="button" data-card-menu-trigger="${escapeHtml(p.id)}" class="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-more-horizontal w-4 h-4"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                    </button>
+                    <!-- Card Menu Dropdown -->
+                    <div id="card-menu-${escapeHtml(p.id)}" class="orbit-dropdown-menu hidden absolute right-0 top-full mt-1 w-36 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl z-40 p-1 divide-y divide-neutral-800/80">
+                      <div class="py-0.5">
+                        <button type="button" data-card-action="edit" data-panel-id="${escapeHtml(p.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-neutral-300 hover:text-white hover:bg-neutral-800 flex items-center gap-2">
+                          <svg class="w-3.5 h-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                          Bearbeiten
+                        </button>
+                        <button type="button" data-card-action="duplicate" data-panel-id="${escapeHtml(p.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-neutral-300 hover:text-white hover:bg-neutral-800 flex items-center gap-2">
+                          <svg class="w-3.5 h-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                          Duplizieren
+                        </button>
+                      </div>
+                      <div class="pt-1">
+                        <button type="button" data-card-action="delete" data-panel-id="${escapeHtml(p.id)}" class="w-full px-2.5 py-1.5 rounded-lg text-left text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2">
+                          <svg class="w-3.5 h-3.5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>
+                          Löschen
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <span class="flex-shrink-0 px-2 py-0.5 rounded-[6px] text-[10px] font-semibold tracking-wide whitespace-nowrap bg-neutral-800 border border-neutral-700/60 text-neutral-300">
-                  Menü-Option
-                </span>
+
+                <p class="text-xs text-neutral-400 leading-relaxed line-clamp-2 mb-3 pl-[52px] text-pretty">
+                  ${escapeHtml(p.description || 'Keine Beschreibung')}
+                </p>
               </div>
 
-              <p class="text-xs text-neutral-400 line-clamp-2 mt-2.5 leading-relaxed">${escapeHtml(t.description || 'Keine Beschreibung')}</p>
-            </div>
+              <div class="flex items-center justify-between gap-3 pt-3 border-t border-neutral-800/80">
+                <div class="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-neutral-500">
+                  <div class="flex items-center gap-1 whitespace-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layers w-3 h-3 flex-shrink-0"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg>
+                    <span class="tabular-nums">${optCount} Option${optCount === 1 ? '' : 'en'}</span>
+                  </div>
+                  <span class="text-neutral-700">·</span>
+                  <div class="flex items-center gap-1 whitespace-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-3 h-3 flex-shrink-0"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>
+                    <span class="tabular-nums">${rolesCount} Rolle${rolesCount === 1 ? '' : 'n'}</span>
+                  </div>
+                  <span class="text-neutral-700">·</span>
+                  <div class="flex items-center gap-1 whitespace-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock w-3 h-3 flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span class="tabular-nums">soeben</span>
+                  </div>
+                </div>
 
-            <div class="pt-2.5 border-t border-neutral-800/80 flex items-center justify-between gap-2">
-              <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-neutral-400 truncate">
-                <span class="tabular-nums px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-300 font-medium">${qCount} ${qCount === 1 ? 'Frage' : 'Fragen'}</span>
-                ${sRole ? `<span class="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 font-medium">@${escapeHtml(sRole.name)}</span>` : ''}
-                ${lCh ? `<span class="text-neutral-500 truncate">#${escapeHtml(lCh.name)}</span>` : ''}
-              </div>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <button type="button" data-edit-btn-type="${escapeHtml(t.id)}" class="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[11px] font-medium text-neutral-200 transition-colors cursor-pointer">
-                  Bearbeiten
-                </button>
-                <button type="button" data-delete-ticket-type="${escapeHtml(t.id)}" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Löschen">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                <button type="button" data-deploy-panel-id="${escapeHtml(p.id)}" class="flex flex-shrink-0 items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.96] cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket w-3.5 h-3.5"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>
+                  Einsetzen
                 </button>
               </div>
             </div>
@@ -785,49 +608,97 @@ DashboardTabs.Tickets = async function (container, guildId) {
         `;
       });
 
-      // Dashed "+ Option hinzufügen" card
-      cards.push(`
-        <button type="button" id="btn-create-ticket-type-card" class="group rounded-xl border-2 border-dashed border-neutral-700 p-4 hover:border-neutral-500 hover:bg-neutral-800/30 transition-[transform,background-color,border-color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer flex flex-col items-center justify-center gap-2.5 min-h-[160px]">
-          <div class="w-11 h-11 rounded-xl bg-neutral-800 flex items-center justify-center transition-transform duration-150 ease-out group-hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-5 h-5 text-neutral-400"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-          </div>
-          <span class="text-sm font-medium text-neutral-400">Option hinzufügen</span>
-        </button>
-      `);
-
       grid.innerHTML = cards.join('');
 
-      document.getElementById('btn-create-ticket-type-card')?.addEventListener('click', () => openTicketTypeModal(null));
-
-      grid.querySelectorAll('[data-edit-ticket-type]').forEach(card => {
+      // Bind card clicks for editing
+      grid.querySelectorAll('[data-open-panel-edit]').forEach(card => {
         card.addEventListener('click', (e) => {
-          if (e.target.closest('[data-edit-btn-type]') || e.target.closest('[data-delete-ticket-type]')) return;
-          const tid = card.getAttribute('data-edit-ticket-type');
-          const found = state.ticketTypes.find(t => t.id === tid);
-          if (found) openTicketTypeModal(found);
+          if (e.target.closest('[data-card-menu-trigger]') || e.target.closest('.orbit-dropdown-menu') || e.target.closest('[data-deploy-panel-id]')) return;
+          const pid = card.getAttribute('data-open-panel-edit');
+          const panel = state.panels.find(p => p.id === pid);
+          if (panel) openTicketBuilderModal(panel);
         });
       });
 
-      grid.querySelectorAll('[data-edit-btn-type]').forEach(btn => {
+      // Bind 3-dots menus
+      grid.querySelectorAll('[data-card-menu-trigger]').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const tid = btn.getAttribute('data-edit-btn-type');
-          const found = state.ticketTypes.find(t => t.id === tid);
-          if (found) openTicketTypeModal(found);
+          const pid = btn.getAttribute('data-card-menu-trigger');
+          const menu = document.getElementById(`card-menu-${pid}`);
+          const wasHidden = menu?.classList.contains('hidden');
+          closeAllDropdowns();
+          if (wasHidden) menu?.classList.remove('hidden');
         });
       });
 
-      grid.querySelectorAll('[data-delete-ticket-type]').forEach(btn => {
+      // Bind card actions (edit, duplicate, delete)
+      grid.querySelectorAll('[data-card-action]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
-          const tid = btn.getAttribute('data-delete-ticket-type');
-          const found = state.ticketTypes.find(t => t.id === tid);
-          const optName = found ? found.name : 'Option';
-          if (!confirm(`Möchten Sie die Option "${optName}" wirklich aus dem Ticket-Menü entfernen?`)) return;
-          state.ticketTypes = state.ticketTypes.filter(t => t.id !== tid);
-          renderMain();
-          await saveTicketConfig(true);
-          if (window.Notifications) Notifications.show(`Option "${optName}" wurde entfernt.`, 'info');
+          closeAllDropdowns();
+          const act = btn.getAttribute('data-card-action');
+          const pid = btn.getAttribute('data-panel-id');
+          const panel = state.panels.find(p => p.id === pid);
+          if (!panel) return;
+
+          if (act === 'edit') {
+            openTicketBuilderModal(panel);
+          } else if (act === 'duplicate') {
+            const clone = JSON.parse(JSON.stringify(panel));
+            clone.id = `panel_${Date.now()}`;
+            clone.name = `${panel.name || panel.title || 'Ticket'} (Kopie)`;
+            clone.title = clone.name;
+            state.panels.push(clone);
+            renderMain();
+            await saveTicketConfig(true);
+            if (window.Notifications) Notifications.show(`Ticket-Typ "${clone.name}" wurde dupliziert.`, 'success');
+          } else if (act === 'delete') {
+            if (!confirm(`Möchten Sie den Ticket-Typ "${panel.name || panel.title}" wirklich löschen?`)) return;
+            state.panels = state.panels.filter(p => p.id !== pid);
+            renderMain();
+            await saveTicketConfig(true);
+            if (window.Notifications) Notifications.show(`Ticket-Typ wurde gelöscht.`, 'info');
+          }
+        });
+      });
+
+      // Bind direct Deploy (Einsetzen) button on card
+      grid.querySelectorAll('[data-deploy-panel-id]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const pid = btn.getAttribute('data-deploy-panel-id');
+          const panel = state.panels.find(p => p.id === pid);
+          if (!panel) return;
+
+          if (!panel.panel_channel_id) {
+            if (window.Notifications) Notifications.show(`Bitte weisen Sie dem Ticket-Typ "${panel.name}" zuerst einen Panel-Kanal zu.`, 'info');
+            openTicketBuilderModal(panel);
+            return;
+          }
+
+          const origContent = btn.innerHTML;
+          btn.innerHTML = `<span>Sendet...</span>`;
+          btn.disabled = true;
+
+          try {
+            await saveTicketConfig(true);
+            await API.sendTicketPanel(guildId, {
+              panel_id: panel.id,
+              channel_id: panel.panel_channel_id,
+              panel_title: panel.title || panel.name || 'Support Ticket',
+              panel_description: panel.description || '',
+              panel_instructions: panel.instructions || '',
+              color: panel.color || '#5865F2',
+              options: panel.options || []
+            });
+            if (window.Notifications) Notifications.show(`Ticket-Panel "${panel.name || panel.title}" erfolgreich in Discord gesendet!`, 'success');
+          } catch (err) {
+            if (window.Notifications) Notifications.show(err.message || 'Fehler beim Senden des Ticket-Panels', 'error');
+          } finally {
+            btn.innerHTML = origContent;
+            btn.disabled = false;
+          }
         });
       });
     };
@@ -979,904 +850,251 @@ DashboardTabs.Tickets = async function (container, guildId) {
       });
     };
 
-    // Bind Main Page Controls
+    // Bind Main Page Events
     const bindMainEvents = () => {
       document.getElementById('btn-goto-analytics')?.addEventListener('click', () => {
         if (window.Router) Router.navigate(`/dashboard/${guildId}/analytics`);
       });
 
-      document.getElementById('btn-create-ticket-type-top')?.addEventListener('click', () => {
-        openTicketTypeModal(null);
+      document.getElementById('btn-create-ticket-top')?.addEventListener('click', () => {
+        openTicketBuilderModal(null);
       });
 
-      document.getElementById('btn-add-ticket-type-shortcut')?.addEventListener('click', () => {
-        openTicketTypeModal(null);
-      });
-
-      // Multi-Option Panel Title / Description / Instructions Live Sync
-      const titleInput = document.getElementById('input-multi-panel-title');
-      const descInput = document.getElementById('input-multi-panel-desc');
-      const instrInput = document.getElementById('input-multi-panel-instr');
-
-      titleInput?.addEventListener('input', (e) => {
-        state.panel_title = e.target.value;
-        const pvEl = document.getElementById('pv-panel-title');
-        if (pvEl) pvEl.textContent = state.panel_title || 'Support Ticket';
-        saveTicketConfig();
-      });
-
-      descInput?.addEventListener('input', (e) => {
-        state.panel_description = e.target.value;
-        const pvEl = document.getElementById('pv-panel-desc');
-        if (pvEl) pvEl.textContent = state.panel_description || 'Select the Correct option Before Openign a ticket';
-        saveTicketConfig();
-      });
-
-      instrInput?.addEventListener('input', (e) => {
-        state.panel_instructions = e.target.value;
-        const pvEl = document.getElementById('pv-panel-instructions');
-        if (pvEl) pvEl.textContent = state.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.';
-        saveTicketConfig();
-      });
-
-      // Multi-Option Panel Sending Action
-      const triggerSendMultiPanel = async (btn) => {
-        if (!state.panel_channel_id) {
-          if (window.Notifications) Notifications.show('Bitte wählen Sie zuerst einen Panel-Kanal aus.', 'info');
-          return;
-        }
-        const origText = btn ? btn.textContent : '';
-        if (btn) {
-          btn.textContent = 'Sendet...';
-          btn.disabled = true;
-        }
-        try {
-          await saveTicketConfig(true);
-          await API.sendTicketPanel(guildId, {
-            channel_id: state.panel_channel_id,
-            send_full_panel: true,
-            panel_title: state.panel_title,
-            panel_description: state.panel_description,
-            panel_instructions: state.panel_instructions
-          });
-          if (window.Notifications) Notifications.show('Multi-Option Ticket-Panel erfolgreich in Discord gesendet!', 'success');
-        } catch (err) {
-          if (window.Notifications) Notifications.show(err.message || 'Fehler beim Senden des Multi-Panels', 'error');
-        } finally {
-          if (btn) {
-            btn.textContent = origText;
-            btn.disabled = false;
-          }
-        }
-      };
-
-      document.getElementById('btn-send-multi-panel-top')?.addEventListener('click', (e) => triggerSendMultiPanel(e.currentTarget));
-      document.getElementById('btn-send-multi-panel-bottom')?.addEventListener('click', (e) => triggerSendMultiPanel(e.currentTarget));
-      document.getElementById('btn-quick-send-preview')?.addEventListener('click', (e) => triggerSendMultiPanel(e.currentTarget));
-
-      // Discord Live Preview Select Dropdown Toggle & Option Selection
-      const pvSelectBtn = document.getElementById('pv-select-btn');
-      const pvSelectMenu = document.getElementById('pv-select-menu');
-      const pvSelectDisplay = document.getElementById('pv-select-display');
-      const pvSelectArrow = document.getElementById('pv-select-arrow');
-
-      pvSelectBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeAllDropdowns();
-        const isHidden = pvSelectMenu?.classList.toggle('hidden');
-        if (pvSelectArrow) {
-          pvSelectArrow.style.transform = isHidden ? '' : 'rotate(180deg)';
-        }
-      });
-
-      pvSelectMenu?.querySelectorAll('[data-pv-opt]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const optId = btn.getAttribute('data-pv-opt');
-          const found = state.ticketTypes.find(t => String(t.id) === String(optId));
-          if (found && pvSelectDisplay) {
-            pvSelectDisplay.innerHTML = `
-              <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${found.color || '#5865F2'}"></span>
-              <span class="text-xs text-white font-medium truncate">${escapeHtml(found.name)}</span>
-            `;
-          } else if (pvSelectDisplay) {
-            pvSelectDisplay.innerHTML = `<span class="text-xs text-neutral-300 truncate">Select a category...</span>`;
-          }
-          pvSelectMenu.classList.add('hidden');
-          if (pvSelectArrow) pvSelectArrow.style.transform = '';
-        });
-      });
-
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('#pv-select-container')) {
-          pvSelectMenu?.classList.add('hidden');
-          if (pvSelectArrow) pvSelectArrow.style.transform = '';
-        }
-      });
-
-      // Multi-Panel Channel Custom Searchable Dropdown
-      const panelChBtn = document.getElementById('main-dd-panel-ch-btn');
-      const panelChMenu = document.getElementById('main-dd-panel-ch-menu');
-      const panelChSearch = document.getElementById('main-search-panel-ch');
-      const panelChList = document.getElementById('main-list-panel-ch');
-
-      panelChBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeAllDropdowns(panelChMenu);
-        panelChMenu?.classList.toggle('hidden');
-        if (!panelChMenu?.classList.contains('hidden')) {
-          if (panelChSearch) {
-            panelChSearch.value = '';
-            setTimeout(() => panelChSearch.focus(), 20);
-          }
-          filterItems(panelChList, '');
-        }
-      });
-
-      panelChSearch?.addEventListener('input', (e) => {
-        filterItems(panelChList, e.target.value);
-      });
-
-      container.querySelectorAll('[data-main-panel-ch]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const cid = btn.getAttribute('data-main-panel-ch') || '';
-          state.panel_channel_id = cid;
-          const ch = getChannelById(cid);
-          const lbl = document.getElementById('main-dd-panel-ch-label');
-          if (lbl) {
-            lbl.textContent = ch ? `#${ch.name}` : 'Panel-Kanal wählen...';
-            lbl.className = `min-w-0 truncate ${ch ? 'text-white' : 'text-neutral-500'}`;
-          }
-          panelChMenu?.classList.add('hidden');
-          saveTicketConfig();
-        });
-      });
-
-      // Multi-Log Channel Custom Searchable Dropdown
-      const logChBtn = document.getElementById('main-dd-log-ch-btn');
-      const logChMenu = document.getElementById('main-dd-log-ch-menu');
-      const logChSearch = document.getElementById('main-search-log-ch');
-      const logChList = document.getElementById('main-list-log-ch');
-
-      logChBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeAllDropdowns(logChMenu);
-        logChMenu?.classList.toggle('hidden');
-        if (!logChMenu?.classList.contains('hidden')) {
-          if (logChSearch) {
-            logChSearch.value = '';
-            setTimeout(() => logChSearch.focus(), 20);
-          }
-          filterItems(logChList, '');
-        }
-      });
-
-      logChSearch?.addEventListener('input', (e) => {
-        filterItems(logChList, e.target.value);
-      });
-
-      container.querySelectorAll('[data-main-log-ch]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const cid = btn.getAttribute('data-main-log-ch') || '';
-          state.log_channel_id = cid;
-          const ch = getChannelById(cid);
-          const lbl = document.getElementById('main-dd-log-ch-label');
-          if (lbl) {
-            lbl.textContent = ch ? `#${ch.name}` : 'Kein Log-Kanal';
-            lbl.className = `min-w-0 truncate ${ch ? 'text-white' : 'text-neutral-500'}`;
-          }
-          logChMenu?.classList.add('hidden');
-          saveTicketConfig();
-        });
-      });
-
-      // Settings switches & inputs
+      // Switch 1: Auto Close
       document.getElementById('tkt-switch-autoclose')?.addEventListener('click', () => {
         state.auto_close_time_enabled = !state.auto_close_time_enabled;
         updateSwitchVisual('tkt-switch-autoclose', state.auto_close_time_enabled);
-        document.getElementById('autoclose-hours-wrap')?.classList.toggle('hidden', !state.auto_close_time_enabled);
+        const wrap = document.getElementById('autoclose-hours-wrap');
+        if (wrap) wrap.classList.toggle('hidden', !state.auto_close_time_enabled);
         saveTicketConfig();
       });
 
       document.getElementById('tkt-autoclose-hours')?.addEventListener('input', (e) => {
-        state.auto_close_time_hours = Math.max(1, parseInt(e.target.value, 10) || 24);
-        saveTicketConfig();
+        const val = parseInt(e.target.value, 10);
+        if (!isNaN(val) && val > 0) {
+          state.auto_close_time_hours = val;
+          saveTicketConfig();
+        }
       });
 
+      // Max Open
       document.getElementById('tkt-input-max-open')?.addEventListener('input', (e) => {
-        state.max_open_tickets = Math.max(1, Math.min(25, parseInt(e.target.value, 10) || 3));
-        saveTicketConfig();
+        const val = parseInt(e.target.value, 10);
+        if (!isNaN(val) && val >= 1 && val <= 25) {
+          state.max_open_tickets = val;
+          saveTicketConfig();
+        }
       });
 
+      // Naming format
       document.getElementById('tkt-input-naming-format')?.addEventListener('input', (e) => {
         state.naming_format = e.target.value;
         saveTicketConfig();
       });
 
+      // Switch 4: Staff only close
       document.getElementById('tkt-switch-staff-close')?.addEventListener('click', () => {
         state.staff_only_close = !state.staff_only_close;
         updateSwitchVisual('tkt-switch-staff-close', state.staff_only_close);
         saveTicketConfig();
       });
 
+      // Switch 5: Ping support
       document.getElementById('tkt-switch-ping-support')?.addEventListener('click', () => {
         state.ping_support_roles = !state.ping_support_roles;
         updateSwitchVisual('tkt-switch-ping-support', state.ping_support_roles);
         saveTicketConfig();
       });
 
+      // Switch 6: Ping custom role
       document.getElementById('tkt-switch-ping-custom')?.addEventListener('click', () => {
         state.ping_custom_role_enabled = !state.ping_custom_role_enabled;
         updateSwitchVisual('tkt-switch-ping-custom', state.ping_custom_role_enabled);
-        document.getElementById('ping-custom-role-wrap')?.classList.toggle('hidden', !state.ping_custom_role_enabled);
+        const wrap = document.getElementById('ping-custom-role-wrap');
+        if (wrap) wrap.classList.toggle('hidden', !state.ping_custom_role_enabled);
         saveTicketConfig();
       });
 
-      // Ping Role Custom Searchable Dropdown
-      const pingRoleBtn = document.getElementById('tkt-dd-ping-role-btn');
-      const pingRoleMenu = document.getElementById('tkt-dd-ping-role-menu');
-      const pingRoleSearch = document.getElementById('tkt-search-ping-role');
-      const pingRoleList = document.getElementById('tkt-list-ping-role');
-
-      pingRoleBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeAllDropdowns(pingRoleMenu);
-        pingRoleMenu?.classList.toggle('hidden');
-        if (!pingRoleMenu?.classList.contains('hidden')) {
-          if (pingRoleSearch) {
-            pingRoleSearch.value = '';
-            setTimeout(() => pingRoleSearch.focus(), 20);
-          }
-          filterItems(pingRoleList, '');
-        }
-      });
-
-      pingRoleSearch?.addEventListener('input', (e) => {
-        filterItems(pingRoleList, e.target.value);
-      });
-
-      container.querySelectorAll('[data-tkt-ping-role-opt]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const rid = btn.getAttribute('data-tkt-ping-role-opt') || '';
-          state.ping_custom_role_id = rid;
-          const pr = allRoles.find(r => String(r.id) === String(rid));
-          const lbl = document.getElementById('tkt-dd-ping-role-label');
-          if (lbl) lbl.textContent = pr ? `@${pr.name}` : 'Rolle wählen...';
-          pingRoleMenu?.classList.add('hidden');
-          saveTicketConfig();
-        });
-      });
-
+      // Switch 7: Claiming
       document.getElementById('tkt-switch-claiming')?.addEventListener('click', () => {
         state.claiming_enabled = !state.claiming_enabled;
         updateSwitchVisual('tkt-switch-claiming', state.claiming_enabled);
         saveTicketConfig();
       });
-    };
 
-    // Helper to filter dropdown items by search term
-    const filterItems = (listContainer, term) => {
-      if (!listContainer) return;
-      const q = String(term || '').toLowerCase().trim();
-      listContainer.querySelectorAll('button').forEach(btn => {
-        const text = btn.textContent.toLowerCase();
-        btn.style.display = (!q || text.includes(q)) ? '' : 'none';
-      });
-    };
+      // Custom Ping Role Dropdown
+      const pingRoleBtn = document.getElementById('tkt-dd-ping-role-btn');
+      const pingRoleMenu = document.getElementById('tkt-dd-ping-role-menu');
+      const pingRoleSearch = document.getElementById('tkt-search-ping-role');
+      const pingRoleLabel = document.getElementById('tkt-dd-ping-role-label');
 
-    // Helper to close all open dropdown menus except keepMenu
-    const closeAllDropdowns = (keepMenu = null) => {
-      document.querySelectorAll('.orbit-dropdown-menu').forEach(menu => {
-        if (menu !== keepMenu) menu.classList.add('hidden');
-      });
-    };
-
-    // Global click listener to close dropdowns when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.orbit-dropdown-menu') && !e.target.closest('button')) {
+      pingRoleBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wasHidden = pingRoleMenu?.classList.contains('hidden');
         closeAllDropdowns();
-      }
-    });
+        if (wasHidden) {
+          pingRoleMenu?.classList.remove('hidden');
+          if (pingRoleSearch) {
+            pingRoleSearch.value = '';
+            pingRoleSearch.focus();
+            filterRoleList('');
+          }
+        }
+      });
 
-    // Ticket-Typ Erstellen Modal (Step 0: Exact PeakBot Picker -> Steps 1..4: 4-Step Wizard)
-    const openTicketTypeModal = (existingType = null, initialStep = null) => {
-      const modalRoot = document.getElementById('tickets-modal-root');
-      if (!modalRoot) return;
+      const filterRoleList = (term) => {
+        const lower = term.toLowerCase().trim();
+        document.querySelectorAll('#tkt-list-ping-role [data-tkt-ping-role-opt]').forEach(btn => {
+          const txt = btn.textContent.toLowerCase();
+          btn.style.display = (!lower || txt.includes(lower)) ? '' : 'none';
+        });
+      };
 
-      const isEditing = Boolean(existingType && existingType.id);
-      let currentStep = isEditing ? (initialStep || 1) : 0; // 0 = Picker, 1 = Grundlagen, 2 = Aufstellen, 3 = Fragen, 4 = Rezension
+      pingRoleSearch?.addEventListener('input', (e) => filterRoleList(e.target.value));
 
-      const draft = isEditing ? JSON.parse(JSON.stringify(existingType)) : {
-        id: `type_${Date.now()}`,
-        name: 'Allgemeine Unterstützung',
-        mode: 'channel',
-        template_key: '',
-        color: 'rgb(88, 101, 242)',
-        description: 'Öffnen Sie einen privaten Support-Kanal mit unserem Team.',
+      document.querySelectorAll('#tkt-list-ping-role [data-tkt-ping-role-opt]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rid = btn.getAttribute('data-tkt-ping-role-opt');
+          state.ping_custom_role_id = rid;
+          const found = allRoles.find(r => String(r.id) === String(rid));
+          if (pingRoleLabel) {
+            pingRoleLabel.textContent = found ? `@${found.name}` : 'Rolle wählen...';
+          }
+          pingRoleMenu?.classList.add('hidden');
+          saveTicketConfig();
+        });
+      });
+
+      document.addEventListener('click', () => closeAllDropdowns());
+    };
+
+    // ==========================================
+    // THE BUILDER MODAL ("das soll der builder sein")
+    // ==========================================
+    const openTicketBuilderModal = (panelToEdit = null) => {
+      const isEdit = Boolean(panelToEdit);
+
+      // Create a working copy of the panel
+      const editingPanel = panelToEdit ? JSON.parse(JSON.stringify(panelToEdit)) : {
+        id: `panel_${Date.now()}`,
+        name: 'Support Ticket',
+        title: 'Support Ticket Desk',
+        description: 'Wählen Sie Ihr Anliegen aus und öffnen Sie ein Ticket.',
+        instructions: '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.',
+        color: '#5865F2',
+        panel_channel_id: state.panels[0]?.panel_channel_id || (allChannels[0]?.id || ''),
+        log_channel_id: state.panels[0]?.log_channel_id || '',
+        category_id: allCategories[0]?.id || '',
+        role_id: allRoles[0]?.id || '',
         button_label: 'Ticket öffnen',
-        panel_channel_id: state.panel_channel_id || '',
-        log_channel_id: state.log_channel_id || '',
-        role_id: '',
-        category_id: '',
-        require_proof: false,
-        post_immediately: true,
-        questions: [
-          { label: 'Betreff', placeholder: 'Worum geht es in Ihrer Anfrage?', style: 'short', required: true },
-          { label: 'Beschreibung', placeholder: 'Bitte beschreiben Sie Ihr Anliegen...', style: 'paragraph', required: true }
+        options: [
+          {
+            id: `opt_${Date.now()}_1`,
+            name: 'Allgemeine Unterstützung',
+            description: 'Öffnen Sie einen privaten 1-zu-1 Support-Kanal mit unserem Team.',
+            color: '#5865F2',
+            category_id: allCategories[0]?.id || '',
+            role_id: allRoles[0]?.id || ''
+          }
         ]
       };
 
-      const applyScratchOrTemplate = (configObj) => {
-        draft.name = configObj.name;
-        draft.mode = configObj.mode;
-        draft.template_key = configObj.template_key || '';
-        draft.color = configObj.color;
-        draft.description = configObj.description;
-        draft.button_label = configObj.button_label;
-        draft.require_proof = Boolean(configObj.require_proof);
-        draft.questions = JSON.parse(JSON.stringify(configObj.questions || []));
-        // Transition straight to Step 1 (Grundlagen) so user can see & edit name, button, and description
-        currentStep = 1;
-        renderModalContent();
-      };
-
-      const closeModal = () => {
-        modalRoot.innerHTML = '';
-      };
-
-      const renderModalContent = () => {
-        // STEP 0: Exact PeakBot Picker View (1:1 from User HTML)
-        if (currentStep === 0) {
-          modalRoot.innerHTML = `
-            <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-              <div class="w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[85vh]" style="opacity: 1; transform: none;">
-                <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-neutral-800 flex-shrink-0">
-                  <div class="flex items-center gap-1.5 min-w-0">
-                    <h2 class="text-sm font-semibold text-white truncate text-balance">Option für Ticket-Menü hinzufügen</h2>
-                  </div>
-                  <div class="flex items-center gap-2 flex-shrink-0">
-                    <button type="button" id="tkt-modal-close" class="grid place-items-center -mr-2 size-9 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-                    </button>
-                  </div>
-                </div>
-                <div class="flex-1 overflow-y-auto min-h-0">
-                  <div style="opacity: 1; transform: none;">
-                    <div class="p-5 space-y-7">
-                      <div class="space-y-3">
-                        <p class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Fangen Sie bei Null an</p>
-                        <div class="grid gap-2.5 grid-cols-1 sm:grid-cols-4">
-                          <button type="button" data-pick-scratch="channel" class="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-800/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] hover:bg-neutral-800/60 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-left group">
-                            <div class="grid place-items-center size-10 rounded-xl flex-shrink-0 transition-transform duration-150 ease-out group-active:scale-95" style="background-color: rgba(88, 101, 242, 0.1);">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-5 h-5" style="color: rgb(88, 101, 242);"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
-                            </div>
-                            <p class="text-sm font-semibold text-white text-pretty leading-tight min-w-0">Kanal</p>
-                          </button>
-                          <button type="button" data-pick-scratch="form" class="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-800/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] hover:bg-neutral-800/60 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-left group">
-                            <div class="grid place-items-center size-10 rounded-xl flex-shrink-0 transition-transform duration-150 ease-out group-active:scale-95" style="background-color: rgba(36, 128, 70, 0.1);">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square w-5 h-5" style="color: rgb(36, 128, 70);"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                            </div>
-                            <p class="text-sm font-semibold text-white text-pretty leading-tight min-w-0">Bilden</p>
-                          </button>
-                          <button type="button" data-pick-scratch="form_channel" class="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-800/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] hover:bg-neutral-800/60 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-left group">
-                            <div class="grid place-items-center size-10 rounded-xl flex-shrink-0 transition-transform duration-150 ease-out group-active:scale-95" style="background-color: rgba(240, 178, 50, 0.1);">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text w-5 h-5" style="color: rgb(240, 178, 50);"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
-                            </div>
-                            <p class="text-sm font-semibold text-white text-pretty leading-tight min-w-0">Formular → Kanal</p>
-                          </button>
-                          <button type="button" data-pick-scratch="panel" class="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-800/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] hover:bg-neutral-800/60 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-left group">
-                            <div class="grid place-items-center size-10 rounded-xl flex-shrink-0 transition-transform duration-150 ease-out group-active:scale-95" style="background-color: rgba(168, 85, 247, 0.1);">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layers w-5 h-5" style="color: rgb(168, 85, 247);"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg>
-                            </div>
-                            <p class="text-sm font-semibold text-white text-pretty leading-tight min-w-0">Panel</p>
-                          </button>
-                        </div>
-                      </div>
-
-                      <div class="space-y-3">
-                        <p class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Oder verwenden Sie eine Vorlage</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                          <button type="button" data-pick-template="bug_report" class="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-800/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] hover:bg-neutral-800/60 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-left group">
-                            <div class="grid place-items-center size-10 rounded-xl flex-shrink-0 transition-transform duration-150 ease-out group-active:scale-95" style="background-color: rgba(218, 55, 60, 0.1);">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bug w-[18px] h-[18px]" style="color: rgb(218, 55, 60);"><path d="m8 2 1.88 1.88"></path><path d="M14.12 3.88 16 2"></path><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path><path d="M12 20v-9"></path><path d="M6.53 9C4.6 8.8 3 7.1 3 5"></path><path d="M6 13H2"></path><path d="M3 21c0-2.1 1.7-3.9 3.8-4"></path><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"></path><path d="M22 13h-4"></path><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"></path></svg>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                              <div class="flex items-center justify-between gap-2">
-                                <p class="text-sm font-medium text-white truncate">Fehlerbericht</p>
-                                <span class="flex-shrink-0 px-1.5 py-0.5 rounded-[4px] text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap bg-emerald-500/10 text-emerald-400">bilden</span>
-                              </div>
-                              <p class="text-[11px] text-neutral-500 text-pretty mt-0.5">Schweregrad + Reproschritte</p>
-                            </div>
-                          </button>
-
-                          <button type="button" data-pick-template="general_support" class="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-800/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] hover:bg-neutral-800/60 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-left group">
-                            <div class="grid place-items-center size-10 rounded-xl flex-shrink-0 transition-transform duration-150 ease-out group-active:scale-95" style="background-color: rgba(88, 101, 242, 0.1);">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-help-circle w-[18px] h-[18px]" style="color: rgb(88, 101, 242);"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                              <div class="flex items-center justify-between gap-2">
-                                <p class="text-sm font-medium text-white truncate">Allgemeine Unterstützung</p>
-                                <span class="flex-shrink-0 px-1.5 py-0.5 rounded-[4px] text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap bg-indigo-500/10 text-indigo-400">Kanal</span>
-                              </div>
-                              <p class="text-[11px] text-neutral-500 text-pretty mt-0.5">Privater 1-zu-1-Kanal</p>
-                            </div>
-                          </button>
-
-                          <button type="button" data-pick-template="player_report" class="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-800/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] hover:bg-neutral-800/60 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-left group">
-                            <div class="grid place-items-center size-10 rounded-xl flex-shrink-0 transition-transform duration-150 ease-out group-active:scale-95" style="background-color: rgba(240, 178, 50, 0.1);">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert w-[18px] h-[18px]" style="color: rgb(240, 178, 50);"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                              <div class="flex items-center justify-between gap-2">
-                                <p class="text-sm font-medium text-white truncate">Spielerbericht</p>
-                                <span class="flex-shrink-0 px-1.5 py-0.5 rounded-[4px] text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap bg-emerald-500/10 text-emerald-400">bilden</span>
-                              </div>
-                              <p class="text-[11px] text-neutral-500 text-pretty mt-0.5">Bericht mit Beweisen</p>
-                            </div>
-                          </button>
-
-                          <button type="button" data-pick-template="staff_application" class="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-800/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] hover:bg-neutral-800/60 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-left group">
-                            <div class="grid place-items-center size-10 rounded-xl flex-shrink-0 transition-transform duration-150 ease-out group-active:scale-95" style="background-color: rgba(36, 128, 70, 0.1);">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-[18px] h-[18px]" style="color: rgb(36, 128, 70);"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                              <div class="flex items-center justify-between gap-2">
-                                <p class="text-sm font-medium text-white truncate">Personalbewerbung</p>
-                                <span class="flex-shrink-0 px-1.5 py-0.5 rounded-[4px] text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap bg-emerald-500/10 text-emerald-400">bilden</span>
-                              </div>
-                              <p class="text-[11px] text-neutral-500 text-pretty mt-0.5">Benutzerdefiniertes Antragsformular</p>
-                            </div>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-
-          document.getElementById('tkt-modal-close')?.addEventListener('click', closeModal);
-
-          modalRoot.querySelectorAll('[data-pick-scratch]').forEach(btn => {
-            btn.addEventListener('click', () => {
-              const modeKey = btn.getAttribute('data-pick-scratch');
-              const meta = MODE_META[modeKey] || MODE_META.channel;
-              applyScratchOrTemplate({
-                name: meta.label === 'Bilden' ? 'Neues Formular' : `Neues ${meta.label}-Ticket`,
-                mode: modeKey,
-                template_key: '',
-                color: meta.color,
-                description: 'Klicken Sie unten, um ein Ticket oder Formular einzureichen.',
-                button_label: 'Ticket öffnen',
-                require_proof: false,
-                questions: [
-                  { label: 'Betreff', placeholder: 'Kurze Zusammenfassung...', style: 'short', required: true },
-                  { label: 'Beschreibung', placeholder: 'Details zu Ihrem Anliegen...', style: 'paragraph', required: true }
-                ]
-              });
-            });
-          });
-
-          modalRoot.querySelectorAll('[data-pick-template]').forEach(btn => {
-            btn.addEventListener('click', () => {
-              const tplKey = btn.getAttribute('data-pick-template');
-              const tpl = TEMPLATES[tplKey];
-              if (tpl) applyScratchOrTemplate(tpl);
-            });
-          });
-          return;
-        }
-
-        // STEPS 1..4: 4-Step Wizard View
-        const modeInfo = MODE_META[draft.mode] || MODE_META.channel;
-        const pCh = getChannelById(draft.panel_channel_id || state.panel_channel_id);
-        const lCh = getChannelById(draft.log_channel_id || state.log_channel_id);
-        const sRole = getRoleById(draft.role_id);
-        const sCat = getCategoryById(draft.category_id);
-
-        const renderStepTab = (stepNum, label, iconSvg) => {
-          const isCurrent = currentStep === stepNum;
-          const isDone = currentStep > stepNum;
-          if (isCurrent) {
-            return `
-              <button type="button" data-wizard-step="${stepNum}" class="relative flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 text-black">
-                <span class="absolute inset-0 bg-white rounded-lg shadow-[0_1px_4px_-1px_rgba(0,0,0,0.5)]"></span>
-                <span class="relative z-10 flex items-center gap-1.5">${iconSvg}${escapeHtml(label)}</span>
-              </button>
-            `;
+      // Ensure options array exists
+      if (!Array.isArray(editingPanel.options) || editingPanel.options.length === 0) {
+        editingPanel.options = [
+          {
+            id: `opt_${Date.now()}_1`,
+            name: 'Allgemeine Unterstützung',
+            description: 'Öffnen Sie ein Support-Ticket.',
+            color: editingPanel.color || '#5865F2',
+            category_id: editingPanel.category_id || '',
+            role_id: editingPanel.role_id || ''
           }
-          if (isDone) {
-            return `
-              <button type="button" data-wizard-step="${stepNum}" class="relative flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 text-neutral-300 hover:text-white active:scale-[0.96]">
-                <span class="relative z-10 flex items-center gap-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-3.5 h-3.5 text-emerald-400"><path d="M20 6 9 17l-5-5"></path></svg>
-                  ${escapeHtml(label)}
-                </span>
-              </button>
-            `;
-          }
-          return `
-            <button type="button" data-wizard-step="${stepNum}" class="relative flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 text-neutral-500 hover:text-neutral-300">
-              <span class="relative z-10 flex items-center gap-1.5">${iconSvg}${escapeHtml(label)}</span>
-            </button>
-          `;
-        };
+        ];
+      }
 
-        let stepBodyHtml = '';
+      let currentStep = 1; // 1: Grundlagen, 2: Aufstellen (Optionen), 3: Rezension
+      const modalRoot = document.getElementById('tickets-modal-root');
+      if (!modalRoot) return;
 
-        // STEP 1: Grundlagen
-        if (currentStep === 1) {
-          stepBodyHtml = `
-            <div class="px-5 py-4 space-y-4">
-              <div class="rounded-2xl bg-neutral-900/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden border border-neutral-800/80">
-                <div class="px-4 py-3 border-b border-neutral-800/80 flex items-center gap-2.5">
-                  <div class="grid place-items-center size-7 rounded-lg bg-indigo-500/10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-indigo-400"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/></svg>
-                  </div>
-                  <p class="text-xs font-semibold text-white">Grundlagen</p>
-                </div>
-                <div class="p-4 space-y-4">
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label class="block text-xs font-medium text-neutral-300 mb-1.5">Name des Ticket-Typs *</label>
-                      <input type="text" id="wiz-input-name" value="${escapeHtml(draft.name)}" placeholder="z. B. Fehlerbericht" class="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
-                    </div>
-                    <div>
-                      <label class="block text-xs font-medium text-neutral-300 mb-1.5">Button-Text</label>
-                      <input type="text" id="wiz-input-btn-label" value="${escapeHtml(draft.button_label)}" placeholder="z. B. Ticket öffnen" class="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
-                    </div>
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-medium text-neutral-300 mb-1.5">Modus</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      ${Object.entries(MODE_META).map(([k, m]) => `
-                        <button type="button" data-wiz-mode="${k}" class="px-3 py-2 rounded-xl border text-xs font-medium text-left flex items-center gap-2 transition-colors ${draft.mode === k ? 'bg-neutral-800 border-white text-white' : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-neutral-700'}">
-                          <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${m.color}"></span>
-                          <span class="truncate">${escapeHtml(m.label)}</span>
-                        </button>
-                      `).join('')}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Beschreibung</label>
-                    <textarea id="wiz-input-desc" rows="3" placeholder="Erklären Sie kurz, wofür dieser Ticket-Typ gedacht ist..." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">${escapeHtml(draft.description)}</textarea>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-        }
-
-        // STEP 2: Aufstellen (Channels, Role, Category with sticky search and z-[99999])
-        else if (currentStep === 2) {
-          stepBodyHtml = `
-            <div class="px-5 py-4 space-y-4">
-              <div class="rounded-2xl bg-neutral-900/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden">
-                <div class="px-4 py-3 border-b border-neutral-800/80 flex items-center gap-2.5">
-                  <div class="grid place-items-center size-7 rounded-lg bg-indigo-500/10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-3.5 h-3.5 text-indigo-400"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
-                  </div>
-                  <p class="text-xs font-semibold text-white">Kanäle</p>
-                </div>
-                <div class="p-4 space-y-3">
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <!-- Panel-Kanal Dropdown -->
-                    <div class="w-full relative">
-                      <label class="block text-sm font-medium text-neutral-300 mb-2">Panel-Kanal *</label>
-                      <div class="relative">
-                        <button type="button" id="wiz-dd-panel-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                          <span id="wiz-dd-panel-ch-label" class="min-w-0 truncate text-sm ${pCh ? 'text-white' : 'text-neutral-500'}">
-                            ${pCh ? `#${escapeHtml(pCh.name)}` : 'Wo das Panel gepostet wird'}
-                          </span>
-                          <svg class="w-4 h-4 text-neutral-400 transition-transform duration-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
-                        </button>
-                        <div id="wiz-dd-panel-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-60 flex flex-col overflow-hidden">
-                          <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                            <div class="relative w-full">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                              <input type="text" id="wiz-search-panel-ch" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
-                            </div>
-                          </div>
-                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="wiz-list-panel-ch">
-                            ${allChannels.map(c => `
-                              <button type="button" data-wiz-panel-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(draft.panel_channel_id || state.panel_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
-                                <span class="truncate">#${escapeHtml(c.name)}</span>
-                              </button>
-                            `).join('')}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Mitarbeiter-/Log-Kanal Dropdown -->
-                    <div class="w-full relative">
-                      <label class="block text-sm font-medium text-neutral-300 mb-2">Mitarbeiter-/Log-Kanal</label>
-                      <div class="relative">
-                        <button type="button" id="wiz-dd-log-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                          <span id="wiz-dd-log-ch-label" class="min-w-0 truncate text-sm ${lCh ? 'text-white' : 'text-neutral-500'}">
-                            ${lCh ? `#${escapeHtml(lCh.name)}` : 'Einsendungen finden Sie hier'}
-                          </span>
-                          <svg class="w-4 h-4 text-neutral-400 transition-transform duration-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
-                        </button>
-                        <div id="wiz-dd-log-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-60 flex flex-col overflow-hidden">
-                          <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                            <div class="relative w-full">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                              <input type="text" id="wiz-search-log-ch" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
-                            </div>
-                          </div>
-                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="wiz-list-log-ch">
-                            <button type="button" data-wiz-log-ch="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Kein Log-Kanal</button>
-                            ${allChannels.map(c => `
-                              <button type="button" data-wiz-log-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(draft.log_channel_id || state.log_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
-                                <span class="truncate">#${escapeHtml(c.name)}</span>
-                              </button>
-                            `).join('')}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Support-Rolle & Kategorie Dropdowns -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <!-- Support Role Dropdown -->
-                    <div class="w-full relative">
-                      <label class="block text-sm font-medium text-neutral-300 mb-2">Support-Rolle</label>
-                      <div class="relative">
-                        <button type="button" id="wiz-dd-role-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                          <span id="wiz-dd-role-label" class="min-w-0 truncate text-sm ${sRole ? 'text-white' : 'text-neutral-500'}">
-                            ${sRole ? `@${escapeHtml(sRole.name)}` : 'Zuständige Team-Rolle (optional)'}
-                          </span>
-                          <svg class="w-4 h-4 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
-                        </button>
-                        <div id="wiz-dd-role-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-60 flex flex-col overflow-hidden">
-                          <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                            <div class="relative w-full">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                              <input type="text" id="wiz-search-role" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
-                            </div>
-                          </div>
-                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="wiz-list-role">
-                            <button type="button" data-wiz-role="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Keine spezifische Rolle</button>
-                            ${allRoles.map(r => `
-                              <button type="button" data-wiz-role="${escapeHtml(r.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center gap-2 ${String(r.id) === String(draft.role_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
-                                <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
-                                <span class="truncate">@${escapeHtml(r.name)}</span>
-                              </button>
-                            `).join('')}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Category Dropdown -->
-                    <div class="w-full relative">
-                      <label class="block text-sm font-medium text-neutral-300 mb-2">Ticket-Kategorie</label>
-                      <div class="relative">
-                        <button type="button" id="wiz-dd-cat-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                          <span id="wiz-dd-cat-label" class="min-w-0 truncate text-sm ${sCat ? 'text-white' : 'text-neutral-500'}">
-                            ${sCat ? escapeHtml(sCat.name) : 'Automatisch (gleiche Kategorie)'}
-                          </span>
-                          <svg class="w-4 h-4 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
-                        </button>
-                        <div id="wiz-dd-cat-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-60 flex flex-col overflow-hidden">
-                          <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
-                            <div class="relative w-full">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-                              <input type="text" id="wiz-search-cat" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs sm:text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
-                            </div>
-                          </div>
-                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="wiz-list-cat">
-                            <button type="button" data-wiz-cat="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Automatisch</button>
-                            ${allCategories.map(cat => `
-                              <button type="button" data-wiz-cat="${escapeHtml(cat.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(cat.id) === String(draft.category_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
-                                <span class="truncate">${escapeHtml(cat.name)}</span>
-                              </button>
-                            `).join('')}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Optionen Card -->
-              <div class="rounded-2xl bg-neutral-900/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden">
-                <div class="px-4 py-3 border-b border-neutral-800/80 flex items-center gap-2.5">
-                  <div class="grid place-items-center size-7 rounded-lg bg-emerald-500/10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-3.5 h-3.5 text-emerald-400"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                  </div>
-                  <p class="text-xs font-semibold text-white">Optionen</p>
-                </div>
-                <div class="divide-y divide-neutral-800/50">
-                  <div class="px-4 py-3">
-                    <div class="flex items-center justify-between gap-3">
-                      <span class="text-xs font-medium text-neutral-200">Ticketanforderung</span>
-                      <span class="flex-shrink-0 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide bg-neutral-800 text-neutral-400 whitespace-nowrap">Serverweit</span>
-                    </div>
-                    <p class="mt-1.5 text-[11px] text-neutral-500 leading-relaxed text-pretty">Die Beanspruchung ist eine serverweite Einstellung. Aktivieren Sie es in den Ticketeinstellungen und es gilt für jeden Typ.</p>
-                  </div>
-                  <div class="px-4 py-3">
-                    <div class="flex items-center justify-between gap-3">
-                      <span class="text-xs font-medium text-neutral-200">Beweise erforderlich</span>
-                      <div class="flex items-center gap-3">
-                        ${renderSwitchButton('wiz-switch-proof', draft.require_proof)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-        }
-
-        // STEP 3: Fragen (Form Questions Builder)
-        else if (currentStep === 3) {
-          stepBodyHtml = `
-            <div class="px-5 py-4 space-y-4">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h4 class="text-xs font-semibold text-white">Formularfelder (${draft.questions.length}/5)</h4>
-                  <p class="text-[11px] text-neutral-500">Diese Fragen werden dem Benutzer beim Öffnen des Tickets im Discord-Modal gestellt.</p>
-                </div>
-                <button type="button" id="wiz-add-question" ${draft.questions.length >= 5 ? 'disabled' : ''} class="px-3 py-1.5 rounded-xl bg-white text-black text-xs font-medium hover:bg-neutral-200 disabled:opacity-40 flex items-center gap-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                  Feld hinzufügen
-                </button>
-              </div>
-
-              <div class="space-y-3">
-                ${draft.questions.map((q, qIdx) => `
-                  <div class="p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800 space-y-3">
-                    <div class="flex items-center justify-between gap-2">
-                      <span class="text-xs font-semibold text-neutral-300">Feld #${qIdx + 1}</span>
-                      <div class="flex items-center gap-3">
-                        <label class="inline-flex items-center gap-1.5 text-xs text-neutral-400 cursor-pointer">
-                          <input type="checkbox" data-q-req="${qIdx}" ${q.required !== false ? 'checked' : ''} class="rounded bg-neutral-800 border-neutral-700">
-                          Pflichtfeld
-                        </label>
-                        ${draft.questions.length > 1 ? `
-                          <button type="button" data-q-del="${qIdx}" class="p-1 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                          </button>
-                        ` : ''}
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                      <div>
-                        <label class="block text-[11px] text-neutral-500 mb-1">Frage / Label</label>
-                        <input type="text" data-q-label="${qIdx}" value="${escapeHtml(q.label)}" placeholder="z. B. Betreff" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none">
-                      </div>
-                      <div>
-                        <label class="block text-[11px] text-neutral-500 mb-1">Platzhalter</label>
-                        <input type="text" data-q-ph="${qIdx}" value="${escapeHtml(q.placeholder)}" placeholder="Optionaler Hinweis..." class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none">
-                      </div>
-                      <div>
-                        <label class="block text-[11px] text-neutral-500 mb-1">Antwort-Typ</label>
-                        <div class="relative">
-                          <button type="button" data-q-style-btn="${qIdx}" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-white flex items-center justify-between gap-2 transition-colors cursor-pointer">
-                            <span>${q.style === 'paragraph' ? 'Absatz (Mehrzeilig)' : 'Kurztext (1 Zeile)'}</span>
-                            <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                          </button>
-                          <div data-q-style-menu="${qIdx}" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 top-full mt-1.5 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl py-1 z-[99999]">
-                            <button type="button" data-q-style-opt="short" data-q-idx="${qIdx}" class="w-full px-3 py-2 text-left text-xs ${q.style !== 'paragraph' ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'} transition-colors">Kurztext (1 Zeile)</button>
-                            <button type="button" data-q-style-opt="paragraph" data-q-idx="${qIdx}" class="w-full px-3 py-2 text-left text-xs ${q.style === 'paragraph' ? 'bg-neutral-800 text-white font-semibold' : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'} transition-colors">Absatz (Mehrzeilig)</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          `;
-        }
-
-        // STEP 4: Rezension (Review & Publish)
-        else if (currentStep === 4) {
-          stepBodyHtml = `
-            <div class="px-5 py-4 space-y-4">
-              <div class="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-4 space-y-3">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2.5">
-                    <span class="w-3 h-3 rounded-full" style="background-color: ${draft.color}"></span>
-                    <h4 class="text-sm font-semibold text-white">${escapeHtml(draft.name)}</h4>
-                  </div>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${modeInfo.badgeClass}">${escapeHtml(modeInfo.label)}</span>
-                </div>
-                <p class="text-xs text-neutral-400">${escapeHtml(draft.description)}</p>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-neutral-800/80 text-xs">
-                  <div>
-                    <span class="text-[11px] text-neutral-500 block">Panel-Kanal</span>
-                    <span class="text-white font-medium">${pCh ? `#${escapeHtml(pCh.name)}` : 'Standard'}</span>
-                  </div>
-                  <div>
-                    <span class="text-[11px] text-neutral-500 block">Log-Kanal</span>
-                    <span class="text-white font-medium">${lCh ? `#${escapeHtml(lCh.name)}` : 'Standard'}</span>
-                  </div>
-                  <div>
-                    <span class="text-[11px] text-neutral-500 block">Support-Rolle</span>
-                    <span class="text-white font-medium">${sRole ? `@${escapeHtml(sRole.name)}` : 'Standard'}</span>
-                  </div>
-                  <div>
-                    <span class="text-[11px] text-neutral-500 block">Fragen</span>
-                    <span class="text-white font-medium">${draft.questions.length} Felder</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="rounded-2xl bg-indigo-500/10 border border-indigo-500/20 p-4 flex items-center gap-3">
-                <div class="grid place-items-center size-8 rounded-lg bg-indigo-500/20 text-indigo-400 shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                </div>
-                <div>
-                  <p class="text-xs font-semibold text-white">Menü-Option im zentralen Ticket-Panel</p>
-                  <p class="text-[11px] text-neutral-300">Diese Option wird im Auswahl-Dropdown des Ticket-Panels angezeigt. Sie können das Panel jederzeit über die Discord-Vorschau oder "Panel in Discord senden" posten.</p>
-                </div>
-              </div>
-            </div>
-          `;
-        }
-
-        const isNextDisabled = currentStep === 2 && !draft.panel_channel_id && !state.panel_channel_id;
+      const renderModal = () => {
+        const panelChannel = getChannelById(editingPanel.panel_channel_id);
+        const logChannel = getChannelById(editingPanel.log_channel_id);
+        const defCategory = getCategoryById(editingPanel.category_id);
+        const defRole = getRoleById(editingPanel.role_id);
 
         modalRoot.innerHTML = `
-          <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-            <div class="w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[85vh]" style="opacity: 1; transform: none;">
-              <!-- Top Wizard Header -->
+          <div id="builder-backdrop" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+            <div class="w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[85vh]">
+              
+              <!-- Modal Header -->
               <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-neutral-800 flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
-                  <button type="button" id="wiz-top-back" class="grid place-items-center -ml-2 size-9 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                  <button type="button" id="modal-btn-back-header" class="grid place-items-center -ml-2 size-9 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left w-4 h-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
                   </button>
-                  <h2 class="text-sm font-semibold text-white truncate text-balance">${isEditing ? 'Bearbeiten' : 'Neu'} – ${escapeHtml(draft.name)}</h2>
+                  <h2 class="text-sm font-semibold text-white truncate text-balance">
+                    ${isEdit ? `Ticket-Typ bearbeiten – ${escapeHtml(editingPanel.name)}` : 'Neu – Prüfung'}
+                  </h2>
                 </div>
+
                 <div class="flex items-center gap-2 flex-shrink-0">
+                  <!-- Step Pills Nav -->
                   <div class="hidden sm:flex gap-0.5 p-1 rounded-xl bg-neutral-800/50 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
-                    ${renderStepTab(1, 'Grundlagen', `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check w-3.5 h-3.5 text-emerald-400"><path d="M20 6 9 17l-5-5"></path></svg>`)}
-                    ${renderStepTab(2, 'Aufstellen', `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings w-3.5 h-3.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>`)}
-                    ${renderStepTab(3, 'Fragen', `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text w-3.5 h-3.5"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>`)}
-                    ${renderStepTab(4, 'Rezension', `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send w-3.5 h-3.5"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>`)}
+                    <button type="button" data-nav-step="1" class="relative flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-[transform,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 cursor-pointer ${currentStep === 1 ? 'text-black font-semibold' : 'text-neutral-300 hover:text-white'}">
+                      ${currentStep === 1 ? '<span class="absolute inset-0 bg-white rounded-lg shadow-[0_1px_4px_-1px_rgba(0,0,0,0.5)]"></span>' : ''}
+                      <span class="relative z-10 flex items-center gap-1.5">
+                        ${currentStep > 1 ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-400"><path d="M20 6 9 17l-5-5"></path></svg>' : ''}
+                        Grundlagen
+                      </span>
+                    </button>
+
+                    <button type="button" data-nav-step="2" class="relative flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-[transform,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 cursor-pointer ${currentStep === 2 ? 'text-black font-semibold' : 'text-neutral-300 hover:text-white'}">
+                      ${currentStep === 2 ? '<span class="absolute inset-0 bg-white rounded-lg shadow-[0_1px_4px_-1px_rgba(0,0,0,0.5)]"></span>' : ''}
+                      <span class="relative z-10 flex items-center gap-1.5">
+                        ${currentStep > 2 ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-400"><path d="M20 6 9 17l-5-5"></path></svg>' : ''}
+                        Aufstellen (Optionen)
+                      </span>
+                    </button>
+
+                    <button type="button" data-nav-step="3" class="relative flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-[transform,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 cursor-pointer ${currentStep === 3 ? 'text-black font-semibold' : 'text-neutral-300 hover:text-white'}">
+                      ${currentStep === 3 ? '<span class="absolute inset-0 bg-white rounded-lg shadow-[0_1px_4px_-1px_rgba(0,0,0,0.5)]"></span>' : ''}
+                      <span class="relative z-10 flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="${currentStep === 3 ? 'text-black' : 'text-neutral-400'}"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+                        Rezension
+                      </span>
+                    </button>
                   </div>
-                  <button type="button" id="tkt-modal-close" class="grid place-items-center -mr-2 size-9 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+
+                  <button type="button" id="modal-btn-close-header" class="grid place-items-center -mr-2 size-9 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-4 h-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
                   </button>
                 </div>
               </div>
 
-              <!-- Wizard Body -->
-              <div class="flex-1 overflow-y-auto min-h-0">
-                <div style="opacity: 1; transform: none;">
-                  ${stepBodyHtml}
-                </div>
+              <!-- Modal Body Content -->
+              <div class="flex-1 overflow-y-auto min-h-0 p-5">
+                ${renderStepContent()}
               </div>
 
-              <!-- Wizard Footer -->
+              <!-- Modal Footer -->
               <div class="flex items-center justify-between gap-3 px-5 py-3 border-t border-neutral-800 flex-shrink-0">
-                <button type="button" id="wiz-btn-prev" class="flex items-center gap-1.5 h-10 -ml-2.5 pl-2.5 pr-3.5 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                <button type="button" id="modal-btn-prev" class="flex items-center gap-1.5 h-10 -ml-2.5 pl-2.5 pr-3.5 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer ${currentStep === 1 ? 'opacity-30 pointer-events-none' : ''}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left w-3.5 h-3.5"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
                   Vorherige
                 </button>
+
                 <div class="flex items-center gap-3">
                   <div class="hidden sm:flex items-center gap-2.5 h-10 px-3.5 rounded-xl bg-neutral-800/60 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
-                    <div class="w-2.5 h-2.5 rounded-full outline outline-1 -outline-offset-1 outline-white/10" style="background-color: ${draft.color};"></div>
-                    <span class="text-[10px] text-neutral-400 font-medium whitespace-nowrap">${escapeHtml(modeInfo.label)}</span>
+                    <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${editingPanel.color || '#5865F2'};"></div>
+                    <span class="text-[10px] text-neutral-400 font-medium whitespace-nowrap">Kanal</span>
                     <span class="text-[10px] text-neutral-700">/</span>
-                    <span class="text-[10px] text-neutral-500 tabular-nums whitespace-nowrap">Schritt ${currentStep}/4</span>
-                    <span class="text-[10px] text-neutral-700">/</span>
-                    <span class="text-[10px] text-neutral-500 tabular-nums whitespace-nowrap">${draft.questions.length}/5 Felder</span>
+                    <span class="text-[10px] text-neutral-500 tabular-nums whitespace-nowrap">Schritt ${currentStep}/3</span>
                   </div>
-                  <button type="button" id="wiz-btn-next" ${isNextDisabled ? 'disabled' : ''} class="flex items-center gap-1.5 bg-white text-black font-medium text-sm rounded-xl h-10 pl-4 pr-3.5 hover:bg-neutral-200 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-30 disabled:cursor-not-allowed">
-                    ${currentStep === 4 ? (isEditing ? 'Option speichern' : 'Option zum Menü hinzufügen') : 'Nächste'}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-3.5 h-3.5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+
+                  <button type="button" id="modal-btn-next" class="inline-flex items-center justify-center gap-2 font-semibold rounded-xl bg-white text-black hover:bg-neutral-200 px-4 py-2 text-sm transition-all duration-150 active:scale-[0.96] cursor-pointer shadow-lg shadow-white/5">
+                    ${currentStep === 3 ? (isEdit ? 'Änderungen speichern' : 'Typ erstellen') : 'Weiter'}
                   </button>
                 </div>
               </div>
@@ -1884,301 +1102,781 @@ DashboardTabs.Tickets = async function (container, guildId) {
           </div>
         `;
 
-        // Bind Wizard Controls
-        document.getElementById('tkt-modal-close')?.addEventListener('click', closeModal);
-
-        document.getElementById('wiz-top-back')?.addEventListener('click', () => {
-          if (isEditing) {
-            closeModal();
-          } else {
-            currentStep = 0;
-            renderModalContent();
-          }
-        });
-
-        modalRoot.querySelectorAll('[data-wizard-step]').forEach(tab => {
-          tab.addEventListener('click', () => {
-            const targetStep = parseInt(tab.getAttribute('data-wizard-step'), 10);
-            if (targetStep > 2 && !draft.panel_channel_id && !state.panel_channel_id) {
-              if (window.Notifications) Notifications.show('Bitte wählen Sie zuerst einen Panel-Kanal aus.', 'info');
-              currentStep = 2;
-            } else {
-              currentStep = targetStep;
-            }
-            renderModalContent();
-          });
-        });
-
-        // Step 1 bindings
-        document.getElementById('wiz-input-name')?.addEventListener('input', (e) => { draft.name = e.target.value; });
-        document.getElementById('wiz-input-btn-label')?.addEventListener('input', (e) => { draft.button_label = e.target.value; });
-        document.getElementById('wiz-input-desc')?.addEventListener('input', (e) => { draft.description = e.target.value; });
-        modalRoot.querySelectorAll('[data-wiz-mode]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const mKey = btn.getAttribute('data-wiz-mode');
-            draft.mode = mKey;
-            draft.color = MODE_META[mKey]?.color || draft.color;
-            renderModalContent();
-          });
-        });
-
-        // Step 2 Custom Searchable Dropdowns bindings
-        // Panel Channel
-        const wizPanelChBtn = document.getElementById('wiz-dd-panel-ch-btn');
-        const wizPanelChMenu = document.getElementById('wiz-dd-panel-ch-menu');
-        const wizPanelChSearch = document.getElementById('wiz-search-panel-ch');
-        const wizPanelChList = document.getElementById('wiz-list-panel-ch');
-
-        wizPanelChBtn?.addEventListener('click', (e) => {
-          e.stopPropagation();
-          closeAllDropdowns(wizPanelChMenu);
-          wizPanelChMenu?.classList.toggle('hidden');
-          if (!wizPanelChMenu?.classList.contains('hidden')) {
-            if (wizPanelChSearch) {
-              wizPanelChSearch.value = '';
-              setTimeout(() => wizPanelChSearch.focus(), 20);
-            }
-            filterItems(wizPanelChList, '');
-          }
-        });
-
-        wizPanelChSearch?.addEventListener('input', (e) => {
-          filterItems(wizPanelChList, e.target.value);
-        });
-
-        modalRoot.querySelectorAll('[data-wiz-panel-ch]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const cid = btn.getAttribute('data-wiz-panel-ch') || '';
-            draft.panel_channel_id = cid;
-            const ch = getChannelById(cid);
-            const lbl = document.getElementById('wiz-dd-panel-ch-label');
-            if (lbl) {
-              lbl.textContent = ch ? `#${ch.name}` : 'Wo das Panel gepostet wird';
-              lbl.className = `min-w-0 truncate text-sm ${ch ? 'text-white' : 'text-neutral-500'}`;
-            }
-            wizPanelChMenu?.classList.add('hidden');
-            const nextBtn = document.getElementById('wiz-btn-next');
-            if (nextBtn) nextBtn.disabled = false;
-          });
-        });
-
-        // Log Channel
-        const wizLogChBtn = document.getElementById('wiz-dd-log-ch-btn');
-        const wizLogChMenu = document.getElementById('wiz-dd-log-ch-menu');
-        const wizLogChSearch = document.getElementById('wiz-search-log-ch');
-        const wizLogChList = document.getElementById('wiz-list-log-ch');
-
-        wizLogChBtn?.addEventListener('click', (e) => {
-          e.stopPropagation();
-          closeAllDropdowns(wizLogChMenu);
-          wizLogChMenu?.classList.toggle('hidden');
-          if (!wizLogChMenu?.classList.contains('hidden')) {
-            if (wizLogChSearch) {
-              wizLogChSearch.value = '';
-              setTimeout(() => wizLogChSearch.focus(), 20);
-            }
-            filterItems(wizLogChList, '');
-          }
-        });
-
-        wizLogChSearch?.addEventListener('input', (e) => {
-          filterItems(wizLogChList, e.target.value);
-        });
-
-        modalRoot.querySelectorAll('[data-wiz-log-ch]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const cid = btn.getAttribute('data-wiz-log-ch') || '';
-            draft.log_channel_id = cid;
-            const ch = getChannelById(cid);
-            const lbl = document.getElementById('wiz-dd-log-ch-label');
-            if (lbl) {
-              lbl.textContent = ch ? `#${ch.name}` : 'Einsendungen finden Sie hier';
-              lbl.className = `min-w-0 truncate text-sm ${ch ? 'text-white' : 'text-neutral-500'}`;
-            }
-            wizLogChMenu?.classList.add('hidden');
-          });
-        });
-
-        // Role Dropdown
-        const wizRoleBtn = document.getElementById('wiz-dd-role-btn');
-        const wizRoleMenu = document.getElementById('wiz-dd-role-menu');
-        const wizRoleSearch = document.getElementById('wiz-search-role');
-        const wizRoleList = document.getElementById('wiz-list-role');
-
-        wizRoleBtn?.addEventListener('click', (e) => {
-          e.stopPropagation();
-          closeAllDropdowns(wizRoleMenu);
-          wizRoleMenu?.classList.toggle('hidden');
-          if (!wizRoleMenu?.classList.contains('hidden')) {
-            if (wizRoleSearch) {
-              wizRoleSearch.value = '';
-              setTimeout(() => wizRoleSearch.focus(), 20);
-            }
-            filterItems(wizRoleList, '');
-          }
-        });
-
-        wizRoleSearch?.addEventListener('input', (e) => {
-          filterItems(wizRoleList, e.target.value);
-        });
-
-        modalRoot.querySelectorAll('[data-wiz-role]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const rid = btn.getAttribute('data-wiz-role') || '';
-            draft.role_id = rid;
-            const r = getRoleById(rid);
-            const lbl = document.getElementById('wiz-dd-role-label');
-            if (lbl) {
-              lbl.textContent = r ? `@${r.name}` : 'Zuständige Team-Rolle (optional)';
-              lbl.className = `min-w-0 truncate text-sm ${r ? 'text-white' : 'text-neutral-500'}`;
-            }
-            wizRoleMenu?.classList.add('hidden');
-          });
-        });
-
-        // Category Dropdown
-        const wizCatBtn = document.getElementById('wiz-dd-cat-btn');
-        const wizCatMenu = document.getElementById('wiz-dd-cat-menu');
-        const wizCatSearch = document.getElementById('wiz-search-cat');
-        const wizCatList = document.getElementById('wiz-list-cat');
-
-        wizCatBtn?.addEventListener('click', (e) => {
-          e.stopPropagation();
-          closeAllDropdowns(wizCatMenu);
-          wizCatMenu?.classList.toggle('hidden');
-          if (!wizCatMenu?.classList.contains('hidden')) {
-            if (wizCatSearch) {
-              wizCatSearch.value = '';
-              setTimeout(() => wizCatSearch.focus(), 20);
-            }
-            filterItems(wizCatList, '');
-          }
-        });
-
-        wizCatSearch?.addEventListener('input', (e) => {
-          filterItems(wizCatList, e.target.value);
-        });
-
-        modalRoot.querySelectorAll('[data-wiz-cat]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const catId = btn.getAttribute('data-wiz-cat') || '';
-            draft.category_id = catId;
-            const cat = getCategoryById(catId);
-            const lbl = document.getElementById('wiz-dd-cat-label');
-            if (lbl) {
-              lbl.textContent = cat ? cat.name : 'Automatisch (gleiche Kategorie)';
-              lbl.className = `min-w-0 truncate text-sm ${cat ? 'text-white' : 'text-neutral-500'}`;
-            }
-            wizCatMenu?.classList.add('hidden');
-          });
-        });
-
-        document.getElementById('wiz-switch-proof')?.addEventListener('click', () => {
-          draft.require_proof = !draft.require_proof;
-          updateSwitchVisual('wiz-switch-proof', draft.require_proof);
-        });
-
-        // Step 3 bindings
-        document.getElementById('wiz-add-question')?.addEventListener('click', () => {
-          if (draft.questions.length < 5) {
-            draft.questions.push({ label: 'Neue Frage', placeholder: '', style: 'short', required: true });
-            renderModalContent();
-          }
-        });
-        modalRoot.querySelectorAll('[data-q-label]').forEach(inp => {
-          inp.addEventListener('input', () => {
-            draft.questions[parseInt(inp.getAttribute('data-q-label'), 10)].label = inp.value;
-          });
-        });
-        modalRoot.querySelectorAll('[data-q-ph]').forEach(inp => {
-          inp.addEventListener('input', () => {
-            draft.questions[parseInt(inp.getAttribute('data-q-ph'), 10)].placeholder = inp.value;
-          });
-        });
-        modalRoot.querySelectorAll('[data-q-style-btn]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const idx = btn.getAttribute('data-q-style-btn');
-            const menu = modalRoot.querySelector(`[data-q-style-menu="${idx}"]`);
-            modalRoot.querySelectorAll('[data-q-style-menu]').forEach(m => {
-              if (m !== menu) m.classList.add('hidden');
-            });
-            menu?.classList.toggle('hidden');
-          });
-        });
-        modalRoot.querySelectorAll('[data-q-style-opt]').forEach(optBtn => {
-          optBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const idx = parseInt(optBtn.getAttribute('data-q-idx'), 10);
-            const val = optBtn.getAttribute('data-q-style-opt') || 'short';
-            if (draft.questions[idx]) {
-              draft.questions[idx].style = val;
-              renderModalContent();
-            }
-          });
-        });
-        modalRoot.querySelectorAll('[data-q-req]').forEach(chk => {
-          chk.addEventListener('change', () => {
-            draft.questions[parseInt(chk.getAttribute('data-q-req'), 10)].required = chk.checked;
-          });
-        });
-        modalRoot.querySelectorAll('[data-q-del]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            draft.questions.splice(parseInt(btn.getAttribute('data-q-del'), 10), 1);
-            renderModalContent();
-          });
-        });
-
-        // Prev / Next footer buttons
-        document.getElementById('wiz-btn-prev')?.addEventListener('click', () => {
-          closeAllDropdowns();
-          if (currentStep > 1) {
-            currentStep -= 1;
-          } else if (!isEditing) {
-            currentStep = 0;
-          } else {
-            closeModal();
-            return;
-          }
-          renderModalContent();
-        });
-
-        document.getElementById('wiz-btn-next')?.addEventListener('click', async () => {
-          closeAllDropdowns();
-          if (currentStep < 4) {
-            currentStep += 1;
-            renderModalContent();
-            return;
-          }
-
-          // Final Step 4 Submit: Add/Update Option in ticket panel's options list
-          const existingIdx = state.ticketTypes.findIndex(t => t.id === draft.id);
-          if (existingIdx >= 0) {
-            state.ticketTypes[existingIdx] = draft;
-          } else {
-            state.ticketTypes.push(draft);
-          }
-
-          if (draft.panel_channel_id) state.panel_channel_id = draft.panel_channel_id;
-          if (draft.log_channel_id) state.log_channel_id = draft.log_channel_id;
-          state.enabled = true;
-
-          closeModal();
-          renderMain();
-          await saveTicketConfig(true);
-          if (window.Notifications) Notifications.show(`Option "${draft.name}" erfolgreich zum Ticket-Menü hinzugefügt!`, 'success');
-        });
+        bindModalEvents();
       };
 
-      renderModalContent();
+      const renderStepContent = () => {
+        // STEP 1: Grundlagen
+        if (currentStep === 1) {
+          const panelChannel = getChannelById(editingPanel.panel_channel_id);
+          const logChannel = getChannelById(editingPanel.log_channel_id);
+          const defCategory = getCategoryById(editingPanel.category_id);
+          const defRole = getRoleById(editingPanel.role_id);
+
+          return `
+            <div class="space-y-4 max-w-2xl mx-auto">
+              <div>
+                <h3 class="text-sm font-semibold text-white">Grundlagen des Ticket-Typs</h3>
+                <p class="text-xs text-neutral-400 mt-0.5">Legen Sie Name, Beschreibung, Panel-Kanal und Akzentfarbe für dieses Ticket fest.</p>
+              </div>
+
+              <!-- Name & Title -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Interner Name *</label>
+                  <input type="text" id="builder-input-name" value="${escapeHtml(editingPanel.name)}" placeholder="z. B. Community Support Desk" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Titel (Discord Embed) *</label>
+                  <input type="text" id="builder-input-title" value="${escapeHtml(editingPanel.title)}" placeholder="z. B. Support Ticket" class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div>
+                <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Beschreibung</label>
+                <input type="text" id="builder-input-desc" value="${escapeHtml(editingPanel.description)}" placeholder="z. B. Öffnen Sie ein Ticket, um mit unserem Team zu sprechen." class="w-full h-10 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
+              </div>
+
+              <!-- Instructions (Quote Block) -->
+              <div>
+                <label class="block text-xs font-medium text-neutral-300 mb-1.5">Anweisungs-Blockquote im Embed</label>
+                <textarea id="builder-input-instr" rows="2" placeholder="> Wählen Sie die passende Kategorie unten aus..." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">${escapeHtml(editingPanel.instructions)}</textarea>
+              </div>
+
+              <!-- Color Palette -->
+              <div>
+                <label class="block text-xs font-medium text-neutral-300 mb-1.5">Akzentfarbe</label>
+                <div class="flex items-center gap-2 flex-wrap">
+                  ${[
+                    { color: '#5865F2', label: 'Discord Blurple' },
+                    { color: '#248046', label: 'Emerald' },
+                    { color: '#F0B232', label: 'Gold' },
+                    { color: '#DA373C', label: 'Crimson' },
+                    { color: '#EB459E', label: 'Fuchsia' },
+                    { color: '#9B59B6', label: 'Purple' },
+                    { color: '#1ABC9C', label: 'Teal' }
+                  ].map(c => `
+                    <button type="button" data-builder-color="${c.color}" class="size-8 rounded-xl border-2 transition-transform active:scale-95 flex items-center justify-center cursor-pointer ${editingPanel.color === c.color ? 'border-white scale-110 shadow-md' : 'border-transparent hover:border-neutral-500'}" style="background-color: ${c.color};" title="${c.label}">
+                      ${editingPanel.color === c.color ? '<svg class="w-4 h-4 text-white drop-shadow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>' : ''}
+                    </button>
+                  `).join('')}
+                  <input type="text" id="builder-custom-color" value="${escapeHtml(editingPanel.color)}" placeholder="#5865F2" class="w-24 h-8 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white uppercase text-center font-mono">
+                </div>
+              </div>
+
+              <!-- Channels Row (Panel Channel & Log Channel) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <!-- Panel Channel Dropdown -->
+                <div class="relative">
+                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Kanal (Hier wird das Ticket gepostet) *</label>
+                  <button type="button" id="bld-dd-panel-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
+                    <span id="bld-dd-panel-ch-label" class="min-w-0 truncate ${panelChannel ? 'text-white font-medium' : 'text-neutral-500'}">
+                      ${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Kanal auswählen...'}
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+                  <div id="bld-dd-panel-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                    <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
+                      <div class="relative w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                        <input type="text" id="bld-search-panel-ch" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                      </div>
+                    </div>
+                    <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-panel-ch">
+                      ${allChannels.map(c => `
+                        <button type="button" data-bld-panel-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(editingPanel.panel_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                          <span class="truncate">#${escapeHtml(c.name)}</span>
+                        </button>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Log Channel Dropdown -->
+                <div class="relative">
+                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Mitarbeiter-/Log-Kanal</label>
+                  <button type="button" id="bld-dd-log-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
+                    <span id="bld-dd-log-ch-label" class="min-w-0 truncate ${logChannel ? 'text-white font-medium' : 'text-neutral-500'}">
+                      ${logChannel ? `#${escapeHtml(logChannel.name)}` : 'Kein Log-Kanal'}
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+                  <div id="bld-dd-log-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                    <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
+                      <div class="relative w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                        <input type="text" id="bld-search-log-ch" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                      </div>
+                    </div>
+                    <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-log-ch">
+                      <button type="button" data-bld-log-ch="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Kein Log-Kanal</button>
+                      ${allChannels.map(c => `
+                        <button type="button" data-bld-log-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(editingPanel.log_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                          <span class="truncate">#${escapeHtml(c.name)}</span>
+                        </button>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Default Category & Support Role -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <!-- Category Dropdown -->
+                <div class="relative">
+                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Standard-Kategorie für geöffnete Tickets</label>
+                  <button type="button" id="bld-dd-cat-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
+                    <span id="bld-dd-cat-label" class="min-w-0 truncate ${defCategory ? 'text-white font-medium' : 'text-neutral-500'}">
+                      ${defCategory ? `📁 ${escapeHtml(defCategory.name)}` : 'Automatische Kategorie'}
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+                  <div id="bld-dd-cat-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                    <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
+                      <div class="relative w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                        <input type="text" id="bld-search-cat" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                      </div>
+                    </div>
+                    <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-cat">
+                      <button type="button" data-bld-cat="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Automatische Kategorie</button>
+                      ${allCategories.map(c => `
+                        <button type="button" data-bld-cat="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(editingPanel.category_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                          <span class="truncate">📁 ${escapeHtml(c.name)}</span>
+                        </button>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Support Role Dropdown -->
+                <div class="relative">
+                  <label class="block text-xs font-medium text-neutral-300 mb-1.5">Standard-Support-Rolle</label>
+                  <button type="button" id="bld-dd-role-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
+                    <span id="bld-dd-role-label" class="min-w-0 truncate ${defRole ? 'text-white font-medium' : 'text-neutral-500'}">
+                      ${defRole ? `@${escapeHtml(defRole.name)}` : 'Keine Standard-Rolle'}
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+                  <div id="bld-dd-role-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                    <div class="orbit-searchbar-header sticky top-0 z-20 p-2 bg-neutral-900/95 backdrop-blur-md border-b border-neutral-800/80 shrink-0">
+                      <div class="relative w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                        <input type="text" id="bld-search-role" placeholder="Suchen..." class="orbit-searchbar-input w-full pl-9 pr-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-neutral-500" autocomplete="off">
+                      </div>
+                    </div>
+                    <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="bld-list-role">
+                      <button type="button" data-bld-role="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Keine Standard-Rolle</button>
+                      ${allRoles.map(r => `
+                        <button type="button" data-bld-role="${escapeHtml(r.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center gap-2 ${String(r.id) === String(editingPanel.role_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                          <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
+                          <span class="truncate">@${escapeHtml(r.name)}</span>
+                        </button>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        // STEP 2: Aufstellen (Optionen hinzufügen)
+        if (currentStep === 2) {
+          return `
+            <div class="space-y-5 max-w-3xl mx-auto">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+                    Optionen in diesem Ticket (${editingPanel.options.length})
+                  </h3>
+                  <p class="text-xs text-neutral-400 mt-0.5">
+                    Fügen Sie mehrere Auswahl-Optionen zu diesem Ticket-Panel hinzu (z. B. Support, Kauf-Hilfe, Bug Report). Jede Option kann eine eigene Support-Ping-Rolle und eine eigene Kategorie besitzen!
+                  </p>
+                </div>
+                <button type="button" id="bld-btn-add-option" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all duration-150 active:scale-[0.96] shrink-0 cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                  Option hinzufügen
+                </button>
+              </div>
+
+              <!-- Options List Container -->
+              <div class="space-y-3" id="bld-options-container">
+                ${editingPanel.options.map((opt, oIdx) => {
+                  const optCat = getCategoryById(opt.category_id || editingPanel.category_id);
+                  const optRole = getRoleById(opt.role_id || editingPanel.role_id);
+
+                  return `
+                    <div class="p-4 rounded-xl bg-neutral-800/40 border border-neutral-800 hover:border-neutral-700 space-y-3 transition-colors" data-bld-opt-row="${oIdx}">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
+                          <span class="w-6 h-6 rounded-lg bg-neutral-800 border border-neutral-700/80 flex items-center justify-center text-xs font-bold text-neutral-400 tabular-nums">
+                            ${oIdx + 1}
+                          </span>
+                          <span class="text-xs font-semibold text-white truncate">${escapeHtml(opt.name || `Option ${oIdx + 1}`)}</span>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                          ${editingPanel.options.length > 1 ? `
+                            <button type="button" data-bld-del-opt="${oIdx}" class="p-1 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Option entfernen">
+                              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>
+                            </button>
+                          ` : ''}
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-[11px] font-medium text-neutral-400 mb-1">Option-Titel *</label>
+                          <input type="text" data-opt-field="name" data-opt-idx="${oIdx}" value="${escapeHtml(opt.name)}" placeholder="z. B. Allgemeiner Support" class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
+                        </div>
+                        <div>
+                          <label class="block text-[11px] font-medium text-neutral-400 mb-1">Kurzbeschreibung</label>
+                          <input type="text" data-opt-field="description" data-opt-idx="${oIdx}" value="${escapeHtml(opt.description)}" placeholder="z. B. Fragen zum Server..." class="w-full h-9 px-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <!-- Ziel-Kategorie Dropdown -->
+                        <div>
+                          <label class="block text-[11px] font-medium text-neutral-400 mb-1">Ziel-Kategorie für diese Option</label>
+                          <select data-opt-field="category_id" data-opt-idx="${oIdx}" class="w-full h-9 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
+                            <option value="">Standard-Kategorie verwenden (${defCategory ? defCategory.name : 'Automatisch'})</option>
+                            ${allCategories.map(c => `
+                              <option value="${escapeHtml(c.id)}" ${String(c.id) === String(opt.category_id) ? 'selected' : ''}>📁 ${escapeHtml(c.name)}</option>
+                            `).join('')}
+                          </select>
+                        </div>
+
+                        <!-- Ping-Rolle Dropdown -->
+                        <div>
+                          <label class="block text-[11px] font-medium text-neutral-400 mb-1">Support Ping-Rolle für diese Option</label>
+                          <select data-opt-field="role_id" data-opt-idx="${oIdx}" class="w-full h-9 px-2.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-neutral-500">
+                            <option value="">Standard-Rolle verwenden (${defRole ? `@${defRole.name}` : 'Keine'})</option>
+                            ${allRoles.map(r => `
+                              <option value="${escapeHtml(r.id)}" ${String(r.id) === String(opt.role_id) ? 'selected' : ''}>@${escapeHtml(r.name)}</option>
+                            `).join('')}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div class="pt-2">
+                <button type="button" id="bld-btn-add-option-bottom" class="w-full py-2.5 rounded-xl border border-dashed border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800/40 text-xs font-medium text-neutral-400 hover:text-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                  Weitere Option zu diesem Ticket hinzufügen
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        // STEP 3: Rezension (2-Column 1:1 PeakBot & Discord Live Preview)
+        if (currentStep === 3) {
+          const panelChannel = getChannelById(editingPanel.panel_channel_id);
+          const logChannel = getChannelById(editingPanel.log_channel_id);
+          const defCategory = getCategoryById(editingPanel.category_id);
+          const defRole = getRoleById(editingPanel.role_id);
+          const optCount = editingPanel.options.length;
+
+          return `
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-6">
+              <!-- Left Column: Summary Info -->
+              <div class="space-y-4">
+                <div>
+                  <h3 class="text-sm font-semibold text-white">Zusammenfassung & Vorschau</h3>
+                  <p class="text-xs text-neutral-400 mt-0.5">Überprüfen Sie alle Einstellungen und testen Sie das Panel vor dem Speichern.</p>
+                </div>
+
+                <!-- Panel Info Box -->
+                <div class="rounded-2xl bg-neutral-800/20 overflow-hidden shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
+                  <div class="flex items-center gap-3 p-3.5">
+                    <div class="grid place-items-center size-10 rounded-xl flex-shrink-0" style="background-color: ${editingPanel.color ? editingPanel.color.replace('rgb(', 'rgba(').replace(')', ', 0.125)') : 'rgba(88, 101, 242, 0.125)'};">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ticket w-5 h-5" style="color: ${editingPanel.color || '#5865F2'};"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-white truncate">${escapeHtml(editingPanel.name)}</p>
+                      <p class="text-xs text-neutral-500 truncate">${escapeHtml(editingPanel.description || 'Keine Beschreibung')}</p>
+                    </div>
+                    <span class="flex-shrink-0 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap bg-indigo-500/15 text-indigo-400">
+                      1 Ticket (${optCount} Opt.)
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 4 KPI Info Tiles -->
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div class="rounded-xl px-3.5 py-2.5 bg-neutral-800/20 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
+                    <div class="flex items-center gap-1.5 mb-1">
+                      <span class="text-neutral-500"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg></span>
+                      <p class="text-[10px] text-neutral-500 uppercase tracking-wider truncate">Panel-Kanal</p>
+                    </div>
+                    <p class="text-xs truncate tabular-nums text-neutral-300 font-medium">${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Kein Kanal gewählt'}</p>
+                  </div>
+
+                  <div class="rounded-xl px-3.5 py-2.5 bg-neutral-800/20 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
+                    <div class="flex items-center gap-1.5 mb-1">
+                      <span class="text-neutral-500"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path></svg></span>
+                      <p class="text-[10px] text-neutral-500 uppercase tracking-wider truncate">Mitarbeiterkanal</p>
+                    </div>
+                    <p class="text-xs truncate tabular-nums text-neutral-300 font-medium">${logChannel ? `#${escapeHtml(logChannel.name)}` : 'Kein Log-Kanal'}</p>
+                  </div>
+
+                  <div class="rounded-xl px-3.5 py-2.5 bg-neutral-800/20 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
+                    <div class="flex items-center gap-1.5 mb-1">
+                      <span class="text-neutral-500"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg></span>
+                      <p class="text-[10px] text-neutral-500 uppercase tracking-wider truncate">Kategorie</p>
+                    </div>
+                    <p class="text-xs truncate tabular-nums text-neutral-300 font-medium">${defCategory ? `📁 ${escapeHtml(defCategory.name)}` : 'Automatisch'}</p>
+                  </div>
+
+                  <div class="rounded-xl px-3.5 py-2.5 bg-neutral-800/20 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]">
+                    <div class="flex items-center gap-1.5 mb-1">
+                      <span class="text-neutral-500"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>
+                      <p class="text-[10px] text-neutral-500 uppercase tracking-wider truncate">Support-Rollen</p>
+                    </div>
+                    <p class="text-xs truncate tabular-nums text-neutral-300 font-medium">${defRole ? `@${escapeHtml(defRole.name)}` : 'Server-Standard'}</p>
+                  </div>
+                </div>
+
+                <!-- Configured Options Summary -->
+                <div class="rounded-xl p-3 bg-neutral-800/30 border border-neutral-800 space-y-2">
+                  <div class="text-xs font-semibold text-neutral-300">Konfigurierte Optionen (${optCount}):</div>
+                  <div class="space-y-1.5">
+                    ${editingPanel.options.map((opt, idx) => {
+                      const r = getRoleById(opt.role_id || editingPanel.role_id);
+                      const c = getCategoryById(opt.category_id || editingPanel.category_id);
+                      return `
+                        <div class="flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg bg-neutral-800/50">
+                          <span class="font-medium text-white truncate">${idx + 1}. ${escapeHtml(opt.name)}</span>
+                          <div class="flex items-center gap-1.5 text-[11px] text-neutral-400 shrink-0">
+                            ${c ? `<span class="text-neutral-400">📁 ${escapeHtml(c.name)}</span>` : ''}
+                            ${r ? `<span class="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300">@${escapeHtml(r.name)}</span>` : ''}
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+
+                <!-- Badges -->
+                <div class="flex flex-wrap gap-2 pt-1">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap bg-[#5865F2] text-white">
+                    ${escapeHtml(editingPanel.button_label || 'Ticket öffnen')}
+                  </span>
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap bg-emerald-500/10 text-emerald-400 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.2)]">
+                    <svg class="w-3 h-3 mr-1 -ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg>
+                    Willkommen einbetten
+                  </span>
+                </div>
+              </div>
+
+              <!-- Right Column: 1:1 Discord Live-Vorschau -->
+              <div class="border-l border-neutral-800/60 pl-6 hidden lg:block">
+                <div class="px-1 py-1 mb-2.5 flex items-center gap-2">
+                  <svg class="lucide lucide-eye w-3.5 h-3.5 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Panel-Vorschau</span>
+                </div>
+
+                <div class="rounded-xl overflow-hidden border border-neutral-700/30 shadow-2xl">
+                  <!-- Channel Header -->
+                  <div class="bg-[#2f3136] px-3.5 py-2 flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
+                    <span class="text-xs font-semibold text-white truncate">${panelChannel ? escapeHtml(panelChannel.name) : 'tickets'}</span>
+                  </div>
+
+                  <!-- Bot Message Content -->
+                  <div class="bg-[#313338] p-3.5 space-y-2.5 font-sans">
+                    <div class="flex gap-2.5">
+                      <div class="size-8 rounded-full bg-[#5865F2] flex items-center justify-center font-bold text-white text-xs shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                          <span class="text-xs font-semibold text-white">Orbit</span>
+                          <span class="inline-flex items-center px-1 py-px text-[9px] font-bold bg-[#5865F2] text-white rounded leading-none">BOT</span>
+                          <span class="text-[10px] text-neutral-400">Heute um 12:00 Uhr</span>
+                        </div>
+
+                        <!-- Discord Embed -->
+                        <div class="border-l-[3px] rounded-r bg-[#2b2d31] p-3 space-y-1.5" style="border-color: ${editingPanel.color || '#5865F2'};">
+                          <p class="text-xs font-bold text-white leading-snug">${escapeHtml(editingPanel.title || editingPanel.name)}</p>
+                          <p class="text-xs text-neutral-300 leading-relaxed">${escapeHtml(editingPanel.description || '')}</p>
+                          ${editingPanel.instructions ? `
+                            <div class="border-l-[3px] border-[#4e5058] pl-2 py-0.5 mt-1.5">
+                              <p class="text-[11px] text-neutral-300 leading-relaxed">${escapeHtml(editingPanel.instructions)}</p>
+                            </div>
+                          ` : ''}
+                        </div>
+
+                        <!-- Discord Select Menu Preview Component -->
+                        <div class="mt-2.5">
+                          <div class="w-full rounded bg-[#2b2d31] border border-[#1e1f22] p-2 flex items-center justify-between text-xs text-neutral-300 shadow-inner">
+                            <span class="truncate">Select a category...</span>
+                            <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                          </div>
+                        </div>
+
+                        <!-- Discord Button Component -->
+                        <div class="mt-2">
+                          <button type="button" class="px-3.5 py-1.5 rounded-md text-xs font-medium text-white bg-[#5865F2] flex items-center gap-1.5 shadow pointer-events-none">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>
+                            ${escapeHtml(editingPanel.button_label || 'Ticket öffnen')}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        return '';
+      };
+
+      const bindModalEvents = () => {
+        // Step Navigation Pills
+        modalRoot.querySelectorAll('[data-nav-step]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const stepNum = parseInt(btn.getAttribute('data-nav-step'), 10);
+            if (stepNum && stepNum >= 1 && stepNum <= 3) {
+              currentStep = stepNum;
+              renderModal();
+            }
+          });
+        });
+
+        // Close / Back buttons in Header
+        document.getElementById('modal-btn-close-header')?.addEventListener('click', () => {
+          modalRoot.innerHTML = '';
+        });
+
+        document.getElementById('modal-btn-back-header')?.addEventListener('click', () => {
+          if (currentStep > 1) {
+            currentStep--;
+            renderModal();
+          } else {
+            modalRoot.innerHTML = '';
+          }
+        });
+
+        // Footer Prev / Next
+        document.getElementById('modal-btn-prev')?.addEventListener('click', () => {
+          if (currentStep > 1) {
+            currentStep--;
+            renderModal();
+          }
+        });
+
+        document.getElementById('modal-btn-next')?.addEventListener('click', async () => {
+          if (currentStep < 3) {
+            currentStep++;
+            renderModal();
+          } else {
+            // STEP 3 Save action!
+            if (!editingPanel.name || !editingPanel.title) {
+              if (window.Notifications) Notifications.show('Bitte geben Sie einen Namen für den Ticket-Typ ein.', 'info');
+              currentStep = 1;
+              renderModal();
+              return;
+            }
+
+            if (!editingPanel.panel_channel_id) {
+              if (window.Notifications) Notifications.show('Bitte wählen Sie einen Panel-Kanal für dieses Ticket aus.', 'info');
+              currentStep = 1;
+              renderModal();
+              return;
+            }
+
+            // Save into state.panels
+            if (isEdit) {
+              const idx = state.panels.findIndex(p => p.id === editingPanel.id);
+              if (idx >= 0) {
+                state.panels[idx] = editingPanel;
+              } else {
+                state.panels.push(editingPanel);
+              }
+            } else {
+              state.panels.push(editingPanel);
+            }
+
+            modalRoot.innerHTML = '';
+            renderMain();
+            await saveTicketConfig(true);
+            if (window.Notifications) Notifications.show(`Ticket-Typ "${editingPanel.name}" erfolgreich gespeichert!`, 'success');
+          }
+        });
+
+        // Step 1 Event Listeners
+        if (currentStep === 1) {
+          const nameInput = document.getElementById('builder-input-name');
+          const titleInput = document.getElementById('builder-input-title');
+          const descInput = document.getElementById('builder-input-desc');
+          const instrInput = document.getElementById('builder-input-instr');
+          const customColorInput = document.getElementById('builder-custom-color');
+
+          nameInput?.addEventListener('input', (e) => {
+            editingPanel.name = e.target.value;
+          });
+
+          titleInput?.addEventListener('input', (e) => {
+            editingPanel.title = e.target.value;
+          });
+
+          descInput?.addEventListener('input', (e) => {
+            editingPanel.description = e.target.value;
+          });
+
+          instrInput?.addEventListener('input', (e) => {
+            editingPanel.instructions = e.target.value;
+          });
+
+          customColorInput?.addEventListener('input', (e) => {
+            editingPanel.color = e.target.value;
+          });
+
+          modalRoot.querySelectorAll('[data-builder-color]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              editingPanel.color = btn.getAttribute('data-builder-color');
+              renderModal();
+            });
+          });
+
+          // Panel Channel Searchable Dropdown
+          const bldPanelChBtn = document.getElementById('bld-dd-panel-ch-btn');
+          const bldPanelChMenu = document.getElementById('bld-dd-panel-ch-menu');
+          const bldSearchPanelCh = document.getElementById('bld-search-panel-ch');
+          const bldPanelChLabel = document.getElementById('bld-dd-panel-ch-label');
+
+          bldPanelChBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const wasHidden = bldPanelChMenu?.classList.contains('hidden');
+            closeAllDropdowns();
+            if (wasHidden) {
+              bldPanelChMenu?.classList.remove('hidden');
+              if (bldSearchPanelCh) {
+                bldSearchPanelCh.value = '';
+                bldSearchPanelCh.focus();
+                filterBldPanelCh('');
+              }
+            }
+          });
+
+          const filterBldPanelCh = (term) => {
+            const lower = term.toLowerCase().trim();
+            document.querySelectorAll('#bld-list-panel-ch [data-bld-panel-ch]').forEach(btn => {
+              const txt = btn.textContent.toLowerCase();
+              btn.style.display = (!lower || txt.includes(lower)) ? '' : 'none';
+            });
+          };
+
+          bldSearchPanelCh?.addEventListener('input', (e) => filterBldPanelCh(e.target.value));
+
+          document.querySelectorAll('#bld-list-panel-ch [data-bld-panel-ch]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const cid = btn.getAttribute('data-bld-panel-ch');
+              editingPanel.panel_channel_id = cid;
+              const ch = getChannelById(cid);
+              if (bldPanelChLabel) {
+                bldPanelChLabel.textContent = ch ? `#${ch.name}` : 'Kanal auswählen...';
+                bldPanelChLabel.className = 'min-w-0 truncate text-white font-medium';
+              }
+              bldPanelChMenu?.classList.add('hidden');
+            });
+          });
+
+          // Log Channel Searchable Dropdown
+          const bldLogChBtn = document.getElementById('bld-dd-log-ch-btn');
+          const bldLogChMenu = document.getElementById('bld-dd-log-ch-menu');
+          const bldSearchLogCh = document.getElementById('bld-search-log-ch');
+          const bldLogChLabel = document.getElementById('bld-dd-log-ch-label');
+
+          bldLogChBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const wasHidden = bldLogChMenu?.classList.contains('hidden');
+            closeAllDropdowns();
+            if (wasHidden) {
+              bldLogChMenu?.classList.remove('hidden');
+              if (bldSearchLogCh) {
+                bldSearchLogCh.value = '';
+                bldSearchLogCh.focus();
+                filterBldLogCh('');
+              }
+            }
+          });
+
+          const filterBldLogCh = (term) => {
+            const lower = term.toLowerCase().trim();
+            document.querySelectorAll('#bld-list-log-ch [data-bld-log-ch]').forEach(btn => {
+              const txt = btn.textContent.toLowerCase();
+              btn.style.display = (!lower || txt.includes(lower)) ? '' : 'none';
+            });
+          };
+
+          bldSearchLogCh?.addEventListener('input', (e) => filterBldLogCh(e.target.value));
+
+          document.querySelectorAll('#bld-list-log-ch [data-bld-log-ch]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const cid = btn.getAttribute('data-bld-log-ch');
+              editingPanel.log_channel_id = cid;
+              const ch = getChannelById(cid);
+              if (bldLogChLabel) {
+                bldLogChLabel.textContent = ch ? `#${ch.name}` : 'Kein Log-Kanal';
+                bldLogChLabel.className = `min-w-0 truncate ${ch ? 'text-white font-medium' : 'text-neutral-500'}`;
+              }
+              bldLogChMenu?.classList.add('hidden');
+            });
+          });
+
+          // Category Dropdown
+          const bldCatBtn = document.getElementById('bld-dd-cat-btn');
+          const bldCatMenu = document.getElementById('bld-dd-cat-menu');
+          const bldSearchCat = document.getElementById('bld-search-cat');
+          const bldCatLabel = document.getElementById('bld-dd-cat-label');
+
+          bldCatBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const wasHidden = bldCatMenu?.classList.contains('hidden');
+            closeAllDropdowns();
+            if (wasHidden) {
+              bldCatMenu?.classList.remove('hidden');
+              if (bldSearchCat) {
+                bldSearchCat.value = '';
+                bldSearchCat.focus();
+                filterBldCat('');
+              }
+            }
+          });
+
+          const filterBldCat = (term) => {
+            const lower = term.toLowerCase().trim();
+            document.querySelectorAll('#bld-list-cat [data-bld-cat]').forEach(btn => {
+              const txt = btn.textContent.toLowerCase();
+              btn.style.display = (!lower || txt.includes(lower)) ? '' : 'none';
+            });
+          };
+
+          bldSearchCat?.addEventListener('input', (e) => filterBldCat(e.target.value));
+
+          document.querySelectorAll('#bld-list-cat [data-bld-cat]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const catId = btn.getAttribute('data-bld-cat');
+              editingPanel.category_id = catId;
+              const c = getCategoryById(catId);
+              if (bldCatLabel) {
+                bldCatLabel.textContent = c ? `📁 ${c.name}` : 'Automatische Kategorie';
+                bldCatLabel.className = `min-w-0 truncate ${c ? 'text-white font-medium' : 'text-neutral-500'}`;
+              }
+              bldCatMenu?.classList.add('hidden');
+            });
+          });
+
+          // Support Role Dropdown
+          const bldRoleBtn = document.getElementById('bld-dd-role-btn');
+          const bldRoleMenu = document.getElementById('bld-dd-role-menu');
+          const bldSearchRole = document.getElementById('bld-search-role');
+          const bldRoleLabel = document.getElementById('bld-dd-role-label');
+
+          bldRoleBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const wasHidden = bldRoleMenu?.classList.contains('hidden');
+            closeAllDropdowns();
+            if (wasHidden) {
+              bldRoleMenu?.classList.remove('hidden');
+              if (bldSearchRole) {
+                bldSearchRole.value = '';
+                bldSearchRole.focus();
+                filterBldRole('');
+              }
+            }
+          });
+
+          const filterBldRole = (term) => {
+            const lower = term.toLowerCase().trim();
+            document.querySelectorAll('#bld-list-role [data-bld-role]').forEach(btn => {
+              const txt = btn.textContent.toLowerCase();
+              btn.style.display = (!lower || txt.includes(lower)) ? '' : 'none';
+            });
+          };
+
+          bldSearchRole?.addEventListener('input', (e) => filterBldRole(e.target.value));
+
+          document.querySelectorAll('#bld-list-role [data-bld-role]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const rid = btn.getAttribute('data-bld-role');
+              editingPanel.role_id = rid;
+              const r = getRoleById(rid);
+              if (bldRoleLabel) {
+                bldRoleLabel.textContent = r ? `@${r.name}` : 'Keine Standard-Rolle';
+                bldRoleLabel.className = `min-w-0 truncate ${r ? 'text-white font-medium' : 'text-neutral-500'}`;
+              }
+              bldRoleMenu?.classList.add('hidden');
+            });
+          });
+        }
+
+        // Step 2 Event Listeners (Options Add/Remove/Update)
+        if (currentStep === 2) {
+          const addOpt = () => {
+            const newIdx = editingPanel.options.length + 1;
+            editingPanel.options.push({
+              id: `opt_${Date.now()}_${newIdx}`,
+              name: `Option ${newIdx}`,
+              description: 'Öffnen Sie ein Ticket.',
+              color: editingPanel.color || '#5865F2',
+              category_id: editingPanel.category_id || '',
+              role_id: editingPanel.role_id || ''
+            });
+            renderModal();
+          };
+
+          document.getElementById('bld-btn-add-option')?.addEventListener('click', addOpt);
+          document.getElementById('bld-btn-add-option-bottom')?.addEventListener('click', addOpt);
+
+          modalRoot.querySelectorAll('[data-bld-del-opt]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const idx = parseInt(btn.getAttribute('data-bld-del-opt'), 10);
+              if (!isNaN(idx) && editingPanel.options.length > 1) {
+                editingPanel.options.splice(idx, 1);
+                renderModal();
+              }
+            });
+          });
+
+          modalRoot.querySelectorAll('[data-opt-field]').forEach(input => {
+            const handleFieldUpdate = (e) => {
+              const fld = input.getAttribute('data-opt-field');
+              const idx = parseInt(input.getAttribute('data-opt-idx'), 10);
+              if (editingPanel.options[idx]) {
+                editingPanel.options[idx][fld] = e.target.value;
+              }
+            };
+            input.addEventListener('input', handleFieldUpdate);
+            input.addEventListener('change', handleFieldUpdate);
+          });
+        }
+      };
+
+      renderModal();
     };
 
     renderMain();
   } catch (err) {
-    container.innerHTML = `<div class="p-8 text-red-400 text-center text-sm">Fehler beim Laden des Ticket-Tabs: ${err.message}</div>`;
+    container.innerHTML = `
+      <div class="py-16 text-center text-red-400 text-xs">
+        Fehler beim Laden des Ticket-Bereichs: ${err.message || 'Unbekannter Fehler'}
+      </div>
+    `;
   }
 };
