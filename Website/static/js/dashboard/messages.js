@@ -538,6 +538,22 @@ DashboardTabs.Messages = async function (container, guildId) {
     return escaped;
   }
 
+  function autoResizeTextarea(el) {
+    if (!el) return;
+    el.style.resize = 'none';
+    el.style.overflowY = 'hidden';
+    el.style.height = 'auto';
+    el.style.height = Math.max(el.scrollHeight, 28) + 'px';
+  }
+
+  function setupAutoResizeTextarea(el) {
+    if (!el) return;
+    autoResizeTextarea(el);
+    el.removeEventListener('input', el._autoResizeHandler);
+    el._autoResizeHandler = () => autoResizeTextarea(el);
+    el.addEventListener('input', el._autoResizeHandler);
+  }
+
   function renderSenderAvatarHtml(sizeCls = 'w-10 h-10') {
     if (state.send_as === 'bot') {
       return `<img src="${escapeHtml(botAvatarUrl)}" alt="" class="${sizeCls} rounded-full object-cover flex-shrink-0 bg-neutral-800">`;
@@ -643,7 +659,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                   ${state.fields.some(f => (f.name || '').trim() || (f.value || '').trim()) ? `
                     <div class="grid grid-cols-12 gap-2.5 pt-1">
                       ${state.fields.filter(f => (f.name || '').trim() || (f.value || '').trim()).map(f => `
-                        <div class="${f.inline ? 'col-span-4' : 'col-span-12'} min-w-0">
+                        <div class="${f.inline ? 'col-span-4' : 'col-span-12'} min-w-0" style="${f.inline ? 'grid-column: span 4 / span 4;' : 'grid-column: span 12 / span 12;'}">
                           <div class="text-xs font-semibold text-white break-words">${formatDiscordText((f.name || '\u200b'))}</div>
                           <div class="text-xs text-neutral-300 whitespace-pre-wrap break-words mt-0.5">${formatDiscordText(f.value || '\u200b')}</div>
                         </div>
@@ -746,7 +762,7 @@ DashboardTabs.Messages = async function (container, guildId) {
 
             <!-- Description -->
             <div>
-              <textarea id="msg-emb-description" rows="3" placeholder="Embed description (supports Markdown & / for variables)..." class="w-full px-2.5 py-2 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none resize-y">${escapeHtml(state.description)}</textarea>
+              <textarea id="msg-emb-description" rows="1" placeholder="Embed description (supports Markdown & / for variables)..." class="w-full px-2.5 py-2 rounded bg-[#1e1f22] border border-white/[0.06] focus:border-indigo-500/60 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none overflow-hidden" style="resize: none; overflow-y: hidden;">${escapeHtml(state.description)}</textarea>
             </div>
           </div>
 
@@ -813,7 +829,7 @@ DashboardTabs.Messages = async function (container, guildId) {
                       </button>
                     </div>
                   </div>
-                  <textarea rows="2" data-field-value="${idx}" placeholder="Field value..." class="w-full px-2 py-1 rounded bg-[#2b2d31] border border-white/[0.06] text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none">${escapeHtml(f.value)}</textarea>
+                  <textarea rows="1" data-field-value="${idx}" placeholder="Field value..." class="w-full px-2 py-1 rounded bg-[#2b2d31] border border-white/[0.06] text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none resize-none overflow-hidden" style="resize: none; overflow-y: hidden;">${escapeHtml(f.value)}</textarea>
                 </div>
               `).join('')}
             </div>
@@ -1655,12 +1671,18 @@ DashboardTabs.Messages = async function (container, guildId) {
               const val = lastFocusedInput.value;
               lastFocusedInput.value = val.slice(0, start) + ' ' + token + ' ' + val.slice(end);
               lastFocusedInput.dispatchEvent(new Event('input', { bubbles: true }));
+              if (lastFocusedInput.tagName === 'TEXTAREA') {
+                autoResizeTextarea(lastFocusedInput);
+              }
             }
           } else {
             state.description = (state.description ? state.description + ' ' : '') + token;
             updateToolbarStatesInPlace();
             const descEl = document.getElementById('msg-emb-description');
-            if (descEl) descEl.value = state.description;
+            if (descEl) {
+              descEl.value = state.description;
+              autoResizeTextarea(descEl);
+            }
           }
 
           updateToolbarStatesInPlace();
@@ -1878,9 +1900,15 @@ DashboardTabs.Messages = async function (container, guildId) {
     const bindEmbInput = (id, key) => {
       const el = document.getElementById(id);
       if (!el) return;
+      if (id === 'msg-emb-description') {
+        setupAutoResizeTextarea(el);
+      }
       el.addEventListener('focus', () => pushUndo());
       el.addEventListener('input', (e) => {
         state[key] = e.target.value;
+        if (id === 'msg-emb-description') {
+          autoResizeTextarea(e.target);
+        }
         updateToolbarStatesInPlace();
       });
     };
@@ -1920,11 +1948,13 @@ DashboardTabs.Messages = async function (container, guildId) {
     });
 
     container.querySelectorAll('[data-field-value]').forEach(input => {
+      setupAutoResizeTextarea(input);
       input.addEventListener('focus', () => pushUndo());
       input.addEventListener('input', (e) => {
         const idx = parseInt(e.target.getAttribute('data-field-value'), 10);
         if (state.fields[idx]) {
           state.fields[idx].value = e.target.value;
+          autoResizeTextarea(e.target);
           updateToolbarStatesInPlace();
         }
       });
@@ -1985,6 +2015,12 @@ DashboardTabs.Messages = async function (container, guildId) {
         render();
       }
     }, { once: true });
+    // Ensure all auto-resize textareas are sized accurately after mount
+    requestAnimationFrame(() => {
+      const descEl = document.getElementById('msg-emb-description');
+      if (descEl) autoResizeTextarea(descEl);
+      container.querySelectorAll('[data-field-value]').forEach(el => autoResizeTextarea(el));
+    });
   }
 
   render();
