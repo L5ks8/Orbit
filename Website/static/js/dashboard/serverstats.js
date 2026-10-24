@@ -15,7 +15,6 @@ function renderServerStatsModule(el, guildId, sCfg, categoryOptions) {
         <h1 class="text-xl font-bold text-white">Server Stats Counters</h1>
         <p class="text-xs text-neutral-400 mt-1">Display live server metrics as locked voice channels.</p>
       </div>
-      <button type="button" id="save-serverstats-btn" class="px-5 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all active:scale-95">Save Changes</button>
     </div>
 
     <!-- Master Toggle -->
@@ -29,7 +28,7 @@ function renderServerStatsModule(el, guildId, sCfg, categoryOptions) {
           <p class="text-xs text-neutral-500">Automatically creates and updates voice counter channels.</p>
         </div>
       </div>
-      ${renderToggle({ id: 'stats-toggle', checked: enabled, onChange: (v) => { enabled = v; } })}
+      ${renderToggle({ id: 'stats-toggle', checked: enabled, onChange: async (v) => { enabled = v; await API.saveConfig(guildId, { serverstats: { enabled, category_id: categoryId, users_name: usersName, bots_name: botsName, boosts_name: boostsName } }); } })}
     </div>
 
     <!-- Category Selector & Auto Setup -->

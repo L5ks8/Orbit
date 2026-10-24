@@ -18,7 +18,7 @@
 
   const SVGS = {
     spinner: `<svg class="animate-spin w-4 h-4 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`,
-    check: `<svg class="w-4 h-4 text-[#34d399] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+    check: `<svg class="w-4 h-4 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
     error: `<svg class="w-4 h-4 text-red-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`,
     info: `<svg class="w-4 h-4 text-[#5865F2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`,
     close: `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
@@ -106,6 +106,17 @@
      * Grey saving state in bottom-right corner.
      * Transitions seamlessly if an active save notification already exists.
      */
+    _removeExtraSaveToasts(keepId = null) {
+      if (!this.container) return;
+      const saveToasts = this.container.querySelectorAll('.toast-saving, .toast-saved');
+      saveToasts.forEach(t => {
+        if (!keepId || t.id !== `toast-${keepId}`) {
+          if (t._dismissTimer) clearTimeout(t._dismissTimer);
+          t.remove();
+        }
+      });
+    },
+
     saving(msg = 'Saving...') {
       this.init();
       if (this.activeSaveTimer) {
@@ -113,52 +124,85 @@
         this.activeSaveTimer = null;
       }
 
+      let existing = null;
       if (this.activeSaveId) {
-        const existing = document.getElementById(`toast-${this.activeSaveId}`);
-        if (existing) {
-          if (existing._dismissTimer) clearTimeout(existing._dismissTimer);
-          this.update(this.activeSaveId, msg, 'saving', 0);
-          return this.activeSaveId;
-        }
+        existing = document.getElementById(`toast-${this.activeSaveId}`);
+      }
+      if (!existing && this.container) {
+        existing = this.container.querySelector('.toast-saving, .toast-saved');
       }
 
+      if (existing) {
+        if (existing._dismissTimer) clearTimeout(existing._dismissTimer);
+        existing.classList.remove('toast-leaving', 'toast-saved', 'toast-error', 'toast-success', 'toast-info');
+        existing.classList.add('toast-saving');
+        const iconEl = existing.querySelector('.toast-icon');
+        const msgEl = existing.querySelector('.toast-message');
+        if (iconEl) iconEl.innerHTML = this.getIconSvg('saving');
+        if (msgEl) msgEl.textContent = msg;
+        this.activeSaveId = parseInt(existing.id.replace('toast-', ''), 10) || this.activeSaveId;
+        this._removeExtraSaveToasts(this.activeSaveId);
+        return this.activeSaveId;
+      }
+
+      this._removeExtraSaveToasts();
       const id = this.show(msg, 'saving', 0);
       this.activeSaveId = id;
       return id;
     },
 
     /**
-     * Smoothly transforms the active saving toast into "Saved" (soft emerald check).
+     * Smoothly transforms the active saving toast into "Saved" (rich green background).
      */
-    saved(msg = 'Saved', duration = 2500) {
+    saved(msg = 'Saved', duration = 2200) {
+      this.init();
+      let existing = null;
       if (this.activeSaveId) {
-        const existing = document.getElementById(`toast-${this.activeSaveId}`);
-        if (existing) {
-          const id = this.activeSaveId;
-          this.activeSaveId = null;
-          this.update(id, msg, 'saved', duration);
-          return id;
-        }
+        existing = document.getElementById(`toast-${this.activeSaveId}`);
       }
-      this.activeSaveId = null;
-      return this.show(msg, 'saved', duration);
+      if (!existing && this.container) {
+        existing = this.container.querySelector('.toast-saving, .toast-saved');
+      }
+
+      if (existing) {
+        const id = parseInt(existing.id.replace('toast-', ''), 10) || this.activeSaveId;
+        this.activeSaveId = id;
+        this.update(id, msg, 'saved', duration);
+        this._removeExtraSaveToasts(id);
+        return id;
+      }
+
+      this._removeExtraSaveToasts();
+      const id = this.show(msg, 'saved', duration);
+      this.activeSaveId = id;
+      return id;
     },
 
     /**
      * Smoothly transforms the active saving toast into "Error saving" in red.
      */
     errorSaving(msg = 'Error saving changes', duration = 4500) {
+      this.init();
+      let existing = null;
       if (this.activeSaveId) {
-        const existing = document.getElementById(`toast-${this.activeSaveId}`);
-        if (existing) {
-          const id = this.activeSaveId;
-          this.activeSaveId = null;
-          this.update(id, msg, 'error', duration);
-          return id;
-        }
+        existing = document.getElementById(`toast-${this.activeSaveId}`);
       }
-      this.activeSaveId = null;
-      return this.show(msg, 'error', duration);
+      if (!existing && this.container) {
+        existing = this.container.querySelector('.toast-saving, .toast-saved');
+      }
+
+      if (existing) {
+        const id = parseInt(existing.id.replace('toast-', ''), 10) || this.activeSaveId;
+        this.activeSaveId = id;
+        this.update(id, msg, 'error', duration);
+        this._removeExtraSaveToasts(id);
+        return id;
+      }
+
+      this._removeExtraSaveToasts();
+      const id = this.show(msg, 'error', duration);
+      this.activeSaveId = id;
+      return id;
     },
 
     dismiss(id) {

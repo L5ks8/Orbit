@@ -4697,15 +4697,22 @@ input:checked + .toggle-slider:before {
 
 .toast-saved,
 .toast-success {
-  background: rgba(24, 24, 27, 0.96) !important;
-  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  background: #059669 !important;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
   color: #ffffff !important;
-  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(16, 185, 129, 0.15) !important;
+  box-shadow: 0 10px 25px -3px rgba(4, 120, 87, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
 }
 
 .toast-saved .toast-icon,
 .toast-success .toast-icon {
-  color: #34d399 !important;
+  color: #ffffff !important;
+}
+
+.toast-saved .toast-icon svg,
+.toast-success .toast-icon svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
 }
 
 .toast-saved .toast-message,
@@ -4716,13 +4723,13 @@ input:checked + .toggle-slider:before {
 
 .toast-saved .toast-close,
 .toast-success .toast-close {
-  color: rgba(255, 255, 255, 0.6) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .toast-saved .toast-close:hover,
 .toast-success .toast-close:hover {
   color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.2) !important;
 }
 
 .toast-error {

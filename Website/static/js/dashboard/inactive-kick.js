@@ -108,10 +108,7 @@ DashboardTabs.InactiveKick = async function (container, guildId) {
                     <span id="master-toggle-label" class="text-sm font-medium whitespace-nowrap ${cfg.enabled ? 'text-white' : 'text-neutral-500'}">${cfg.enabled ? 'Enabled' : 'Disabled'}</span>
                   </div>
                 </div>
-                <!-- Save Changes Button -->
-                <button type="button" id="save-inactivekick-btn" class="px-4 py-1.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all flex items-center gap-2 shadow-sm active:scale-95 cursor-pointer">
-                  <span>Save Changes</span>
-                </button>
+
               </div>
             </div>
           </div>

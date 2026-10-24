@@ -12,7 +12,6 @@ function renderLevelingModule(el, guildId, cfg, channelOptions, roleOptions) {
         <h1 class="text-xl font-bold text-white">Leveling & XP System</h1>
         <p class="text-xs text-neutral-400 mt-1">Reward active chatters with experience points, ranks, and role rewards.</p>
       </div>
-      <button type="button" id="save-level-btn" class="px-5 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all">Save Changes</button>
     </div>
     <div class="p-6 rounded-2xl bg-neutral-900 border border-neutral-800 flex flex-col gap-4">
       <div class="flex items-center justify-between">
@@ -20,11 +19,11 @@ function renderLevelingModule(el, guildId, cfg, channelOptions, roleOptions) {
           <span class="text-sm font-semibold text-white">Enable Leveling</span>
           <p class="text-xs text-neutral-500">Award XP for messages with cooldowns.</p>
         </div>
-        ${renderToggle({ id: 'level-toggle', checked: enabled, onChange: (v) => { enabled = v; } })}
+        ${renderToggle({ id: 'level-toggle', checked: enabled, onChange: async (v) => { enabled = v; await API.saveConfig(guildId, { level: { enabled, announcement_channel_id: ch, xp_multiplier: multiplier } }); } })}
       </div>
       <div class="flex flex-col gap-2 pt-2">
         <label class="text-xs font-semibold text-neutral-300">Level-Up Announcement Channel</label>
-        ${renderCustomSelect({ id: 'level-ch-sel', options: channelOptions, value: ch, onChange: (v) => { ch = v; } })}
+        ${renderCustomSelect({ id: 'level-ch-sel', options: channelOptions, value: ch, onChange: async (v) => { ch = v; await API.saveConfig(guildId, { level: { enabled, announcement_channel_id: ch, xp_multiplier: multiplier } }); } })}
       </div>
       <div class="flex flex-col gap-2">
         <label class="text-xs font-semibold text-neutral-300">XP Multiplier</label>

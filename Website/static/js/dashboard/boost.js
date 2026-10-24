@@ -12,7 +12,6 @@ function renderBoostModule(el, guildId, cfg, channelOptions) {
         <h1 class="text-xl font-bold text-white">Boost Messages</h1>
         <p class="text-xs text-neutral-400 mt-1">Publicly announce and thank users when they boost your Discord server.</p>
       </div>
-      <button type="button" id="save-boost-btn" class="px-5 py-2 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all">Save Changes</button>
     </div>
     <div class="p-6 rounded-2xl bg-neutral-900 border border-neutral-800 flex flex-col gap-4">
       <div class="flex items-center justify-between">
@@ -20,11 +19,11 @@ function renderBoostModule(el, guildId, cfg, channelOptions) {
           <span class="text-sm font-semibold text-white">Enable Boost Announcements</span>
           <p class="text-xs text-neutral-500">Send custom messages on Nitro boosts.</p>
         </div>
-        ${renderToggle({ id: 'boost-toggle', checked: enabled, onChange: (v) => { enabled = v; } })}
+        ${renderToggle({ id: 'boost-toggle', checked: enabled, onChange: async (v) => { enabled = v; await API.saveConfig(guildId, { boost: { enabled, channel_id: ch, message: msg } }); } })}
       </div>
       <div class="flex flex-col gap-2 pt-2">
         <label class="text-xs font-semibold text-neutral-300">Announce Channel</label>
-        ${renderCustomSelect({ id: 'boost-ch-sel', options: channelOptions, value: ch, onChange: (v) => { ch = v; } })}
+        ${renderCustomSelect({ id: 'boost-ch-sel', options: channelOptions, value: ch, onChange: async (v) => { ch = v; await API.saveConfig(guildId, { boost: { enabled, channel_id: ch, message: msg } }); } })}
       </div>
       <div class="flex flex-col gap-2">
         <label class="text-xs font-semibold text-neutral-300">Boost Message</label>
