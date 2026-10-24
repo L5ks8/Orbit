@@ -1175,6 +1175,14 @@ DashboardTabs.Messages = async function (container, guildId) {
         e.stopPropagation();
         const id = btn.getAttribute('data-delete-saved');
         if (!id) return;
+        const targetEmb = savedEmbeds.find(x => String(x.id) === String(id));
+        const confirmed = await window.confirmDelete({
+          title: `${targetEmb?.name || 'Nachricht'} löschen?`,
+          message: 'Das kann nicht rückgängig gemacht werden. Diese Vorlage wird dauerhaft entfernt.',
+          confirmText: 'Löschen',
+          cancelText: 'Abbrechen'
+        });
+        if (!confirmed) return;
         try {
           await API.deleteSavedEmbed(guildId, id);
           savedEmbeds = savedEmbeds.filter(x => String(x.id) !== String(id));

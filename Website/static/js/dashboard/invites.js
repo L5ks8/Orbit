@@ -1314,6 +1314,14 @@ DashboardTabs.Invites = async function (container, guildId) {
       btn.addEventListener('click', async () => {
         const sourceId = btn.getAttribute('data-delete-source');
         if (!sourceId) return;
+        const src = state.sources.find(s => String(s.id) === String(sourceId));
+        const confirmed = await window.confirmDelete({
+          title: `${src?.name || 'Quelle'} löschen?`,
+          message: 'Das kann nicht rückgängig gemacht werden. Alle Statistiken zu dieser Quelle werden gelöscht.',
+          confirmText: 'Löschen',
+          cancelText: 'Abbrechen'
+        });
+        if (!confirmed) return;
         try {
           await API.deleteInviteSource(guildId, sourceId);
           state.sources = state.sources.filter(s => String(s.id) !== String(sourceId));

@@ -515,6 +515,14 @@ DashboardTabs.Roles = async function (container, guildId) {
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
           const pid = btn.getAttribute('data-delete-panel');
+          const panel = state.reactionPanels.find(p => String(p.id) === String(pid));
+          const confirmed = await window.confirmDelete({
+            title: `${panel?.title || 'Reaktions-Panel'} löschen?`,
+            message: 'Das kann nicht rückgängig gemacht werden. Das Reaktions-Panel wird nicht mehr funktionieren.',
+            confirmText: 'Löschen',
+            cancelText: 'Abbrechen'
+          });
+          if (!confirmed) return;
           try {
             await API.deleteReactionRole(guildId, pid);
             state.reactionPanels = state.reactionPanels.filter(p => String(p.id) !== String(pid));
@@ -742,9 +750,16 @@ DashboardTabs.Roles = async function (container, guildId) {
       });
 
       body.querySelectorAll('[data-delete-rule]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
           e.stopPropagation();
           const rid = btn.getAttribute('data-delete-rule');
+          const confirmed = await window.confirmDelete({
+            title: 'Regel löschen?',
+            message: 'Das kann nicht rückgängig gemacht werden.',
+            confirmText: 'Löschen',
+            cancelText: 'Abbrechen'
+          });
+          if (!confirmed) return;
           state.customRules = state.customRules.filter(r => r.id !== rid);
           renderCustomRules();
           saveRolesConfig();

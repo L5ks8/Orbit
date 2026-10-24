@@ -486,7 +486,7 @@ const API = {
   async verifyCaptcha(token, solution) {
     return await this.request(`/api/verify/${token}`, {
       method: 'POST',
-      body: { solution }
+      body: { solution, code: solution }
     });
   },
 

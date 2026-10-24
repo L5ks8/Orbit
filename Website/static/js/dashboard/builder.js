@@ -1519,6 +1519,14 @@ DashboardTabs.Builder = async function(container, guildId) {
         const cid = btn.getAttribute('data-delete-chat');
         openChatOptionsId = null;
         if (!cid) return;
+        const targetChat = chats.find(c => c.id === cid);
+        const confirmed = await window.confirmDelete({
+          title: `${targetChat?.title || 'Chat'} löschen?`,
+          message: 'Das kann nicht rückgängig gemacht werden. Der Chat-Verlauf wird dauerhaft gelöscht.',
+          confirmText: 'Löschen',
+          cancelText: 'Abbrechen'
+        });
+        if (!confirmed) return;
         chats = chats.filter(c => c.id !== cid);
         if (activeChatId === cid) {
           activeChatId = chats.length ? chats[0].id : null;
@@ -1529,6 +1537,23 @@ DashboardTabs.Builder = async function(container, guildId) {
             await API.deleteAIHelperChat(guildId, cid);
           }
         } catch (_) {}
+        render();
+      });
+    });
+
+    container.querySelectorAll('[data-action="clear-all-chats"]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const confirmed = await window.confirmDelete({
+          title: 'Alle Chats löschen?',
+          message: 'Das kann nicht rückgängig gemacht werden. Alle bisherigen Chatverläufe werden dauerhaft gelöscht.',
+          confirmText: 'Löschen',
+          cancelText: 'Abbrechen'
+        });
+        if (!confirmed) return;
+        chats = [];
+        activeChatId = null;
+        saveLocalChats(chats, activeChatId);
         render();
       });
     });

@@ -654,7 +654,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
             await saveTicketConfig(true);
             if (window.Notifications) Notifications.show(`Ticket-Typ "${clone.name}" wurde dupliziert.`, 'success');
           } else if (act === 'delete') {
-            if (!confirm(`Möchten Sie den Ticket-Typ "${panel.name || panel.title}" wirklich löschen?`)) return;
+            const confirmed = await window.confirmDelete({
+              title: `${panel.name || panel.title || 'Ticket-Typ'} löschen?`,
+              message: 'Das kann nicht rückgängig gemacht werden. Das Ticket-Panel wird nicht mehr funktionieren.',
+              confirmText: 'Löschen',
+              cancelText: 'Abbrechen'
+            });
+            if (!confirmed) return;
             state.panels = state.panels.filter(p => p.id !== pid);
             renderMain();
             await saveTicketConfig(true);

@@ -1116,6 +1116,15 @@ DashboardTabs.Verification = async function(container, guildId) {
       container.querySelectorAll('[data-sys-delete]').forEach(btn => {
         btn.onclick = async () => {
           const sysId = btn.getAttribute('data-sys-delete');
+          const sys = systems.find(s => String(s.id) === String(sysId));
+          const sysName = sys?.name || 'Rules Agreement';
+          const confirmed = await window.confirmDelete({
+            title: `${sysName} löschen?`,
+            message: 'Das kann nicht rückgängig gemacht werden. Das Verifizierungs-Panel wird nicht mehr funktionieren.',
+            confirmText: 'Löschen',
+            cancelText: 'Abbrechen'
+          });
+          if (!confirmed) return;
           systems = systems.filter(s => String(s.id) !== String(sysId));
           await persistSystems(false);
           render();

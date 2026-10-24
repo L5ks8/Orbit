@@ -1721,15 +1721,30 @@ class ActionsMixin:
     async def handle_api_captcha(self, request: web.Request):
         token = request.match_info.get("token")
         if not token or token not in WEB_VERIFY_SESSIONS:
-            return web.Response(text="Invalid or expired token", status=400)
+            return web.json_response({"error": "Invalid or expired token"}, status=400)
             
         try:
+            session = WEB_VERIFY_SESSIONS[token]
+            guild = self.bot.get_guild(session.get("guild_id"))
+            guild_name = guild.name if guild else "Server Verification"
+            
             from Components.Systems.Verify._captcha import generate_captcha
+            import base64
             code, img_bytes = generate_captcha()
-            WEB_VERIFY_SESSIONS[token]["code"] = code
-            return web.Response(body=img_bytes, content_type="image/png")
+            WEB_VERIFY_SESSIONS[token]["code"] = code.strip().upper()
+            
+            accept = request.headers.get("Accept", "")
+            if "image" in accept and "application/json" not in accept:
+                return web.Response(body=img_bytes, content_type="image/png")
+                
+            b64_img = base64.b64encode(img_bytes).decode("utf-8")
+            return web.json_response({
+                "guild_name": guild_name,
+                "is_captcha": True,
+                "captcha_image": f"data:image/png;base64,{b64_img}"
+            })
         except Exception as e:
-            return web.Response(text=str(e), status=500)
+            return web.json_response({"error": str(e)}, status=500)
 
     async def handle_api_verify(self, request: web.Request):
         token = request.match_info.get("token")
@@ -1738,10 +1753,11 @@ class ActionsMixin:
             
         try:
             data = await request.json()
-            user_code = str(data.get("code", "")).strip().upper()
+            user_code = str(data.get("code") or data.get("solution") or "").strip().upper()
             session = WEB_VERIFY_SESSIONS[token]
             
-            if "code" in session and user_code != session.get("code"):
+            expected_code = session.get("code")
+            if expected_code and expected_code != "OK" and user_code != expected_code.upper():
                 return web.json_response({"error": "Incorrect code"}, status=400)
                 
             guild_id = session["guild_id"]
