@@ -35,7 +35,7 @@ def load_appeals_config(guild_id: int) -> Dict[str, Any]:
     merged = {**default_cfg, **doc}
     return merged
 
-def save_appeals_config(guild_id: int, data: Dict[str, Any]) -> None:
+def save_appeals_config(guild_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
     db = get_db()
     if db is not None:
         clean = dict(data)
@@ -46,6 +46,7 @@ def save_appeals_config(guild_id: int, data: Dict[str, Any]) -> None:
             {"$set": clean},
             upsert=True
         )
+    return load_appeals_config(guild_id)
 
 def get_appeals_config_by_url(custom_url: str) -> Dict[str, Any]:
     db = get_db()

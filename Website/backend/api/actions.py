@@ -1416,11 +1416,13 @@ class ActionsMixin:
             
         try:
             data = await request.json()
-            from Components.Systems.BanAppeals._storage import save_appeals_config
+            from Components.Systems.BanAppeals._storage import save_appeals_config, load_appeals_config
             saved = save_appeals_config(guild_id, data)
-            if "_id" in saved:
+            if not saved or not isinstance(saved, dict):
+                saved = load_appeals_config(guild_id) or {}
+            if isinstance(saved, dict) and "_id" in saved:
                 saved["_id"] = str(saved["_id"])
-            return web.json_response({"success": True, "config": saved})
+            return web.json_response({"success": True, "config": saved or {}})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 

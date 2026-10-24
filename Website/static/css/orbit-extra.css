@@ -4733,19 +4733,34 @@ input:checked + .toggle-slider:before {
 }
 
 .toast-error {
-  background: rgba(24, 24, 27, 0.96) !important;
-  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  background: #dc2626 !important;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
   color: #ffffff !important;
-  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(239, 68, 68, 0.15) !important;
+  box-shadow: 0 10px 25px -3px rgba(220, 38, 38, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
 }
 
 .toast-error .toast-icon {
-  color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+.toast-error .toast-icon svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
 }
 
 .toast-error .toast-message {
-  color: #fca5a5 !important;
-  font-weight: 500 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.toast-error .toast-close {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.toast-error .toast-close:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.2) !important;
 }
 
 .toast-info {
