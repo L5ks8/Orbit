@@ -329,7 +329,13 @@ DashboardTabs.Polls = async function(container, guildId) {
               else if (window.Notifications) Notifications.show(err.message || 'Fehler beim Beenden der Umfrage.', 'error');
             }
           } else if (action === 'delete') {
-            if (!confirm(`Möchten Sie die Umfrage "${poll.question || 'Umfrage'}" wirklich löschen?`)) return;
+            const confirmed = await window.confirmDelete({
+              title: `Umfrage "${poll.question || 'Umfrage'}" löschen?`,
+              message: 'Das kann nicht rückgängig gemacht werden. Die Umfrage und alle abgegebenen Stimmen werden dauerhaft gelöscht.',
+              confirmText: 'Löschen',
+              cancelText: 'Abbrechen'
+            });
+            if (!confirmed) return;
             try {
               await API.deletePoll(guildId, poll.id);
               polls = polls.filter(p => String(p.id) !== String(poll.id));

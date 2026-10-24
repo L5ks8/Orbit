@@ -1400,6 +1400,13 @@ DashboardTabs.Builder = async function(container, guildId) {
 
     container.querySelectorAll('[data-action="clear-all-chats"]').forEach(btn => {
       btn.addEventListener('click', async () => {
+        const confirmed = await window.confirmDelete({
+          title: 'Alle Chats löschen?',
+          message: 'Das kann nicht rückgängig gemacht werden. Alle bisherigen Chatverläufe werden dauerhaft gelöscht.',
+          confirmText: 'Löschen',
+          cancelText: 'Abbrechen'
+        });
+        if (!confirmed) return;
         chats = [];
         activeChatId = null;
         openChatOptionsId = null;
