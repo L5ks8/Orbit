@@ -36,11 +36,11 @@ def _load_status() -> dict | None:
 
 def _parse_discord_status(status_str: str) -> discord.Status:
     s = status_str.lower().strip()
-    if s in ["idle", "abwesend"]:
+    if s in ["idle", "away"]:
         return discord.Status.idle
-    if s in ["dnd", "do_not_disturb", "nicht stören", "nicht stoeren"]:
+    if s in ["dnd", "do_not_disturb"]:
         return discord.Status.dnd
-    if s in ["invisible", "offline", "unsichtbar"]:
+    if s in ["invisible", "offline"]:
         return discord.Status.invisible
     return discord.Status.online
 

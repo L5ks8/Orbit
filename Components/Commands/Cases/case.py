@@ -44,8 +44,8 @@ async def case_info(interaction: discord.Interaction, fall: int):
     
     await ctx.send(embed=embed)
 
-@case_group.command(name="delete", description="Löscht einen Fall.")
-@app_commands.describe(fall="Die ID des Falls (Zahl)")
+@case_group.command(name="delete", description="Deletes a moderation case.")
+@app_commands.describe(fall="The ID of the case (number)")
 @app_commands.checks.has_permissions(manage_messages=True)
 async def case_delete(interaction: discord.Interaction, fall: int):
     ctx = InteractionContext(interaction)
@@ -58,8 +58,8 @@ async def case_delete(interaction: discord.Interaction, fall: int):
     else:
         await ctx.send(embed=make_embed(f"Case #{fall} could not be found or deleted.", discord.Color.red()), ephemeral=True)
 
-@case_group.command(name="reason", description="Ändert den Grund eines Falls.")
-@app_commands.describe(fall="Die ID des Falls (Zahl)", grund="Der neue Grund")
+@case_group.command(name="reason", description="Changes the reason of a moderation case.")
+@app_commands.describe(fall="The ID of the case (number)", grund="The new reason")
 @app_commands.checks.has_permissions(manage_messages=True)
 async def case_reason(interaction: discord.Interaction, fall: int, *, grund: str):
     ctx = InteractionContext(interaction)

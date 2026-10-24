@@ -179,11 +179,11 @@ class AuthMixin:
       </svg>
     </div>
   </div>
-  <h2 id="title">Authentifizierung...</h2>
-  <p id="desc">Bitte warten Sie, während wir Ihre Anmeldung abschließen.</p>
+  <h2 id="title">Authenticating...</h2>
+  <p id="desc">Please wait while we complete your sign-in.</p>
   <div>
     <a href="/dashboard" id="redirect-link" class="redirect-link" onclick="handleRedirect(event)">Not redirecting? Click here</a>
-    <a href="/auth/login?popup=1" id="retry-btn" class="error-btn">Erneut versuchen</a>
+    <a href="/auth/login?popup=1" id="retry-btn" class="error-btn">Try again</a>
   </div>
 </div>
 <script>

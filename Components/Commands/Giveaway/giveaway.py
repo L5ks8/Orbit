@@ -379,7 +379,7 @@ async def reroll_giveaway_logic(bot: commands.Bot, guild_id: int, entry_or_id, w
             valid_entrants.append(uid)
 
     if not valid_entrants:
-        return {"error": "Keine gültigen Teilnehmer vorhanden, um Gewinner auszulosen."}
+        return {"error": "No valid participants entered to draw winners."}
 
     k = max(1, min(int(winners_count or entry.get("winners", 1) or 1), len(valid_entrants)))
     picked_winners = random.sample(valid_entrants, k)
@@ -407,16 +407,16 @@ async def reroll_giveaway_logic(bot: commands.Bot, guild_id: int, entry_or_id, w
         try:
             color = resolve_color(entry.get("color", 0x5865F2))
             jump_url = msg.jump_url if msg else None
-            desc = f"Herzlichen Glückwunsch {winners_display}! Du hast **{entry['prize']}** gewonnen!"
+            desc = f"Congratulations {winners_display}! You won **{entry['prize']}**!"
             if jump_url:
-                desc += f"\n\n[Zum Giveaway springen]({jump_url})"
+                desc += f"\n\n[Jump to Giveaway]({jump_url})"
             reroll_embed = discord.Embed(
-                title="🎉 Giveaway neu ausgelost!",
+                title="🎉 Giveaway Rerolled!",
                 description=desc,
                 color=color
             )
-            reroll_embed.add_field(name="Preis", value=str(entry['prize']), inline=True)
-            reroll_embed.add_field(name="Neue(r) Gewinner", value=winners_display, inline=True)
+            reroll_embed.add_field(name="Prize", value=str(entry['prize']), inline=True)
+            reroll_embed.add_field(name="New Winner(s)", value=winners_display, inline=True)
             reroll_embed.set_footer(text=f"Giveaway ID: #{entry.get('giveaway_id')}")
             await channel.send(embed=reroll_embed, allowed_mentions=discord.AllowedMentions(users=True))
         except Exception as e:

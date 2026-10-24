@@ -69,8 +69,8 @@ def build_invite_leaderboard_embed(guild: discord.Guild, bot: commands.Bot, auto
             name_str = member.mention if member else f"<@{uid}>"
             if show_numbers and show_inviter_count:
                 podium_lines.append(
-                    f"{podium_medals[idx]} {name_str} — **{entry.get('total', 0)}** Einladungen "
-                    f"*(+{entry.get('regular', 0)} regulär, -{entry.get('left', 0)} verlassen)*"
+                    f"{podium_medals[idx]} {name_str} — **{entry.get('total', 0)}** Invites "
+                    f"*(+{entry.get('regular', 0)} regular, -{entry.get('left', 0)} left)*"
                 )
             else:
                 podium_lines.append(f"{podium_medals[idx]} {name_str}")
@@ -87,7 +87,7 @@ def build_invite_leaderboard_embed(guild: discord.Guild, bot: commands.Bot, auto
         name_str = member.mention if member else f"<@{uid}>"
         if show_numbers and show_inviter_count:
             rest_lines.append(
-                f"`#{idx}` {name_str} — **{entry.get('total', 0)}** Einladungen "
+                f"`#{idx}` {name_str} — **{entry.get('total', 0)}** Invites "
                 f"*(+{entry.get('regular', 0)} / -{entry.get('left', 0)})*"
             )
         else:
@@ -97,7 +97,7 @@ def build_invite_leaderboard_embed(guild: discord.Guild, bot: commands.Bot, auto
         lines.append("\n".join(rest_lines))
 
     embed.description = "\n".join(lines)
-    embed.set_footer(text=f"{guild.name} • Top {min(len(lb), top_limit)} Einlader")
+    embed.set_footer(text=f"{guild.name} • Top {min(len(lb), top_limit)} Inviters")
     return embed
 
 

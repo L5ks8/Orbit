@@ -1208,12 +1208,12 @@ class ConfigMixin:
 
                                 if discord_ch and isinstance(discord_ch, discord.TextChannel):
                                     from Components.Systems.Tickets._views import close_ticket_flow
-                                    status_label = "Gelöst" if new_status == "resolved" else "Abgelehnt"
+                                    status_label = "Resolved" if new_status == "resolved" else "Rejected"
                                     color = discord.Color.green() if new_status == "resolved" else discord.Color.red()
                                     mention_txt = executor.mention if hasattr(executor, "mention") else "Support Team"
                                     emb = discord.Embed(
                                         title=f"🎫 Ticket {status_label}",
-                                        description=f"Dieses Ticket wurde von {mention_txt} über das Dashboard als **{status_label}** markiert und wird nun geschlossen.",
+                                        description=f"This ticket was marked as **{status_label}** via the dashboard by {mention_txt} and is now being closed.",
                                         color=color
                                     )
                                     emb.set_footer(text="Orbit Ticket System")
@@ -1224,7 +1224,7 @@ class ConfigMixin:
 
                                     asyncio.create_task(close_ticket_flow(
                                         guild, discord_ch, executor,
-                                        reason=f"Ticket über Dashboard als {status_label} markiert",
+                                        reason=f"Ticket marked as {status_label} via Dashboard",
                                         final_status=new_status
                                     ))
                             else:
@@ -1234,8 +1234,8 @@ class ConfigMixin:
                                     if discord_ch and isinstance(discord_ch, discord.TextChannel):
                                         mention_txt = staff_member.mention if staff_member else "Support Team"
                                         claim_emb = discord.Embed(
-                                            title="🎫 Ticket übernommen",
-                                            description=f"Dieses Ticket wurde von {mention_txt} über das Dashboard übernommen.",
+                                            title="🎫 Ticket Claimed",
+                                            description=f"This ticket has been claimed via the dashboard by {mention_txt}.",
                                             color=discord.Color.yellow()
                                         )
                                         claim_emb.set_footer(text="Orbit Ticket System")

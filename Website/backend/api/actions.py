@@ -124,11 +124,11 @@ class ActionsMixin:
             data = await request.json()
             channel_id = data.get("channel_id")
             if not channel_id:
-                return web.json_response({"error": "Bitte wähle zuerst einen Kanal aus."}, status=400)
+                return web.json_response({"error": "Please select a channel first."}, status=400)
                 
             channel = guild.get_channel(int(channel_id))
             if not channel:
-                return web.json_response({"error": "Kanal wurde nicht gefunden."}, status=400)
+                return web.json_response({"error": "Channel not found."}, status=400)
                 
             content = str(data.get("content") or "").strip()
             has_embed_flag = data.get("has_embed", True)
@@ -278,7 +278,7 @@ class ActionsMixin:
 
             return web.json_response({"success": True})
         except discord.Forbidden:
-            return web.json_response({"error": "Dem Bot fehlen die Berechtigungen, um in diesem Kanal Nachrichten zu senden."}, status=403)
+            return web.json_response({"error": "The bot is missing permissions to send messages in this channel."}, status=403)
         except Exception as e:
             import traceback
             traceback.print_exc()
@@ -374,7 +374,7 @@ class ActionsMixin:
             if not channel and channel_id and str(channel_id).isdigit():
                 channel = guild.get_channel(int(channel_id))
             if not channel:
-                return web.json_response({"error": "Bitte wähle einen gültigen Kanal aus oder lasse den Bot einen neuen erstellen."}, status=400)
+                return web.json_response({"error": "Please select a valid channel or allow the bot to create a new one."}, status=400)
 
             # Optional: lock other channels so @everyone only sees #verify until verified
             if data.get("lock_channels") or sys_payload.get("lock_channels"):
@@ -523,7 +523,7 @@ class ActionsMixin:
                 "created_channel": {"id": str(created_channel.id), "name": created_channel.name} if created_channel else None
             })
         except discord.Forbidden:
-            return web.json_response({"error": "Dem Bot fehlen die Berechtigungen (Rollen/Kanäle verwalten oder Nachrichten senden)."}, status=403)
+            return web.json_response({"error": "The bot is missing required permissions (Manage Roles/Channels or Send Messages)."}, status=403)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=400)
 
@@ -591,7 +591,7 @@ class ActionsMixin:
 
             if matched_slot and matched_slot.get("mode") != "panel" and not send_full_panel:
                 s_name = matched_slot.get("name") or "Support Ticket"
-                s_desc = matched_slot.get("description") or "Klicken Sie auf den Button unten, um ein Ticket oder Formular zu öffnen."
+                s_desc = matched_slot.get("description") or "Click the button below to open a ticket or inquiry form."
                 btn_lbl = matched_slot.get("button_label") or s_name
                 embed = discord.Embed(
                     title=s_name,
@@ -2143,11 +2143,11 @@ class ActionsMixin:
 
             cid = auto_post.get("channel_id")
             if not cid or not str(cid).isdigit():
-                return web.json_response({"error": "Bitte wähle zuerst einen Kanal aus."}, status=400)
+                return web.json_response({"error": "Please select a channel first."}, status=400)
 
             channel = guild.get_channel(int(cid))
             if not channel:
-                return web.json_response({"error": "Kanal wurde auf dem Server nicht gefunden."}, status=404)
+                return web.json_response({"error": "Channel not found on server."}, status=404)
 
             embed = build_invite_leaderboard_embed(
                 guild,
@@ -2164,7 +2164,7 @@ class ActionsMixin:
 
             return web.json_response({"success": True, "message_id": str(msg.id)})
         except discord.Forbidden:
-            return web.json_response({"error": "Dem Bot fehlen die Berechtigungen, um in diesem Kanal Nachrichten zu senden."}, status=403)
+            return web.json_response({"error": "The bot is missing permissions to send messages in this channel."}, status=403)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2196,7 +2196,7 @@ class ActionsMixin:
                 target_channel = guild.text_channels[0]
 
             if not target_channel:
-                return web.json_response({"error": "Kein gültiger Textkanal für den Einladungslink gefunden."}, status=400)
+                return web.json_response({"error": "No valid text channel found for the invite link."}, status=400)
 
             invite_code = custom_code
             if not invite_code:
@@ -2205,14 +2205,14 @@ class ActionsMixin:
                         max_age=0,
                         max_uses=0,
                         unique=True,
-                        reason=f"Orbit Quellen-Tracker: {name}"
+                        reason=f"Orbit Source Tracker: {name}"
                     )
                     invite_code = inv.code
                     await refresh_invite_cache(guild)
                 except discord.Forbidden:
-                    return web.json_response({"error": "Dem Bot fehlt die Berechtigung 'Einladung erstellen' in diesem Kanal."}, status=403)
+                    return web.json_response({"error": "The bot is missing 'Create Invite' permission in this channel."}, status=403)
                 except Exception as e:
-                    return web.json_response({"error": f"Fehler beim Erstellen der Discord-Einladung: {e}"}, status=400)
+                    return web.json_response({"error": f"Error creating Discord invite: {e}"}, status=400)
 
             source_obj = {
                 "id": secrets.token_hex(6),
@@ -2264,7 +2264,7 @@ class ActionsMixin:
                         guild_invites = await guild.invites()
                         for ginv in guild_invites:
                             if ginv.code == removed["code"]:
-                                await ginv.delete(reason="Orbit Quellen-Tracker Quelle gelöscht")
+                                await ginv.delete(reason="Orbit Source Tracker: Source deleted")
                                 break
                     except Exception:
                         pass
@@ -2407,12 +2407,12 @@ class ActionsMixin:
 
             if not is_draft:
                 if not question:
-                    return web.json_response({"error": "Bitte gib eine Frage für die Umfrage ein."}, status=400)
+                    return web.json_response({"error": "Please enter a question for the poll."}, status=400)
                 if len(clean_opts) < 2:
-                    return web.json_response({"error": "Bitte gib mindestens 2 Optionen an."}, status=400)
+                    return web.json_response({"error": "Please provide at least 2 options."}, status=400)
             else:
                 if not question:
-                    question = "Unbenannte Umfrage"
+                    question = "Untitled Poll"
                 while len(clean_opts) < 2:
                     clean_opts.append(f"Option {len(clean_opts) + 1}")
 
@@ -2448,7 +2448,7 @@ class ActionsMixin:
                             break
 
             if not is_draft and not target_channel:
-                return web.json_response({"error": "Bitte wähle einen gültigen Kanal aus."}, status=400)
+                return web.json_response({"error": "Please select a valid channel."}, status=400)
 
             # Check bot permissions in target channel
             if not is_draft and target_channel:
@@ -2456,9 +2456,9 @@ class ActionsMixin:
                 if me_user:
                     ch_perms = target_channel.permissions_for(me_user)
                     if not ch_perms.send_messages:
-                        return web.json_response({"error": f"Dem Bot fehlt die Berechtigung 'Nachrichten senden' in #{target_channel.name}."}, status=403)
+                        return web.json_response({"error": f"The bot is missing 'Send Messages' permission in #{target_channel.name}."}, status=403)
                     if not ch_perms.embed_links:
-                        return web.json_response({"error": f"Dem Bot fehlt die Berechtigung 'Links einbetten' in #{target_channel.name}."}, status=403)
+                        return web.json_response({"error": f"The bot is missing 'Embed Links' permission in #{target_channel.name}."}, status=403)
 
             try:
                 dur_val = max(1, min(999, int(data.get("duration_value") or 1)))
@@ -2561,7 +2561,7 @@ class ActionsMixin:
                 "poll": self._normalize_poll_entry(guild, poll_id, entry)
             })
         except discord.Forbidden:
-            return web.json_response({"error": "Dem Bot fehlen die Berechtigungen, um in diesem Kanal Nachrichten zu senden."}, status=403)
+            return web.json_response({"error": "The bot is missing permissions to send messages in this channel."}, status=403)
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2766,11 +2766,11 @@ class ActionsMixin:
         try:
             body = await request.json()
         except Exception:
-            return web.json_response({"error": "Ungültiger JSON-Body."}, status=400)
+            return web.json_response({"error": "Invalid JSON body."}, status=400)
 
         prize = str(body.get("prize", "")).strip()
         if not prize:
-            return web.json_response({"error": "Preis darf nicht leer sein."}, status=400)
+            return web.json_response({"error": "Prize cannot be empty."}, status=400)
 
         is_draft = bool(body.get("draft") or body.get("is_draft"))
         channel_id_raw = body.get("channel_id")
@@ -2834,7 +2834,7 @@ class ActionsMixin:
             })
 
         if not entry["channel_id"]:
-            return web.json_response({"error": "Bitte wähle einen Zielkanal für das Giveaway aus."}, status=400)
+            return web.json_response({"error": "Please select a target channel for the giveaway."}, status=400)
 
         channel = guild.get_channel(entry["channel_id"])
         if not channel:
@@ -2844,7 +2844,7 @@ class ActionsMixin:
                 channel = None
 
         if not channel:
-            return web.json_response({"error": "Kanal wurde auf dem Discord-Server nicht gefunden."}, status=404)
+            return web.json_response({"error": "Channel was not found on the Discord server."}, status=404)
 
         try:
             msg = await send_giveaway_message(channel, entry, guild_id)
@@ -2852,7 +2852,7 @@ class ActionsMixin:
                 entry["message_id"] = msg.id
                 entry["channel_id"] = msg.channel.id
         except Exception as e:
-            return web.json_response({"error": f"Fehler beim Senden in Discord: {str(e)}"}, status=500)
+            return web.json_response({"error": f"Error sending to Discord: {str(e)}"}, status=500)
 
         data = load_giveaways(guild_id) or {}
         data[gw_id] = entry
