@@ -527,29 +527,38 @@ class ActionsMixin:
             
         try:
             data = await request.json()
-            channel_id = data.get("channel_id")
-            if not channel_id:
-                return web.json_response({"error": "No channel_id provided"}, status=400)
-                
-            channel = guild.get_channel(int(channel_id))
-            if not channel:
-                return web.json_response({"error": "Channel not found"}, status=400)
-                
             from Components.Systems.Tickets._views import PersistentTicketPanelLayout
             from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
             
             ticket_cfg = load_ticket_config(guild_id)
             ticket_cfg["enabled"] = True
+
+            channel_id = data.get("channel_id") or ticket_cfg.get("panel_channel_id")
+            if not channel_id:
+                return web.json_response({"error": "No channel_id provided and no panel_channel_id configured"}, status=400)
+                
+            channel = guild.get_channel(int(channel_id))
+            if not channel:
+                return web.json_response({"error": "Channel not found"}, status=400)
+
+            if "panel_title" in data and data["panel_title"]:
+                ticket_cfg["panel_title"] = data["panel_title"]
+            if "panel_description" in data and data["panel_description"]:
+                ticket_cfg["panel_description"] = data["panel_description"]
+            if "panel_instructions" in data and data["panel_instructions"]:
+                ticket_cfg["panel_instructions"] = data["panel_instructions"]
+            
             slot_id = data.get("slot_id")
             slot_name = data.get("slot_name")
+            send_full_panel = data.get("send_full_panel", False)
             matched_slot = None
-            if slot_id or slot_name:
+            if (slot_id or slot_name) and not send_full_panel:
                 for s in ticket_cfg.get("options_slots", []):
                     if isinstance(s, dict) and (str(s.get("id")) == str(slot_id) or s.get("name") == slot_name):
                         matched_slot = s
                         break
 
-            if matched_slot and matched_slot.get("mode") != "panel":
+            if matched_slot and matched_slot.get("mode") != "panel" and not send_full_panel:
                 s_name = matched_slot.get("name") or "Support Ticket"
                 s_desc = matched_slot.get("description") or "Klicken Sie auf den Button unten, um ein Ticket oder Formular zu öffnen."
                 btn_lbl = matched_slot.get("button_label") or s_name

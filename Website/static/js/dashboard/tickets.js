@@ -1,6 +1,8 @@
 /**
  * Orbit Dashboard - Tickets Tab (/dashboard/:guildId/tickets)
- * 1:1 PeakBot Tickets UI with Stats Bar, Ticketarten + 4-Step Wizard Modal, Einreichungen Filter & Einstellungen
+ * 1:1 PeakBot Tickets UI with Stats Bar, Multi-Option Discord Ticket-Panel Preview & Deploy,
+ * PeakBot Modal ("Fangen Sie bei Null an" + "Vorlagen"), 4-Step Wizard, Searchable Dropdowns (z-[99999]),
+ * Einreichungen Filter & Einstellungen
  */
 
 DashboardTabs.Tickets = async function (container, guildId) {
@@ -116,13 +118,37 @@ DashboardTabs.Tickets = async function (container, guildId) {
       }
     };
 
+    const initialSlots = Array.isArray(tCfg.options_slots) ? tCfg.options_slots.map((s, idx) => ({
+      id: String(s.id || `type_${Date.now()}_${idx}`),
+      name: String(s.name || 'Allgemeine Unterstützung'),
+      mode: String(s.mode || 'channel'),
+      template_key: String(s.template_key || ''),
+      color: String(s.color || (MODE_META[s.mode]?.color || 'rgb(88, 101, 242)')),
+      description: String(s.description || 'Öffnen Sie ein Ticket, um mit unserem Team zu sprechen.'),
+      button_label: String(s.button_label || s.name || 'Ticket öffnen'),
+      panel_channel_id: String(s.panel_channel_id || tCfg.panel_channel_id || ''),
+      log_channel_id: String(s.log_channel_id || tCfg.log_channel_id || ''),
+      role_id: String(s.role_id || ''),
+      category_id: String(s.category_id || ''),
+      require_proof: Boolean(s.require_proof),
+      questions: Array.isArray(s.questions) && s.questions.length > 0 ? s.questions.map(q => ({
+        label: String(q.label || 'Frage'),
+        placeholder: String(q.placeholder || ''),
+        style: q.style === 'paragraph' ? 'paragraph' : 'short',
+        required: q.required !== false
+      })) : [
+        { label: 'Betreff', placeholder: 'Kurze Zusammenfassung...', style: 'short', required: true },
+        { label: 'Beschreibung', placeholder: 'Bitte beschreiben Sie Ihr Anliegen...', style: 'paragraph', required: true }
+      ]
+    })) : [];
+
     const state = {
       enabled: Boolean(tCfg.enabled),
-      panel_title: tCfg.panel_title || 'Support Ticket Desk',
-      panel_description: tCfg.panel_description || 'Click the button below to open a direct support channel with our team.',
-      panel_instructions: tCfg.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click **Create Ticket**.',
-      panel_channel_id: String(tCfg.panel_channel_id || ''),
-      log_channel_id: String(tCfg.log_channel_id || ''),
+      panel_title: tCfg.panel_title || 'Support Ticket',
+      panel_description: tCfg.panel_description || 'Select the Correct option Before Openign a ticket',
+      panel_instructions: tCfg.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.',
+      panel_channel_id: String(tCfg.panel_channel_id || (initialSlots[0]?.panel_channel_id || '')),
+      log_channel_id: String(tCfg.log_channel_id || (initialSlots[0]?.log_channel_id || '')),
       auto_close_time_enabled: Boolean(tCfg.auto_close_time_enabled),
       auto_close_time_hours: parseInt(tCfg.auto_close_time_hours, 10) || 24,
       max_open_tickets: parseInt(tCfg.max_open_tickets, 10) || 3,
@@ -132,29 +158,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
       ping_custom_role_enabled: Boolean(tCfg.ping_custom_role_enabled),
       ping_custom_role_id: String(tCfg.ping_custom_role_id || ''),
       claiming_enabled: Boolean(tCfg.claiming_enabled),
-      ticketTypes: Array.isArray(tCfg.options_slots) ? tCfg.options_slots.map((s, idx) => ({
-        id: String(s.id || `type_${Date.now()}_${idx}`),
-        name: String(s.name || 'Allgemeine Unterstützung'),
-        mode: String(s.mode || 'channel'),
-        template_key: String(s.template_key || ''),
-        color: String(s.color || (MODE_META[s.mode]?.color || 'rgb(88, 101, 242)')),
-        description: String(s.description || 'Öffnen Sie ein Ticket, um mit unserem Team zu sprechen.'),
-        button_label: String(s.button_label || s.name || 'Ticket öffnen'),
-        panel_channel_id: String(s.panel_channel_id || tCfg.panel_channel_id || ''),
-        log_channel_id: String(s.log_channel_id || tCfg.log_channel_id || ''),
-        role_id: String(s.role_id || ''),
-        category_id: String(s.category_id || ''),
-        require_proof: Boolean(s.require_proof),
-        questions: Array.isArray(s.questions) && s.questions.length > 0 ? s.questions.map(q => ({
-          label: String(q.label || 'Frage'),
-          placeholder: String(q.placeholder || ''),
-          style: q.style === 'paragraph' ? 'paragraph' : 'short',
-          required: q.required !== false
-        })) : [
-          { label: 'Betreff', placeholder: 'Kurze Zusammenfassung...', style: 'short', required: true },
-          { label: 'Beschreibung', placeholder: 'Bitte beschreiben Sie Ihr Anliegen...', style: 'paragraph', required: true }
-        ]
-      })) : [],
+      ticketTypes: initialSlots,
       activeTickets: Array.isArray(tCfg.active_tickets_list) ? tCfg.active_tickets_list : [],
       closedTickets: Array.isArray(tCfg.closed_tickets_list) ? tCfg.closed_tickets_list : [],
       stats: tCfg.stats || { open: 0, claimed: 0, resolved: 0, avg_resolution: '<1Std' },
@@ -179,8 +183,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
       const execSave = async () => {
         try {
-          const primaryPanelChannel = state.ticketTypes[0]?.panel_channel_id || state.panel_channel_id || '';
-          const primaryLogChannel = state.ticketTypes[0]?.log_channel_id || state.log_channel_id || '';
+          const primaryPanelChannel = state.panel_channel_id || state.ticketTypes[0]?.panel_channel_id || '';
+          const primaryLogChannel = state.log_channel_id || state.ticketTypes[0]?.log_channel_id || '';
           await API.saveConfig(guildId, {
             ticket: {
               enabled: state.ticketTypes.length > 0 ? true : state.enabled,
@@ -251,6 +255,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
       const { openCount, claimedCount, resolved7d, avgStr } = computeLiveStats();
       const typeCount = state.ticketTypes.length;
       const progressPct = Math.min(100, typeCount > 0 ? Math.max(4, (typeCount / 10) * 100) : 0);
+      const panelChannel = getChannelById(state.panel_channel_id);
+      const logChannel = getChannelById(state.log_channel_id);
 
       container.innerHTML = `
         <div>
@@ -292,6 +298,207 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 Analytics ansehen
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-3 h-3 flex-shrink-0"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
               </button>
+            </div>
+
+            <!-- Multi-Option Ticket-Panel Section (Orbit Multi-Option Ticket Layout & Live Discord Preview) -->
+            <div class="mb-8">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div>
+                  <h3 class="text-sm font-semibold text-white text-balance flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    Multi-Option Ticket-Panel
+                  </h3>
+                  <p class="text-xs text-neutral-400 mt-0.5">Zentrales Discord-Panel mit Auswahl-Dropdown für alle konfigurierten Ticket-Kategorien und 'Create Ticket' Button.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-1 rounded-lg bg-neutral-800 text-[11px] font-medium text-neutral-300 border border-neutral-700/60 tabular-nums">
+                    ${typeCount} Kategorie${typeCount === 1 ? '' : 'n'} im Menü
+                  </span>
+                  <button type="button" id="btn-send-multi-panel-top" class="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl h-9 px-3.5 transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+                    Panel in Discord senden
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <!-- Left: Panel Settings (7 cols) -->
+                <div class="lg:col-span-7 bg-neutral-900 rounded-2xl border border-neutral-800 p-5 space-y-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Panel Channel Dropdown -->
+                    <div class="w-full relative">
+                      <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Kanal *</label>
+                      <div class="relative">
+                        <button type="button" id="main-dd-panel-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
+                          <span id="main-dd-panel-ch-label" class="min-w-0 truncate ${panelChannel ? 'text-white' : 'text-neutral-500'}">
+                            ${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Panel-Kanal wählen...'}
+                          </span>
+                          <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div id="main-dd-panel-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                          <!-- Sticky Search Bar -->
+                          <div class="sticky top-0 z-20 bg-neutral-900 p-2 border-b border-neutral-800 shrink-0">
+                            <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                              <input type="text" id="main-search-panel-ch" placeholder="Kanal suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs">
+                            </div>
+                          </div>
+                          <!-- Items List -->
+                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="main-list-panel-ch">
+                            ${allChannels.map(c => `
+                              <button type="button" data-main-panel-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(state.panel_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                                <span class="truncate">#${escapeHtml(c.name)}</span>
+                              </button>
+                            `).join('')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Log Channel Dropdown -->
+                    <div class="w-full relative">
+                      <label class="block text-xs font-medium text-neutral-300 mb-1.5">Mitarbeiter-/Log-Kanal</label>
+                      <div class="relative">
+                        <button type="button" id="main-dd-log-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-left transition-colors cursor-pointer">
+                          <span id="main-dd-log-ch-label" class="min-w-0 truncate ${logChannel ? 'text-white' : 'text-neutral-500'}">
+                            ${logChannel ? `#${escapeHtml(logChannel.name)}` : 'Kein Log-Kanal'}
+                          </span>
+                          <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div id="main-dd-log-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                          <!-- Sticky Search Bar -->
+                          <div class="sticky top-0 z-20 bg-neutral-900 p-2 border-b border-neutral-800 shrink-0">
+                            <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                              <input type="text" id="main-search-log-ch" placeholder="Kanal suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs">
+                            </div>
+                          </div>
+                          <!-- Items List -->
+                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="main-list-log-ch">
+                            <button type="button" data-main-log-ch="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Kein Log-Kanal</button>
+                            ${allChannels.map(c => `
+                              <button type="button" data-main-log-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(state.log_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                                <span class="truncate">#${escapeHtml(c.name)}</span>
+                              </button>
+                            `).join('')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Panel Title Input -->
+                  <div>
+                    <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Titel</label>
+                    <input type="text" id="input-multi-panel-title" value="${escapeHtml(state.panel_title)}" placeholder="Support Ticket" class="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
+                  </div>
+
+                  <!-- Panel Description Input -->
+                  <div>
+                    <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Beschreibung</label>
+                    <input type="text" id="input-multi-panel-desc" value="${escapeHtml(state.panel_description)}" placeholder="Select the Correct option Before Openign a ticket" class="w-full h-10 px-3.5 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">
+                  </div>
+
+                  <!-- Panel Instructions (Quote Block) Input -->
+                  <div>
+                    <label class="block text-xs font-medium text-neutral-300 mb-1.5">Panel-Anweisungen (Blockquote)</label>
+                    <textarea id="input-multi-panel-instr" rows="2" placeholder="> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel." class="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-sm text-white focus:outline-none focus:border-neutral-500">${escapeHtml(state.panel_instructions)}</textarea>
+                  </div>
+
+                  <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-800/80">
+                    <button type="button" id="btn-add-ticket-type-shortcut" class="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                      Ticket-Typ für Dropdown hinzufügen
+                    </button>
+                    <button type="button" id="btn-send-multi-panel-bottom" class="flex items-center gap-1.5 bg-white text-black hover:bg-neutral-200 font-medium text-xs rounded-xl h-9 px-4 transition-transform duration-150 active:scale-[0.96]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+                      Multi-Option Panel in Discord senden
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Right: Discord Live Preview (5 cols) matching media_1792825411260_c3fb72d0.png 1:1 -->
+                <div class="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-[#313338] border border-[#232428] p-4 text-white font-sans text-sm select-none shadow-xl">
+                  <div>
+                    <div class="flex items-center justify-between pb-3 border-b border-[#232428] mb-3">
+                      <span class="text-xs font-semibold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="size-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Discord Live-Vorschau
+                      </span>
+                      <span class="text-[11px] text-neutral-400 font-mono">${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'Kein Kanal'}</span>
+                    </div>
+
+                    <!-- Bot Message Header -->
+                    <div class="flex items-start gap-3">
+                      <div class="size-9 rounded-full bg-[#5865F2] flex items-center justify-center font-bold text-white text-sm shadow-sm shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          <span class="font-semibold text-white text-sm">Orbit</span>
+                          <span class="bg-[#5865F2] text-white text-[9px] font-bold px-1 rounded leading-tight">BOT</span>
+                          <span class="text-neutral-400 text-[11px] ml-1">Heute um 12:00 Uhr</span>
+                        </div>
+
+                        <!-- Discord Embed Card (Green border like screenshot) -->
+                        <div class="mt-2.5 rounded bg-[#2b2d31] border-l-4 border-l-[#248046] p-3.5 space-y-2 shadow-md">
+                          <div id="pv-panel-title" class="font-bold text-white text-sm leading-snug">
+                            ${escapeHtml(state.panel_title || 'Support Ticket')}
+                          </div>
+                          <div id="pv-panel-desc" class="text-xs text-neutral-300 leading-relaxed">
+                            ${escapeHtml(state.panel_description || 'Select the Correct option Before Openign a ticket')}
+                          </div>
+                          <div class="border-l-[3px] border-[#4e5058] pl-2.5 py-0.5">
+                            <p id="pv-panel-instructions" class="text-xs text-neutral-300 leading-relaxed font-normal">
+                              ${escapeHtml(state.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.')}
+                            </p>
+                          </div>
+                        </div>
+
+                        <!-- Discord Select Menu Preview Component -->
+                        <div class="mt-3">
+                          <div class="rounded-lg bg-[#2b2d31] hover:bg-[#35373c] border border-[#1e1f22] p-2.5 flex items-center justify-between cursor-pointer transition-colors shadow-inner">
+                            <div class="flex items-center gap-2 min-w-0">
+                              <span class="text-xs text-neutral-300 truncate">Select a category...</span>
+                            </div>
+                            <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                          </div>
+
+                          <!-- Category Preview Chips (showing options inside the dropdown) -->
+                          <div class="flex flex-wrap gap-1 mt-2">
+                            ${state.ticketTypes.length > 0 ? state.ticketTypes.map(t => `
+                              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#2b2d31] border border-[#383a40] text-[11px] text-neutral-300">
+                                <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${t.color || '#5865F2'}"></span>
+                                <span class="truncate max-w-[130px]">${escapeHtml(t.name)}</span>
+                              </span>
+                            `).join('') : `
+                              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#2b2d31] border border-[#383a40] text-[11px] text-neutral-400">
+                                <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                                General Support
+                              </span>
+                            `}
+                          </div>
+                        </div>
+
+                        <!-- Discord Button Component -->
+                        <div class="mt-2.5">
+                          <button type="button" class="bg-[#5865F2] hover:bg-[#4752C4] text-white font-medium text-xs rounded-md px-4 py-2 flex items-center gap-2 shadow transition-colors pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
+                            Create Ticket
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 pt-3 border-t border-[#232428] flex items-center justify-between text-xs text-neutral-400">
+                    <span class="text-[11px]">Interaktives Discord UI-Layout</span>
+                    <button type="button" id="btn-quick-send-preview" class="px-2.5 py-1 rounded bg-[#5865F2] hover:bg-[#4752C4] text-white text-[11px] font-medium transition-colors">
+                      Jetzt posten
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Ticketarten Section -->
@@ -428,7 +635,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                 <div class="border-t border-neutral-800/60"></div>
 
-                <!-- Row 6: Pingen Sie eine Rolle für ein neues Ticket -->
+                <!-- Row 6: Pingen Sie eine Rolle für ein neues Ticket (Custom Searchable Dropdown) -->
                 <div class="px-5 py-4 flex items-center justify-between gap-4">
                   <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center flex-shrink-0">
@@ -438,7 +645,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                   </div>
                   <div class="flex items-center gap-2.5 flex-shrink-0">
                     <div id="ping-custom-role-wrap" class="relative ${state.ping_custom_role_enabled ? '' : 'hidden'}">
-                      <button type="button" id="tkt-dd-ping-role-btn" class="h-9 px-3 min-w-[160px] bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-white flex items-center justify-between gap-2 transition-colors cursor-pointer">
+                      <button type="button" id="tkt-dd-ping-role-btn" class="h-9 px-3 min-w-[170px] bg-neutral-800 border border-neutral-700 hover:border-neutral-600 rounded-xl text-xs text-white flex items-center justify-between gap-2 transition-colors cursor-pointer">
                         <span id="tkt-dd-ping-role-label" class="truncate">
                           ${(() => {
                             const pr = allRoles.find(r => String(r.id) === String(state.ping_custom_role_id));
@@ -447,14 +654,23 @@ DashboardTabs.Tickets = async function (container, guildId) {
                         </span>
                         <svg class="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                       </button>
-                      <div id="tkt-dd-ping-role-menu" data-lenis-prevent style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute right-0 top-full mt-1.5 w-56 max-h-56 overflow-y-auto rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl py-1 z-[99999]">
-                        <button type="button" data-tkt-ping-role-opt="" class="w-full px-3 py-2 text-left text-xs text-neutral-400 hover:bg-neutral-800 hover:text-white transition-colors">Keine Rolle</button>
-                        ${allRoles.map(r => `
-                          <button type="button" data-tkt-ping-role-opt="${escapeHtml(r.id)}" class="w-full px-3 py-2 text-left text-xs text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 transition-colors">
-                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
-                            <span class="truncate">@${escapeHtml(r.name)}</span>
-                          </button>
-                        `).join('')}
+                      <div id="tkt-dd-ping-role-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute right-0 top-full mt-1.5 w-60 rounded-xl bg-neutral-900 border border-neutral-700 shadow-2xl z-[99999] max-h-60 flex flex-col overflow-hidden">
+                        <!-- Sticky Search -->
+                        <div class="sticky top-0 z-20 bg-neutral-900 p-2 border-b border-neutral-800 shrink-0">
+                          <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                            <input type="text" id="tkt-search-ping-role" placeholder="Rolle suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs">
+                          </div>
+                        </div>
+                        <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="tkt-list-ping-role">
+                          <button type="button" data-tkt-ping-role-opt="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Keine Rolle</button>
+                          ${allRoles.map(r => `
+                            <button type="button" data-tkt-ping-role-opt="${escapeHtml(r.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-300 hover:bg-neutral-800/60 flex items-center gap-2">
+                              <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
+                              <span class="truncate">@${escapeHtml(r.name)}</span>
+                            </button>
+                          `).join('')}
+                        </div>
                       </div>
                     </div>
                     <div class="flex items-center gap-3">
@@ -506,8 +722,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
       const cards = state.ticketTypes.map((t) => {
         const modeInfo = MODE_META[t.mode] || MODE_META.channel;
-        const pCh = getChannelById(t.panel_channel_id);
-        const lCh = getChannelById(t.log_channel_id);
+        const pCh = getChannelById(t.panel_channel_id || state.panel_channel_id);
+        const lCh = getChannelById(t.log_channel_id || state.log_channel_id);
         const sRole = getRoleById(t.role_id);
         const qCount = Array.isArray(t.questions) ? t.questions.length : 0;
 
@@ -521,7 +737,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                   </div>
                   <div class="min-w-0">
                     <h4 class="text-sm font-semibold text-white truncate">${escapeHtml(t.name)}</h4>
-                    <p class="text-[11px] text-neutral-500 truncate">${pCh ? `#${escapeHtml(pCh.name)}` : 'Kein Panel-Kanal'}</p>
+                    <p class="text-[11px] text-neutral-500 truncate">${pCh ? `#${escapeHtml(pCh.name)}` : 'Kein spezifischer Kanal'}</p>
                   </div>
                 </div>
                 <span class="flex-shrink-0 px-1.5 py-0.5 rounded-[4px] text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap ${modeInfo.badgeClass}">
@@ -539,7 +755,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 ${sRole ? `<span>· @${escapeHtml(sRole.name)}</span>` : ''}
               </div>
               <div class="flex items-center gap-1 shrink-0">
-                <button type="button" data-send-ticket-type="${escapeHtml(t.id)}" class="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-white hover:text-black text-[11px] font-medium text-neutral-200 transition-colors" title="Panel in Discord senden">
+                <button type="button" data-send-ticket-type="${escapeHtml(t.id)}" class="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-white hover:text-black text-[11px] font-medium text-neutral-200 transition-colors" title="Einzelnes Panel in Discord senden">
                   Panel senden
                 </button>
                 <button type="button" data-delete-ticket-type="${escapeHtml(t.id)}" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Löschen">
@@ -580,7 +796,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
           const tid = btn.getAttribute('data-send-ticket-type');
           const found = state.ticketTypes.find(t => t.id === tid);
           if (!found) return;
-          if (!found.panel_channel_id) {
+          const targetChannelId = found.panel_channel_id || state.panel_channel_id;
+          if (!targetChannelId) {
             openTicketTypeModal(found, 2);
             if (window.Notifications) Notifications.show('Bitte wählen Sie zuerst einen Panel-Kanal aus.', 'info');
             return;
@@ -591,7 +808,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           try {
             await saveTicketConfig(true);
             await API.sendTicketPanel(guildId, {
-              channel_id: found.panel_channel_id,
+              channel_id: targetChannelId,
               slot_id: found.id,
               slot_name: found.name
             });
@@ -610,7 +827,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           e.stopPropagation();
           const tid = btn.getAttribute('data-delete-ticket-type');
           state.ticketTypes = state.ticketTypes.filter(t => t.id !== tid);
-          renderTicketTypesGrid();
+          renderMain();
           await saveTicketConfig(true);
           if (window.Notifications) Notifications.show('Ticket-Typ gelöscht', 'success');
         });
@@ -774,6 +991,149 @@ DashboardTabs.Tickets = async function (container, guildId) {
         openTicketTypeModal(null);
       });
 
+      document.getElementById('btn-add-ticket-type-shortcut')?.addEventListener('click', () => {
+        openTicketTypeModal(null);
+      });
+
+      // Multi-Option Panel Title / Description / Instructions Live Sync
+      const titleInput = document.getElementById('input-multi-panel-title');
+      const descInput = document.getElementById('input-multi-panel-desc');
+      const instrInput = document.getElementById('input-multi-panel-instr');
+
+      titleInput?.addEventListener('input', (e) => {
+        state.panel_title = e.target.value;
+        const pvEl = document.getElementById('pv-panel-title');
+        if (pvEl) pvEl.textContent = state.panel_title || 'Support Ticket';
+        saveTicketConfig();
+      });
+
+      descInput?.addEventListener('input', (e) => {
+        state.panel_description = e.target.value;
+        const pvEl = document.getElementById('pv-panel-desc');
+        if (pvEl) pvEl.textContent = state.panel_description || 'Select the Correct option Before Openign a ticket';
+        saveTicketConfig();
+      });
+
+      instrInput?.addEventListener('input', (e) => {
+        state.panel_instructions = e.target.value;
+        const pvEl = document.getElementById('pv-panel-instructions');
+        if (pvEl) pvEl.textContent = state.panel_instructions || '> Select your desired inquiry category in the dropdown menu below, then click Create Ticket to open your private channel.';
+        saveTicketConfig();
+      });
+
+      // Multi-Option Panel Sending Action
+      const triggerSendMultiPanel = async (btn) => {
+        if (!state.panel_channel_id) {
+          if (window.Notifications) Notifications.show('Bitte wählen Sie zuerst einen Panel-Kanal aus.', 'info');
+          return;
+        }
+        const origText = btn ? btn.textContent : '';
+        if (btn) {
+          btn.textContent = 'Sendet...';
+          btn.disabled = true;
+        }
+        try {
+          await saveTicketConfig(true);
+          await API.sendTicketPanel(guildId, {
+            channel_id: state.panel_channel_id,
+            send_full_panel: true,
+            panel_title: state.panel_title,
+            panel_description: state.panel_description,
+            panel_instructions: state.panel_instructions
+          });
+          if (window.Notifications) Notifications.show('Multi-Option Ticket-Panel erfolgreich in Discord gesendet!', 'success');
+        } catch (err) {
+          if (window.Notifications) Notifications.show(err.message || 'Fehler beim Senden des Multi-Panels', 'error');
+        } finally {
+          if (btn) {
+            btn.textContent = origText;
+            btn.disabled = false;
+          }
+        }
+      };
+
+      document.getElementById('btn-send-multi-panel-top')?.addEventListener('click', (e) => triggerSendMultiPanel(e.currentTarget));
+      document.getElementById('btn-send-multi-panel-bottom')?.addEventListener('click', (e) => triggerSendMultiPanel(e.currentTarget));
+      document.getElementById('btn-quick-send-preview')?.addEventListener('click', (e) => triggerSendMultiPanel(e.currentTarget));
+
+      // Multi-Panel Channel Custom Searchable Dropdown
+      const panelChBtn = document.getElementById('main-dd-panel-ch-btn');
+      const panelChMenu = document.getElementById('main-dd-panel-ch-menu');
+      const panelChSearch = document.getElementById('main-search-panel-ch');
+      const panelChList = document.getElementById('main-list-panel-ch');
+
+      panelChBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAllDropdowns(panelChMenu);
+        panelChMenu?.classList.toggle('hidden');
+        if (!panelChMenu?.classList.contains('hidden')) {
+          if (panelChSearch) {
+            panelChSearch.value = '';
+            setTimeout(() => panelChSearch.focus(), 20);
+          }
+          filterItems(panelChList, '');
+        }
+      });
+
+      panelChSearch?.addEventListener('input', (e) => {
+        filterItems(panelChList, e.target.value);
+      });
+
+      container.querySelectorAll('[data-main-panel-ch]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cid = btn.getAttribute('data-main-panel-ch') || '';
+          state.panel_channel_id = cid;
+          const ch = getChannelById(cid);
+          const lbl = document.getElementById('main-dd-panel-ch-label');
+          if (lbl) {
+            lbl.textContent = ch ? `#${ch.name}` : 'Panel-Kanal wählen...';
+            lbl.className = `min-w-0 truncate ${ch ? 'text-white' : 'text-neutral-500'}`;
+          }
+          panelChMenu?.classList.add('hidden');
+          saveTicketConfig();
+        });
+      });
+
+      // Multi-Log Channel Custom Searchable Dropdown
+      const logChBtn = document.getElementById('main-dd-log-ch-btn');
+      const logChMenu = document.getElementById('main-dd-log-ch-menu');
+      const logChSearch = document.getElementById('main-search-log-ch');
+      const logChList = document.getElementById('main-list-log-ch');
+
+      logChBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAllDropdowns(logChMenu);
+        logChMenu?.classList.toggle('hidden');
+        if (!logChMenu?.classList.contains('hidden')) {
+          if (logChSearch) {
+            logChSearch.value = '';
+            setTimeout(() => logChSearch.focus(), 20);
+          }
+          filterItems(logChList, '');
+        }
+      });
+
+      logChSearch?.addEventListener('input', (e) => {
+        filterItems(logChList, e.target.value);
+      });
+
+      container.querySelectorAll('[data-main-log-ch]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cid = btn.getAttribute('data-main-log-ch') || '';
+          state.log_channel_id = cid;
+          const ch = getChannelById(cid);
+          const lbl = document.getElementById('main-dd-log-ch-label');
+          if (lbl) {
+            lbl.textContent = ch ? `#${ch.name}` : 'Kein Log-Kanal';
+            lbl.className = `min-w-0 truncate ${ch ? 'text-white' : 'text-neutral-500'}`;
+          }
+          logChMenu?.classList.add('hidden');
+          saveTicketConfig();
+        });
+      });
+
       // Settings switches & inputs
       document.getElementById('tkt-switch-autoclose')?.addEventListener('click', () => {
         state.auto_close_time_enabled = !state.auto_close_time_enabled;
@@ -816,9 +1176,27 @@ DashboardTabs.Tickets = async function (container, guildId) {
         saveTicketConfig();
       });
 
-      document.getElementById('tkt-dd-ping-role-btn')?.addEventListener('click', (e) => {
+      // Ping Role Custom Searchable Dropdown
+      const pingRoleBtn = document.getElementById('tkt-dd-ping-role-btn');
+      const pingRoleMenu = document.getElementById('tkt-dd-ping-role-menu');
+      const pingRoleSearch = document.getElementById('tkt-search-ping-role');
+      const pingRoleList = document.getElementById('tkt-list-ping-role');
+
+      pingRoleBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        document.getElementById('tkt-dd-ping-role-menu')?.classList.toggle('hidden');
+        closeAllDropdowns(pingRoleMenu);
+        pingRoleMenu?.classList.toggle('hidden');
+        if (!pingRoleMenu?.classList.contains('hidden')) {
+          if (pingRoleSearch) {
+            pingRoleSearch.value = '';
+            setTimeout(() => pingRoleSearch.focus(), 20);
+          }
+          filterItems(pingRoleList, '');
+        }
+      });
+
+      pingRoleSearch?.addEventListener('input', (e) => {
+        filterItems(pingRoleList, e.target.value);
       });
 
       container.querySelectorAll('[data-tkt-ping-role-opt]').forEach(btn => {
@@ -829,7 +1207,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           const pr = allRoles.find(r => String(r.id) === String(rid));
           const lbl = document.getElementById('tkt-dd-ping-role-label');
           if (lbl) lbl.textContent = pr ? `@${pr.name}` : 'Rolle wählen...';
-          document.getElementById('tkt-dd-ping-role-menu')?.classList.add('hidden');
+          pingRoleMenu?.classList.add('hidden');
           saveTicketConfig();
         });
       });
@@ -841,23 +1219,46 @@ DashboardTabs.Tickets = async function (container, guildId) {
       });
     };
 
-    // Ticket-Typ Erstellen Modal (Step 0: Picker -> Steps 1..4: Wizard)
+    // Helper to filter dropdown items by search term
+    const filterItems = (listContainer, term) => {
+      if (!listContainer) return;
+      const q = String(term || '').toLowerCase().trim();
+      listContainer.querySelectorAll('button').forEach(btn => {
+        const text = btn.textContent.toLowerCase();
+        btn.style.display = (!q || text.includes(q)) ? '' : 'none';
+      });
+    };
+
+    // Helper to close all open dropdown menus except keepMenu
+    const closeAllDropdowns = (keepMenu = null) => {
+      document.querySelectorAll('.orbit-dropdown-menu').forEach(menu => {
+        if (menu !== keepMenu) menu.classList.add('hidden');
+      });
+    };
+
+    // Global click listener to close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.orbit-dropdown-menu') && !e.target.closest('button')) {
+        closeAllDropdowns();
+      }
+    });
+
+    // Ticket-Typ Erstellen Modal (Step 0: Exact PeakBot Picker -> Steps 1..4: 4-Step Wizard)
     const openTicketTypeModal = (existingType = null, initialStep = null) => {
       const modalRoot = document.getElementById('tickets-modal-root');
       if (!modalRoot) return;
 
       const isEditing = Boolean(existingType && existingType.id);
-      let currentStep = isEditing ? (initialStep || 2) : 0; // 0 = Picker, 1 = Grundlagen, 2 = Aufstellen, 3 = Fragen, 4 = Rezension
-      let openDropdownId = null;
+      let currentStep = isEditing ? (initialStep || 1) : 0; // 0 = Picker, 1 = Grundlagen, 2 = Aufstellen, 3 = Fragen, 4 = Rezension
 
       const draft = isEditing ? JSON.parse(JSON.stringify(existingType)) : {
         id: `type_${Date.now()}`,
-        name: 'Fehlerbericht',
-        mode: 'form',
-        template_key: 'bug_report',
-        color: 'rgb(218, 55, 60)',
-        description: 'Melden Sie einen Fehler mit Reproduktionsschritten und Schweregrad.',
-        button_label: 'Fehler melden',
+        name: 'Allgemeine Unterstützung',
+        mode: 'channel',
+        template_key: '',
+        color: 'rgb(88, 101, 242)',
+        description: 'Öffnen Sie einen privaten Support-Kanal mit unserem Team.',
+        button_label: 'Ticket öffnen',
         panel_channel_id: state.panel_channel_id || '',
         log_channel_id: state.log_channel_id || '',
         role_id: '',
@@ -865,9 +1266,8 @@ DashboardTabs.Tickets = async function (container, guildId) {
         require_proof: false,
         post_immediately: true,
         questions: [
-          { label: 'Zusammenfassung des Fehlers', placeholder: 'Kurze Beschreibung des Problems...', style: 'short', required: true },
-          { label: 'Schritte zur Reproduktion', placeholder: '1. Gehe zu...\n2. Klicke auf...', style: 'paragraph', required: true },
-          { label: 'Schweregrad', placeholder: 'Niedrig / Mittel / Kritisch', style: 'short', required: true }
+          { label: 'Betreff', placeholder: 'Worum geht es in Ihrer Anfrage?', style: 'short', required: true },
+          { label: 'Beschreibung', placeholder: 'Bitte beschreiben Sie Ihr Anliegen...', style: 'paragraph', required: true }
         ]
       };
 
@@ -879,9 +1279,9 @@ DashboardTabs.Tickets = async function (container, guildId) {
         draft.description = configObj.description;
         draft.button_label = configObj.button_label;
         draft.require_proof = Boolean(configObj.require_proof);
-        draft.questions = JSON.parse(JSON.stringify(configObj.questions));
-        // Jump straight to Step 2 ("Aufstellen") just like PeakBot when selecting a template/mode, while allowing Step 1 ("Grundlagen") click
-        currentStep = 2;
+        draft.questions = JSON.parse(JSON.stringify(configObj.questions || []));
+        // Transition straight to Step 1 (Grundlagen) so user can see & edit name, button, and description
+        currentStep = 1;
         renderModalContent();
       };
 
@@ -890,7 +1290,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
       };
 
       const renderModalContent = () => {
-        // STEP 0: Picker View ("Tickettyp erstellen" — Fangen Sie bei Null an / Oder verwenden Sie eine Vorlage)
+        // STEP 0: Exact PeakBot Picker View (1:1 from User HTML)
         if (currentStep === 0) {
           modalRoot.innerHTML = `
             <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -910,7 +1310,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                     <div class="p-5 space-y-7">
                       <div class="space-y-3">
                         <p class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Fangen Sie bei Null an</p>
-                        <div class="grid gap-2.5 grid-cols-1 sm:grid-cols-3">
+                        <div class="grid gap-2.5 grid-cols-1 sm:grid-cols-4">
                           <button type="button" data-pick-scratch="channel" class="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-800/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)] hover:bg-neutral-800/60 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 text-left group">
                             <div class="grid place-items-center size-10 rounded-xl flex-shrink-0 transition-transform duration-150 ease-out group-active:scale-95" style="background-color: rgba(88, 101, 242, 0.1);">
                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-5 h-5" style="color: rgb(88, 101, 242);"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
@@ -1035,14 +1435,14 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
         // STEPS 1..4: 4-Step Wizard View
         const modeInfo = MODE_META[draft.mode] || MODE_META.channel;
-        const pCh = getChannelById(draft.panel_channel_id);
-        const lCh = getChannelById(draft.log_channel_id);
+        const pCh = getChannelById(draft.panel_channel_id || state.panel_channel_id);
+        const lCh = getChannelById(draft.log_channel_id || state.log_channel_id);
         const sRole = getRoleById(draft.role_id);
         const sCat = getCategoryById(draft.category_id);
 
         const renderStepTab = (stepNum, label, iconSvg) => {
           const isCurrent = currentStep === stepNum;
-          const isDone = currentStep > stepNum || (stepNum === 1 && currentStep >= 2);
+          const isDone = currentStep > stepNum;
           if (isCurrent) {
             return `
               <button type="button" data-wizard-step="${stepNum}" class="relative flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-sm font-medium transition-[transform,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 text-black">
@@ -1115,7 +1515,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           `;
         }
 
-        // STEP 2: Aufstellen (Exact HTML from user's snippet!)
+        // STEP 2: Aufstellen (Channels, Role, Category with sticky search and z-[99999])
         else if (currentStep === 2) {
           stepBodyHtml = `
             <div class="px-5 py-4 space-y-4">
@@ -1128,86 +1528,121 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 </div>
                 <div class="p-4 space-y-3">
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <!-- Panel-Kanal * -->
+                    <!-- Panel-Kanal Dropdown -->
                     <div class="w-full relative">
                       <label class="block text-sm font-medium text-neutral-300 mb-2">Panel-Kanal *</label>
                       <div class="relative">
-                        <button type="button" id="wiz-dd-panel-channel-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 ${openDropdownId === 'panel_ch' ? 'border-neutral-500' : 'border-neutral-700 hover:border-neutral-600'} cursor-pointer">
-                          <span class="min-w-0 truncate text-sm ${pCh ? 'text-white' : 'text-neutral-500'}">${pCh ? `#${escapeHtml(pCh.name)}` : 'Wo das Panel gepostet wird'}</span>
-                          <div class="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 ${openDropdownId === 'panel_ch' ? 'rotate-180' : ''}"><path d="m6 9 6 6 6-6"></path></svg>
-                          </div>
+                        <button type="button" id="wiz-dd-panel-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
+                          <span id="wiz-dd-panel-ch-label" class="min-w-0 truncate text-sm ${pCh ? 'text-white' : 'text-neutral-500'}">
+                            ${pCh ? `#${escapeHtml(pCh.name)}` : 'Wo das Panel gepostet wird'}
+                          </span>
+                          <svg class="w-4 h-4 text-neutral-400 transition-transform duration-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
                         </button>
-                        <div id="wiz-dd-panel-channel-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${openDropdownId === 'panel_ch' ? '' : 'hidden'} absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto p-1 space-y-0.5">
-                          ${allChannels.length > 0 ? allChannels.map(c => `
-                            <button type="button" data-select-panel-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(draft.panel_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
-                              <span class="truncate">#${escapeHtml(c.name)}</span>
-                            </button>
-                          `).join('') : `
-                            <div class="px-3 py-2 text-xs text-neutral-500">Keine Textkanäle verfügbar</div>
-                          `}
+                        <div id="wiz-dd-panel-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-60 flex flex-col overflow-hidden">
+                          <div class="sticky top-0 z-20 bg-neutral-900 p-2 border-b border-neutral-800 shrink-0">
+                            <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                              <input type="text" id="wiz-search-panel-ch" placeholder="Kanal suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs">
+                            </div>
+                          </div>
+                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="wiz-list-panel-ch">
+                            ${allChannels.map(c => `
+                              <button type="button" data-wiz-panel-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(draft.panel_channel_id || state.panel_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                                <span class="truncate">#${escapeHtml(c.name)}</span>
+                              </button>
+                            `).join('')}
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <!-- Mitarbeiter-/Log-Kanal -->
+                    <!-- Mitarbeiter-/Log-Kanal Dropdown -->
                     <div class="w-full relative">
                       <label class="block text-sm font-medium text-neutral-300 mb-2">Mitarbeiter-/Log-Kanal</label>
                       <div class="relative">
-                        <button type="button" id="wiz-dd-log-channel-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 ${openDropdownId === 'log_ch' ? 'border-neutral-500' : 'border-neutral-700 hover:border-neutral-600'} cursor-pointer">
-                          <span class="min-w-0 truncate text-sm ${lCh ? 'text-white' : 'text-neutral-500'}">${lCh ? `#${escapeHtml(lCh.name)}` : 'Einsendungen finden Sie hier'}</span>
-                          <div class="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 ${openDropdownId === 'log_ch' ? 'rotate-180' : ''}"><path d="m6 9 6 6 6-6"></path></svg>
-                          </div>
+                        <button type="button" id="wiz-dd-log-ch-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
+                          <span id="wiz-dd-log-ch-label" class="min-w-0 truncate text-sm ${lCh ? 'text-white' : 'text-neutral-500'}">
+                            ${lCh ? `#${escapeHtml(lCh.name)}` : 'Einsendungen finden Sie hier'}
+                          </span>
+                          <svg class="w-4 h-4 text-neutral-400 transition-transform duration-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
                         </button>
-                        <div id="wiz-dd-log-channel-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${openDropdownId === 'log_ch' ? '' : 'hidden'} absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto p-1 space-y-0.5">
-                          <button type="button" data-select-log-ch="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Kein Log-Kanal</button>
-                          ${allChannels.map(c => `
-                            <button type="button" data-select-log-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(draft.log_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
-                              <span class="truncate">#${escapeHtml(c.name)}</span>
-                            </button>
-                          `).join('')}
+                        <div id="wiz-dd-log-ch-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-60 flex flex-col overflow-hidden">
+                          <div class="sticky top-0 z-20 bg-neutral-900 p-2 border-b border-neutral-800 shrink-0">
+                            <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                              <input type="text" id="wiz-search-log-ch" placeholder="Kanal suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs">
+                            </div>
+                          </div>
+                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="wiz-list-log-ch">
+                            <button type="button" data-wiz-log-ch="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Kein Log-Kanal</button>
+                            ${allChannels.map(c => `
+                              <button type="button" data-wiz-log-ch="${escapeHtml(c.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(c.id) === String(draft.log_channel_id || state.log_channel_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                                <span class="truncate">#${escapeHtml(c.name)}</span>
+                              </button>
+                            `).join('')}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Optional Support-Rolle & Kategorie -->
+                  <!-- Support-Rolle & Kategorie Dropdowns -->
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <!-- Support Role Dropdown -->
                     <div class="w-full relative">
                       <label class="block text-sm font-medium text-neutral-300 mb-2">Support-Rolle</label>
                       <div class="relative">
                         <button type="button" id="wiz-dd-role-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                          <span class="min-w-0 truncate text-sm ${sRole ? 'text-white' : 'text-neutral-500'}">${sRole ? `@${escapeHtml(sRole.name)}` : 'Zuständige Team-Rolle (optional)'}</span>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400"><path d="m6 9 6 6 6-6"></path></svg>
+                          <span id="wiz-dd-role-label" class="min-w-0 truncate text-sm ${sRole ? 'text-white' : 'text-neutral-500'}">
+                            ${sRole ? `@${escapeHtml(sRole.name)}` : 'Zuständige Team-Rolle (optional)'}
+                          </span>
+                          <svg class="w-4 h-4 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
                         </button>
-                        <div id="wiz-dd-role-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${openDropdownId === 'role' ? '' : 'hidden'} absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto p-1 space-y-0.5">
-                          <button type="button" data-select-wiz-role="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Keine spezifische Rolle</button>
-                          ${allRoles.length > 0 ? allRoles.map(r => `
-                            <button type="button" data-select-wiz-role="${escapeHtml(r.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(r.id) === String(draft.role_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
-                              <span class="truncate">@${escapeHtml(r.name)}</span>
-                            </button>
-                          `).join('') : `
-                            <div class="px-3 py-2 text-xs text-neutral-500">Keine Rollen verfügbar</div>
-                          `}
+                        <div id="wiz-dd-role-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-60 flex flex-col overflow-hidden">
+                          <div class="sticky top-0 z-20 bg-neutral-900 p-2 border-b border-neutral-800 shrink-0">
+                            <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                              <input type="text" id="wiz-search-role" placeholder="Rolle suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs">
+                            </div>
+                          </div>
+                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="wiz-list-role">
+                            <button type="button" data-wiz-role="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Keine spezifische Rolle</button>
+                            ${allRoles.map(r => `
+                              <button type="button" data-wiz-role="${escapeHtml(r.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center gap-2 ${String(r.id) === String(draft.role_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                                <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${escapeHtml(r.color || '#99aab5')}"></span>
+                                <span class="truncate">@${escapeHtml(r.name)}</span>
+                              </button>
+                            `).join('')}
+                          </div>
                         </div>
                       </div>
                     </div>
 
+                    <!-- Category Dropdown -->
                     <div class="w-full relative">
                       <label class="block text-sm font-medium text-neutral-300 mb-2">Ticket-Kategorie</label>
                       <div class="relative">
                         <button type="button" id="wiz-dd-cat-btn" class="w-full flex items-center justify-between gap-2 h-10 px-3 bg-neutral-800 border rounded-xl text-sm text-left transition-all duration-200 border-neutral-700 hover:border-neutral-600 cursor-pointer">
-                          <span class="min-w-0 truncate text-sm ${sCat ? 'text-white' : 'text-neutral-500'}">${sCat ? escapeHtml(sCat.name) : 'Automatisch (gleiche Kategorie)'}</span>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400"><path d="m6 9 6 6 6-6"></path></svg>
+                          <span id="wiz-dd-cat-label" class="min-w-0 truncate text-sm ${sCat ? 'text-white' : 'text-neutral-500'}">
+                            ${sCat ? escapeHtml(sCat.name) : 'Automatisch (gleiche Kategorie)'}
+                          </span>
+                          <svg class="w-4 h-4 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
                         </button>
-                        <div id="wiz-dd-cat-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu ${openDropdownId === 'cat' ? '' : 'hidden'} absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto p-1 space-y-0.5">
-                          <button type="button" data-select-wiz-cat="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Automatisch</button>
-                          ${allCategories.map(cat => `
-                            <button type="button" data-select-wiz-cat="${escapeHtml(cat.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(cat.id) === String(draft.category_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
-                              <span class="truncate">${escapeHtml(cat.name)}</span>
-                            </button>
-                          `).join('')}
+                        <div id="wiz-dd-cat-menu" data-lenis-prevent="true" style="z-index: 99999;" class="orbit-dropdown-menu hidden absolute z-[99999] left-0 right-0 mt-1.5 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl max-h-60 flex flex-col overflow-hidden">
+                          <div class="sticky top-0 z-20 bg-neutral-900 p-2 border-b border-neutral-800 shrink-0">
+                            <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-neutral-500 shrink-0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                              <input type="text" id="wiz-search-cat" placeholder="Kategorie suchen..." class="bg-transparent text-white placeholder-neutral-500 focus:outline-none w-full text-xs">
+                            </div>
+                          </div>
+                          <div class="overflow-y-auto p-1 space-y-0.5 flex-1 max-h-48" id="wiz-list-cat">
+                            <button type="button" data-wiz-cat="" class="w-full px-3 py-1.5 rounded-lg text-left text-xs text-neutral-400 hover:bg-neutral-800/60">Automatisch</button>
+                            ${allCategories.map(cat => `
+                              <button type="button" data-wiz-cat="${escapeHtml(cat.id)}" class="w-full px-3 py-1.5 rounded-lg text-left text-xs flex items-center justify-between ${String(cat.id) === String(draft.category_id) ? 'bg-neutral-800 text-white font-medium' : 'text-neutral-300 hover:bg-neutral-800/60'}">
+                                <span class="truncate">${escapeHtml(cat.name)}</span>
+                              </button>
+                            `).join('')}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1323,11 +1758,11 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-neutral-800/80 text-xs">
                   <div>
                     <span class="text-[11px] text-neutral-500 block">Panel-Kanal</span>
-                    <span class="text-white font-medium">${pCh ? `#${escapeHtml(pCh.name)}` : 'Nicht gewählt'}</span>
+                    <span class="text-white font-medium">${pCh ? `#${escapeHtml(pCh.name)}` : 'Standard'}</span>
                   </div>
                   <div>
                     <span class="text-[11px] text-neutral-500 block">Log-Kanal</span>
-                    <span class="text-white font-medium">${lCh ? `#${escapeHtml(lCh.name)}` : 'Keiner'}</span>
+                    <span class="text-white font-medium">${lCh ? `#${escapeHtml(lCh.name)}` : 'Standard'}</span>
                   </div>
                   <div>
                     <span class="text-[11px] text-neutral-500 block">Support-Rolle</span>
@@ -1351,7 +1786,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           `;
         }
 
-        const isNextDisabled = currentStep === 2 && !draft.panel_channel_id;
+        const isNextDisabled = currentStep === 2 && !draft.panel_channel_id && !state.panel_channel_id;
 
         modalRoot.innerHTML = `
           <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -1417,7 +1852,6 @@ DashboardTabs.Tickets = async function (container, guildId) {
             closeModal();
           } else {
             currentStep = 0;
-            openDropdownId = null;
             renderModalContent();
           }
         });
@@ -1425,13 +1859,12 @@ DashboardTabs.Tickets = async function (container, guildId) {
         modalRoot.querySelectorAll('[data-wizard-step]').forEach(tab => {
           tab.addEventListener('click', () => {
             const targetStep = parseInt(tab.getAttribute('data-wizard-step'), 10);
-            if (targetStep > 2 && !draft.panel_channel_id) {
+            if (targetStep > 2 && !draft.panel_channel_id && !state.panel_channel_id) {
               if (window.Notifications) Notifications.show('Bitte wählen Sie zuerst einen Panel-Kanal aus.', 'info');
               currentStep = 2;
             } else {
               currentStep = targetStep;
             }
-            openDropdownId = null;
             renderModalContent();
           });
         });
@@ -1449,88 +1882,158 @@ DashboardTabs.Tickets = async function (container, guildId) {
           });
         });
 
-        // Step 2 bindings
-        document.getElementById('wiz-dd-panel-channel-btn')?.addEventListener('click', async (e) => {
+        // Step 2 Custom Searchable Dropdowns bindings
+        // Panel Channel
+        const wizPanelChBtn = document.getElementById('wiz-dd-panel-ch-btn');
+        const wizPanelChMenu = document.getElementById('wiz-dd-panel-ch-menu');
+        const wizPanelChSearch = document.getElementById('wiz-search-panel-ch');
+        const wizPanelChList = document.getElementById('wiz-list-panel-ch');
+
+        wizPanelChBtn?.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (allChannels.length === 0) {
-            try {
-              const freshCh = await API.getChannels(guildId);
-              if (Array.isArray(freshCh) && freshCh.length > 0) {
-                allChannels = freshCh.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
-              }
-            } catch (_) {}
+          closeAllDropdowns(wizPanelChMenu);
+          wizPanelChMenu?.classList.toggle('hidden');
+          if (!wizPanelChMenu?.classList.contains('hidden')) {
+            if (wizPanelChSearch) {
+              wizPanelChSearch.value = '';
+              setTimeout(() => wizPanelChSearch.focus(), 20);
+            }
+            filterItems(wizPanelChList, '');
           }
-          openDropdownId = openDropdownId === 'panel_ch' ? null : 'panel_ch';
-          renderModalContent();
-          if (openDropdownId && window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
         });
-        modalRoot.querySelectorAll('[data-select-panel-ch]').forEach(btn => {
+
+        wizPanelChSearch?.addEventListener('input', (e) => {
+          filterItems(wizPanelChList, e.target.value);
+        });
+
+        modalRoot.querySelectorAll('[data-wiz-panel-ch]').forEach(btn => {
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            draft.panel_channel_id = btn.getAttribute('data-select-panel-ch') || '';
-            openDropdownId = null;
-            renderModalContent();
+            const cid = btn.getAttribute('data-wiz-panel-ch') || '';
+            draft.panel_channel_id = cid;
+            const ch = getChannelById(cid);
+            const lbl = document.getElementById('wiz-dd-panel-ch-label');
+            if (lbl) {
+              lbl.textContent = ch ? `#${ch.name}` : 'Wo das Panel gepostet wird';
+              lbl.className = `min-w-0 truncate text-sm ${ch ? 'text-white' : 'text-neutral-500'}`;
+            }
+            wizPanelChMenu?.classList.add('hidden');
+            const nextBtn = document.getElementById('wiz-btn-next');
+            if (nextBtn) nextBtn.disabled = false;
           });
         });
 
-        document.getElementById('wiz-dd-log-channel-btn')?.addEventListener('click', async (e) => {
+        // Log Channel
+        const wizLogChBtn = document.getElementById('wiz-dd-log-ch-btn');
+        const wizLogChMenu = document.getElementById('wiz-dd-log-ch-menu');
+        const wizLogChSearch = document.getElementById('wiz-search-log-ch');
+        const wizLogChList = document.getElementById('wiz-list-log-ch');
+
+        wizLogChBtn?.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (allChannels.length === 0) {
-            try {
-              const freshCh = await API.getChannels(guildId);
-              if (Array.isArray(freshCh) && freshCh.length > 0) {
-                allChannels = freshCh.filter(c => !c.type || c.type === 'text' || c.type === 'news' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
-              }
-            } catch (_) {}
+          closeAllDropdowns(wizLogChMenu);
+          wizLogChMenu?.classList.toggle('hidden');
+          if (!wizLogChMenu?.classList.contains('hidden')) {
+            if (wizLogChSearch) {
+              wizLogChSearch.value = '';
+              setTimeout(() => wizLogChSearch.focus(), 20);
+            }
+            filterItems(wizLogChList, '');
           }
-          openDropdownId = openDropdownId === 'log_ch' ? null : 'log_ch';
-          renderModalContent();
-          if (openDropdownId && window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
         });
-        modalRoot.querySelectorAll('[data-select-log-ch]').forEach(btn => {
+
+        wizLogChSearch?.addEventListener('input', (e) => {
+          filterItems(wizLogChList, e.target.value);
+        });
+
+        modalRoot.querySelectorAll('[data-wiz-log-ch]').forEach(btn => {
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            draft.log_channel_id = btn.getAttribute('data-select-log-ch') || '';
-            openDropdownId = null;
-            renderModalContent();
+            const cid = btn.getAttribute('data-wiz-log-ch') || '';
+            draft.log_channel_id = cid;
+            const ch = getChannelById(cid);
+            const lbl = document.getElementById('wiz-dd-log-ch-label');
+            if (lbl) {
+              lbl.textContent = ch ? `#${ch.name}` : 'Einsendungen finden Sie hier';
+              lbl.className = `min-w-0 truncate text-sm ${ch ? 'text-white' : 'text-neutral-500'}`;
+            }
+            wizLogChMenu?.classList.add('hidden');
           });
         });
 
-        document.getElementById('wiz-dd-role-btn')?.addEventListener('click', async (e) => {
+        // Role Dropdown
+        const wizRoleBtn = document.getElementById('wiz-dd-role-btn');
+        const wizRoleMenu = document.getElementById('wiz-dd-role-menu');
+        const wizRoleSearch = document.getElementById('wiz-search-role');
+        const wizRoleList = document.getElementById('wiz-list-role');
+
+        wizRoleBtn?.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (allRoles.length === 0) {
-            try {
-              const freshRoles = await API.getRoles(guildId);
-              if (Array.isArray(freshRoles) && freshRoles.length > 0) {
-                allRoles = freshRoles.filter(r => r.name !== '@everyone');
-              }
-            } catch (_) {}
+          closeAllDropdowns(wizRoleMenu);
+          wizRoleMenu?.classList.toggle('hidden');
+          if (!wizRoleMenu?.classList.contains('hidden')) {
+            if (wizRoleSearch) {
+              wizRoleSearch.value = '';
+              setTimeout(() => wizRoleSearch.focus(), 20);
+            }
+            filterItems(wizRoleList, '');
           }
-          openDropdownId = openDropdownId === 'role' ? null : 'role';
-          renderModalContent();
-          if (openDropdownId && window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
         });
-        modalRoot.querySelectorAll('[data-select-wiz-role]').forEach(btn => {
+
+        wizRoleSearch?.addEventListener('input', (e) => {
+          filterItems(wizRoleList, e.target.value);
+        });
+
+        modalRoot.querySelectorAll('[data-wiz-role]').forEach(btn => {
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            draft.role_id = btn.getAttribute('data-select-wiz-role') || '';
-            openDropdownId = null;
-            renderModalContent();
+            const rid = btn.getAttribute('data-wiz-role') || '';
+            draft.role_id = rid;
+            const r = getRoleById(rid);
+            const lbl = document.getElementById('wiz-dd-role-label');
+            if (lbl) {
+              lbl.textContent = r ? `@${r.name}` : 'Zuständige Team-Rolle (optional)';
+              lbl.className = `min-w-0 truncate text-sm ${r ? 'text-white' : 'text-neutral-500'}`;
+            }
+            wizRoleMenu?.classList.add('hidden');
           });
         });
 
-        document.getElementById('wiz-dd-cat-btn')?.addEventListener('click', (e) => {
+        // Category Dropdown
+        const wizCatBtn = document.getElementById('wiz-dd-cat-btn');
+        const wizCatMenu = document.getElementById('wiz-dd-cat-menu');
+        const wizCatSearch = document.getElementById('wiz-search-cat');
+        const wizCatList = document.getElementById('wiz-list-cat');
+
+        wizCatBtn?.addEventListener('click', (e) => {
           e.stopPropagation();
-          openDropdownId = openDropdownId === 'cat' ? null : 'cat';
-          renderModalContent();
-          if (openDropdownId && window.OrbitDropdownManager) window.OrbitDropdownManager.scheduleSync();
+          closeAllDropdowns(wizCatMenu);
+          wizCatMenu?.classList.toggle('hidden');
+          if (!wizCatMenu?.classList.contains('hidden')) {
+            if (wizCatSearch) {
+              wizCatSearch.value = '';
+              setTimeout(() => wizCatSearch.focus(), 20);
+            }
+            filterItems(wizCatList, '');
+          }
         });
-        modalRoot.querySelectorAll('[data-select-wiz-cat]').forEach(btn => {
+
+        wizCatSearch?.addEventListener('input', (e) => {
+          filterItems(wizCatList, e.target.value);
+        });
+
+        modalRoot.querySelectorAll('[data-wiz-cat]').forEach(btn => {
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            draft.category_id = btn.getAttribute('data-select-wiz-cat') || '';
-            openDropdownId = null;
-            renderModalContent();
+            const catId = btn.getAttribute('data-wiz-cat') || '';
+            draft.category_id = catId;
+            const cat = getCategoryById(catId);
+            const lbl = document.getElementById('wiz-dd-cat-label');
+            if (lbl) {
+              lbl.textContent = cat ? cat.name : 'Automatisch (gleiche Kategorie)';
+              lbl.className = `min-w-0 truncate text-sm ${cat ? 'text-white' : 'text-neutral-500'}`;
+            }
+            wizCatMenu?.classList.add('hidden');
           });
         });
 
@@ -1598,7 +2101,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
         // Prev / Next footer buttons
         document.getElementById('wiz-btn-prev')?.addEventListener('click', () => {
-          openDropdownId = null;
+          closeAllDropdowns();
           if (currentStep > 1) {
             currentStep -= 1;
           } else if (!isEditing) {
@@ -1611,7 +2114,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         });
 
         document.getElementById('wiz-btn-next')?.addEventListener('click', async () => {
-          openDropdownId = null;
+          closeAllDropdowns();
           if (currentStep < 4) {
             currentStep += 1;
             renderModalContent();
@@ -1634,10 +2137,10 @@ DashboardTabs.Tickets = async function (container, guildId) {
           renderMain();
           await saveTicketConfig(true);
 
-          if (draft.post_immediately !== false && draft.panel_channel_id) {
+          if (draft.post_immediately !== false && (draft.panel_channel_id || state.panel_channel_id)) {
             try {
               await API.sendTicketPanel(guildId, {
-                channel_id: draft.panel_channel_id,
+                channel_id: draft.panel_channel_id || state.panel_channel_id,
                 slot_id: draft.id,
                 slot_name: draft.name
               });
