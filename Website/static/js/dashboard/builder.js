@@ -719,13 +719,13 @@ DashboardTabs.Builder = async function(container, guildId) {
             <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
             ${pendingActions.length} pending change(s)
           </span>
-          <button type="button" id="ai-clear-pending-btn" class="text-[11px] text-neutral-400 hover:text-white transition-colors">Verwerfen</button>
+          <button type="button" id="ai-clear-pending-btn" class="text-[11px] text-neutral-400 hover:text-white transition-colors">Discard</button>
         </div>
         <div class="space-y-1">
           ${pendingActions.map((act, idx) => `
             <div class="flex items-center justify-between gap-2 text-[12px] bg-neutral-950/60 px-2.5 py-1.5 rounded-lg border border-white/[0.05]">
               <span class="text-neutral-200 truncate font-medium">${escapeHtml(act.title || act.type)}</span>
-              <button type="button" data-remove-pending="${idx}" class="text-neutral-500 hover:text-red-400 transition-colors" title="Entfernen">✕</button>
+              <button type="button" data-remove-pending="${idx}" class="text-neutral-500 hover:text-red-400 transition-colors" title="Remove">✕</button>
             </div>
           `).join('')}
         </div>
@@ -746,7 +746,7 @@ DashboardTabs.Builder = async function(container, guildId) {
                   <p class="text-[11.5px] font-medium text-white truncate">${escapeHtml(att.name)}</p>
                   <p class="text-[10px] text-emerald-400">Image attached</p>
                 </div>
-                <button type="button" data-remove-attachment="${idx}" class="p-1 rounded-md text-neutral-400 hover:text-red-400 hover:bg-white/10 transition-colors" title="Entfernen">✕</button>
+                <button type="button" data-remove-attachment="${idx}" class="p-1 rounded-md text-neutral-400 hover:text-red-400 hover:bg-white/10 transition-colors" title="Remove">✕</button>
               </div>
             `;
           }
@@ -754,9 +754,9 @@ DashboardTabs.Builder = async function(container, guildId) {
             <div class="relative group flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-neutral-800/90 border border-white/10">
               <div class="min-w-0 max-w-[160px] text-left">
                 <p class="text-[11.5px] font-medium text-white truncate">${escapeHtml(att.name)}</p>
-                <p class="text-[10px] text-neutral-400">${att.size || 0} Zeichen</p>
+                <p class="text-[10px] text-neutral-400">${att.size || 0} chars</p>
               </div>
-              <button type="button" data-remove-attachment="${idx}" class="p-1 rounded-md text-neutral-400 hover:text-red-400 hover:bg-white/10 transition-colors" title="Entfernen">✕</button>
+              <button type="button" data-remove-attachment="${idx}" class="p-1 rounded-md text-neutral-400 hover:text-red-400 hover:bg-white/10 transition-colors" title="Remove">✕</button>
             </div>
           `;
         }).join('')}
@@ -817,6 +817,64 @@ DashboardTabs.Builder = async function(container, guildId) {
     `;
   }
 
+  function getActionMeta(act) {
+    const t = String(act.type || '');
+    if (t === 'create_giveaway') {
+      return {
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gift text-amber-400"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>',
+        badge: 'Giveaway',
+        badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+      };
+    }
+    if (t === 'create_ticket_panel' || t === 'configure_tickets') {
+      return {
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ticket text-indigo-400"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>',
+        badge: 'Tickets',
+        badgeClass: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+      };
+    }
+    if (t === 'create_verification_panel' || t === 'configure_verify') {
+      return {
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check text-emerald-400"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>',
+        badge: 'Verification',
+        badgeClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+      };
+    }
+    if (t === 'channel_permissions') {
+      return {
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock text-cyan-400"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>',
+        badge: 'Permissions',
+        badgeClass: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+      };
+    }
+    if (t === 'configure_security' || t === 'configure_automod') {
+      return {
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert text-rose-400"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>',
+        badge: 'Security',
+        badgeClass: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+      };
+    }
+    if (t === 'create_reaction_roles') {
+      return {
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tags text-purple-400"><path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19"></path><path d="M9.586 5.586A2 2 0 0 0 8.172 5H3a1 1 0 0 0-1 1v5.172a2 2 0 0 0 .586 1.414L8.29 18.29a2.426 2.426 0 0 0 3.42 0l3.58-3.58a2.426 2.426 0 0 0 0-3.42z"></path><circle cx="6.5" cy="9.5" r=".5" fill="currentColor"></circle></svg>',
+        badge: 'Roles',
+        badgeClass: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+      };
+    }
+    if (t === 'send_message') {
+      return {
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square text-sky-400"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+        badge: 'Message',
+        badgeClass: 'bg-sky-500/10 text-sky-400 border-sky-500/20'
+      };
+    }
+    return {
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles text-neutral-300"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>',
+      badge: 'Config',
+      badgeClass: 'bg-white/[0.06] text-neutral-300 border-white/10'
+    };
+  }
+
   function renderCenterBodyHtml() {
     const activeChat = getActiveChat();
     const messages = activeChat && Array.isArray(activeChat.messages) ? activeChat.messages : [];
@@ -835,6 +893,24 @@ DashboardTabs.Builder = async function(container, guildId) {
                 </div>
                 ${renderPromptInputBox('ai-helper-textarea', 'ai-helper-send-btn')}
                 <div class="mt-2 text-center text-[11px] text-neutral-500">You are chatting with Peak, an AI assistant. AI can make mistakes – review changes before applying them.</div>
+
+                <div class="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-[680px]">
+                  <button type="button" data-prompt-chip="Analyze my server overview and activity analytics, and tell me what needs improvement." class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-900 border border-neutral-700/70 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all cursor-pointer">
+                    <span>📊</span> Analyze Server &amp; Analytics
+                  </button>
+                  <button type="button" data-prompt-chip="Create a Discord Nitro giveaway with 1 winner for 24 hours in the giveaways channel." class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-900 border border-neutral-700/70 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all cursor-pointer">
+                    <span>🎉</span> Create a Giveaway
+                  </button>
+                  <button type="button" data-prompt-chip="Setup and deploy an interactive support ticket panel with categories." class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-900 border border-neutral-700/70 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all cursor-pointer">
+                    <span>🎫</span> Setup Ticket Panel
+                  </button>
+                  <button type="button" data-prompt-chip="Setup a verification system with captcha and verified role." class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-900 border border-neutral-700/70 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all cursor-pointer">
+                    <span>🛡️</span> Setup Verification
+                  </button>
+                  <button type="button" data-prompt-chip="Audit our security settings: Anti-Raid, Anti-Nuke and AutoMod protection." class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-900 border border-neutral-700/70 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all cursor-pointer">
+                    <span>🔒</span> Audit Security
+                  </button>
+                </div>
               </div>
             </div>
             <div class="h-px"></div>
@@ -857,12 +933,12 @@ DashboardTabs.Builder = async function(container, guildId) {
                       <div class="flex flex-wrap gap-2">
                         ${msgAtts.map(att => {
                           if (att.type === 'image' && att.dataUrl) {
-                            return `<img src="${att.dataUrl}" alt="${escapeHtml(att.name || 'Bild')}" class="max-h-48 rounded-xl border border-white/10 object-cover">`;
+                            return `<img src="${att.dataUrl}" alt="${escapeHtml(att.name || 'Image')}" class="max-h-48 rounded-xl border border-white/10 object-cover">`;
                           }
                           return `
                             <div class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-900/80 border border-white/10 text-xs text-neutral-200">
                               <span>📄</span>
-                              <span class="truncate max-w-[180px]">${escapeHtml(att.name || 'Datei')}</span>
+                              <span class="truncate max-w-[180px]">${escapeHtml(att.name || 'File')}</span>
                             </div>
                           `;
                         }).join('')}
@@ -888,14 +964,18 @@ DashboardTabs.Builder = async function(container, guildId) {
                     <div class="space-y-2">
                       ${msgActions.map(act => {
                         const isApplied = Boolean(act.applied || appliedActionIds.has(act.id));
+                        const meta = getActionMeta(act);
                         return `
                           <div class="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.08] ${isApplied ? 'opacity-80' : ''}">
                             <div class="flex items-center gap-3 min-w-0">
-                              <div class="w-8 h-8 rounded-lg bg-white/[0.06] text-neutral-300 flex items-center justify-center flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles w-4 h-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
+                              <div class="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+                                ${meta.icon}
                               </div>
                               <div class="min-w-0">
-                                <p class="text-[13.5px] font-semibold text-white truncate">${escapeHtml(act.title || act.type)}</p>
+                                <div class="flex items-center gap-2">
+                                  <p class="text-[13.5px] font-semibold text-white truncate">${escapeHtml(act.title || act.type)}</p>
+                                  <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${meta.badgeClass}">${escapeHtml(meta.badge)}</span>
+                                </div>
                                 <p class="text-[12px] text-neutral-400 truncate">${escapeHtml(act.description || 'Configuration change ready')}</p>
                               </div>
                             </div>
@@ -1820,13 +1900,22 @@ DashboardTabs.Builder = async function(container, guildId) {
       });
     });
 
+    container.querySelectorAll('[data-prompt-chip]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const prompt = btn.getAttribute('data-prompt-chip');
+        if (prompt && !isSending) {
+          sendMessage(prompt);
+        }
+      });
+    });
+
     const refreshPlanBtn = document.getElementById('ai-refresh-plan-btn');
     if (refreshPlanBtn) {
       refreshPlanBtn.addEventListener('click', async () => {
         try {
           cfg = await API.getConfig(guildId);
           render();
-          if (window.Toast) window.Toast.success('Live-Serverstatus aktualisiert');
+          if (window.Toast) window.Toast.success('Live server status updated');
         } catch (_) {}
       });
     }

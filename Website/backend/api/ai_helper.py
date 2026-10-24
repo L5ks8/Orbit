@@ -180,7 +180,7 @@ def _extract_json_payload(raw_text: str) -> Dict[str, Any]:
         except Exception:
             pass
 
-    return {"reply": cleaned or "Wie kann ich dir bei der Server-Konfiguration helfen?", "actions": []}
+    return {"reply": cleaned or "How can I help you with your server configuration?", "actions": []}
 
 
 class AIHelperMixin:
@@ -279,48 +279,151 @@ class AIHelperMixin:
         jtc_cfg = load_jtc_config(guild_id)
         sec_cfg = load_security_config(guild_id)
 
+        # 1. Ticket System Metrics
+        active_tickets_map = ticket_cfg.get("active_tickets", {}) if isinstance(ticket_cfg.get("active_tickets"), dict) else {}
+        closed_tickets_list = ticket_cfg.get("closed_tickets", []) if isinstance(ticket_cfg.get("closed_tickets"), list) else []
+        ticket_active_count = len(active_tickets_map)
+        ticket_closed_count = len(closed_tickets_list)
+        ticket_counter = ticket_cfg.get("ticket_counter", 0)
+        ticket_panel_ch = f"#{guild.get_channel(ticket_cfg['panel_channel_id']).name}({ticket_cfg['panel_channel_id']})" if ticket_cfg.get("panel_channel_id") and guild.get_channel(ticket_cfg["panel_channel_id"]) else "None"
+
+        # 2. Giveaways Status
+        gw_summary = "0 active"
+        try:
+            from Components.Commands.Giveaway._storage import load_giveaways
+            all_gw = load_giveaways(guild_id) or {}
+            now_ts = time.time()
+            active_gws = []
+            for gid, gentry in all_gw.items():
+                if isinstance(gentry, dict) and not gentry.get("ended") and not gentry.get("draft") and gentry.get("end_timestamp", 0) > now_ts:
+                    ch_name = "unknown"
+                    if gentry.get("channel_id"):
+                        ch_obj = guild.get_channel(int(gentry["channel_id"]))
+                        if ch_obj:
+                            ch_name = f"#{ch_obj.name}"
+                    active_gws.append(f"'{gentry.get('prize', 'Prize')}' ({gentry.get('winners', 1)}w) in {ch_name} [{len(gentry.get('entries', []))} entries]")
+            gw_summary = f"{len(active_gws)} Active: {', '.join(active_gws)}" if active_gws else f"0 active ({len(all_gw)} total in history)"
+        except Exception:
+            gw_summary = "0 active"
+
+        # 3. Verification Details
+        v_ch = f"#{guild.get_channel(verify_cfg['channel_id']).name}({verify_cfg['channel_id']})" if verify_cfg.get("channel_id") and guild.get_channel(verify_cfg["channel_id"]) else "None"
+        v_role = f"@{guild.get_role(verify_cfg['role_id']).name}({verify_cfg['role_id']})" if verify_cfg.get("role_id") and guild.get_role(verify_cfg["role_id"]) else "None"
+        v_status = f"Enabled={verify_cfg.get('enabled', False)}, Type={verify_cfg.get('verification_type', 'captcha')}, Channel={v_ch}, VerifiedRole={v_role}"
+
+        # 4. AutoMod & Security Summary
+        am_active = []
+        if automod_cfg.get("enabled"):
+            if automod_cfg.get("anti_spam", {}).get("enabled"): am_active.append("AntiSpam")
+            if automod_cfg.get("anti_link", {}).get("enabled"): am_active.append("AntiLink")
+            if automod_cfg.get("anti_invites", {}).get("enabled"): am_active.append("AntiInvite")
+            if automod_cfg.get("anti_alt", {}).get("enabled"): am_active.append(f"AntiAlt({automod_cfg['anti_alt'].get('min_age_days', 3)}d)")
+            if automod_cfg.get("ai_automod", {}).get("enabled"): am_active.append("AI-Filter")
+            if automod_cfg.get("banned_words", {}).get("enabled"): am_active.append("BannedWords")
+
+        sec_active = []
+        if sec_cfg.get("anti_raid", {}).get("enabled"):
+            sec_active.append(f"AntiRaid(Threshold:{sec_cfg['anti_raid'].get('join_threshold', 10)}/{sec_cfg['anti_raid'].get('time_window', 10)}s)")
+        if sec_cfg.get("anti_nuke", {}).get("enabled"):
+            sec_active.append("AntiNuke")
+
+        # 5. Activity Analytics (7 Days)
+        stats_summary = "No stats recorded yet"
+        try:
+            from Components.Database.mongodb import get_db
+            from datetime import datetime, timedelta, timezone
+            db = get_db()
+            if db is not None:
+                now_dt = datetime.now(timezone.utc)
+                curr_dates = [(now_dt - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+                docs = list(db["GuildStats"].find({
+                    "$or": [
+                        {"guild_id": guild_id},
+                        {"guild_id": str(guild_id)},
+                        {"_id": {"$regex": f"^{guild_id}_"}}
+                    ]
+                }))
+                tot_msgs = 0
+                tot_voice = 0
+                tot_joins = 0
+                tot_leaves = 0
+                for d in docs:
+                    d_str = d.get("date") or (d.get("_id", "").split("_", 1)[1] if "_" in str(d.get("_id")) else "")
+                    if d_str in curr_dates:
+                        tot_msgs += int(d.get("messages", 0) or 0)
+                        tot_voice += int(d.get("voice_minutes", 0) or 0)
+                        tot_joins += int(d.get("joins", 0) or 0)
+                        tot_leaves += int(d.get("leaves", 0) or 0)
+                stats_summary = f"Past 7 Days: {tot_msgs} messages sent, {tot_voice} voice minutes, +{tot_joins} joins, -{tot_leaves} leaves (Net growth: {tot_joins - tot_leaves})"
+        except Exception:
+            stats_summary = "Stats lookup unavailable"
+
         active_mods = []
         if welcome_cfg.get("enabled"): active_mods.append(f"Welcome(Ch:{welcome_cfg.get('channel_id')})")
         if goodbye_cfg.get("enabled"): active_mods.append(f"Goodbye(Ch:{goodbye_cfg.get('channel_id')})")
-        if joinroles_cfg.get("enabled"): active_mods.append(f"JoinRoles({len(joinroles_cfg.get('roles', []))} Rollen)")
-        if verify_cfg.get("enabled"): active_mods.append(f"Verify(Ch:{verify_cfg.get('channel_id')}, Role:{verify_cfg.get('role_id')})")
-        if ticket_cfg.get("enabled"): active_mods.append(f"Tickets(Ch:{ticket_cfg.get('channel_id')})")
-        if level_cfg.get("enabled"): active_mods.append(f"Levels(Ch:{level_cfg.get('announce_channel_id')})")
-        if logs_cfg.get("enabled"): active_mods.append(f"Logs(Ch:{logs_cfg.get('default_channel_id')})")
-        if jtc_cfg.get("enabled"): active_mods.append(f"TempVoice(Trigger:{jtc_cfg.get('trigger_channel_id')})")
-        if automod_cfg.get("enabled"): active_mods.append("AutoMod")
-        if sec_cfg.get("anti_raid", {}).get("enabled"): active_mods.append("AntiRaid")
-        if sec_cfg.get("anti_nuke", {}).get("enabled"): active_mods.append("AntiNuke")
+        if joinroles_cfg.get("enabled"): active_mods.append(f"JoinRoles({len(joinroles_cfg.get('roles', []))} roles)")
+        if verify_cfg.get("enabled"): active_mods.append(f"Verify({v_status})")
+        if ticket_cfg.get("enabled"): active_mods.append(f"Tickets(Open:{ticket_active_count}, Closed:{ticket_closed_count}, Ch:{ticket_panel_ch})")
+        if level_cfg.get("enabled"): active_mods.append(f"Levels(AnnounceCh:{level_cfg.get('announce_channel_id')})")
+        if logs_cfg.get("enabled"): active_mods.append(f"Logs(DefaultCh:{logs_cfg.get('default_channel_id')})")
+        if jtc_cfg.get("enabled"): active_mods.append(f"TempVoice(TriggerCh:{jtc_cfg.get('trigger_channel_id')})")
+        if automod_cfg.get("enabled"): active_mods.append(f"AutoMod({', '.join(am_active)})")
+        if sec_cfg.get("anti_raid", {}).get("enabled") or sec_cfg.get("anti_nuke", {}).get("enabled"): active_mods.append(f"Security({', '.join(sec_active)})")
 
-        return f"""You are **Orbit AI Helper**, an intelligent Discord server configuration, analysis, and permissions assistant in the Orbit Dashboard.
+        return f"""You are **Orbit AI Helper**, an intelligent Discord server co-pilot, analyst, and configuration assistant in the Orbit Dashboard.
 
-RULES:
-- You are NOT a server builder! Never build complete servers from scratch and never delete server structures. Politely decline such requests.
-- You configure existing server modules (Welcome, Goodbye, Tickets, AutoMod, Verify, Levels, TempVoice, Logs, Security, Invites) and adjust channel/role permissions accurately.
-- ALWAYS respond in English by default!
-- Analyze uploaded screenshots, images, or template files and generate appropriate actions.
+CORE CAPABILITIES:
+1. SERVER OVERVIEW & ANALYTICS AUDIT:
+   - When the user asks to analyze the server, check overview, inspect analytics, audit server security, or ask for improvement advice:
+     Deliver an exhaustive, beautifully organized report in English with clear sections and emojis.
+     Include: Member growth & demographics, 7-day activity metrics, security/AutoMod posture, verification onboarding flow, support desk backlog, and giveaway status.
+     Point out specific vulnerabilities or missing features (e.g., missing anti-raid protection, unconfigured log channels, lack of verification).
+     Propose concrete, one-click actions in the "actions" array so the user can build the recommendations with one click!
+2. CREATING & MANAGING SERVER FEATURES:
+   - Create Giveaways: Deploy interactive giveaway messages to any channel via "create_giveaway".
+   - Setup Support Ticket Panels: Deploy interactive ticket panels with dropdown categories to any channel via "create_ticket_panel".
+   - Setup Verification: Deploy verification button panels with roles and security modes via "create_verification_panel".
+   - Channel Permissions: Adjust channel permissions across all channels, categories, or specific channels via "channel_permissions".
+   - Self-Assignable Roles: Deploy interactive button menus via "create_reaction_roles".
+   - Full Module Configuration: Configure Welcome, Goodbye, Join Roles, AutoMod, Security (Anti-Raid/Anti-Nuke), Levels, Logs, TempVoice, and Invites.
+3. STRICT RULES:
+   - You are NOT a server builder! Never delete existing server structures or wipe roles.
+   - ALWAYS reply in English by default!
+   - Every recommended change MUST be accompanied by executable actions in the "actions" array.
+   - ALWAYS use real IDs from the SERVER CONTEXT below!
 
 SERVER CONTEXT:
-- Server: {guild.name} (ID: {guild.id}, {guild.member_count} members)
+- Server: {guild.name} (ID: {guild.id}, Total Members: {guild.member_count}, Boost Tier: {guild.premium_tier}, Boosts: {guild.premium_subscription_count})
+- Recent 7-Day Activity: {stats_summary}
+- Support Tickets: Enabled={ticket_cfg.get('enabled', False)}, Active Open={ticket_active_count}, Closed={ticket_closed_count}, Total Count={ticket_counter}, Panel={ticket_panel_ch}
+- Giveaways: {gw_summary}
+- Verification: {v_status}
+- AutoMod: {', '.join(am_active) if am_active else 'Disabled'}
+- Security: {', '.join(sec_active) if sec_active else 'Disabled'}
 - Categories: {', '.join(cats) if cats else 'None'}
 - Text Channels: {', '.join(txt_chs) if txt_chs else 'None'}
 - Voice Channels: {', '.join(vc_chs) if vc_chs else 'None'}
 - Roles: {', '.join(roles_list)}
 - Active Modules: {', '.join(active_mods) if active_mods else 'None'}
 
-SUPPORTED ACTIONS (in the "actions" array of your response):
-1. channel_permissions: {{"type": "channel_permissions", "title": "...", "description": "...", "role_id": "...", "role_name": "...", "target_scope": "all"|"category"|"channels", "channel_type": "all"|"text"|"voice", "channel_ids": [], "category_ids": [], "exclude_channel_ids": [], "permissions": {{"view_channel": true|false|null, "send_messages": true|false|null, "read_message_history": true|false|null, "connect": true|false|null, "speak": true|false|null}}}}
-2. configure_welcome: {{"type": "configure_welcome", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#5865F2"}}}}
-3. configure_goodbye: {{"type": "configure_goodbye", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#ED4245"}}}}
-4. configure_joinroles: {{"type": "configure_joinroles", "title": "...", "description": "...", "settings": {{"enabled": true, "roles": ["<role-id>"]}}}}
-5. configure_verify: {{"type": "configure_verify", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "role_id": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#57F287"}}}}
-6. configure_tickets: {{"type": "configure_tickets", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "category_id": "...", "log_channel_id": "...", "supporter_role_ids": ["..."], "embed_title": "...", "embed_description": "..."}}}}
-7. configure_automod: {{"type": "configure_automod", "title": "...", "description": "...", "settings": {{"enabled": true, "banned_words": {{"enabled": true, "action": "warn"}}, "anti_spam": {{"enabled": true, "max_messages": 5, "time_window_sec": 3, "action": "warn"}}, "anti_link": {{"enabled": true, "action": "warn"}}, "anti_invites": {{"enabled": true, "action": "warn"}}, "anti_alt": {{"enabled": true, "min_age_days": 3, "action": "kick"}}, "ai_automod": {{"enabled": true, "action": "delete"}}}}}}
-8. configure_security: {{"type": "configure_security", "title": "...", "description": "...", "settings": {{"anti_raid": {{"enabled": true, "join_threshold": 10, "time_window": 10, "action": "kick"}}, "anti_nuke": {{"enabled": true, "action": "strip_roles"}}}}}}
-9. configure_level: {{"type": "configure_level", "title": "...", "description": "...", "settings": {{"enabled": true, "announce_channel_id": "...", "xp_per_message": 15, "xp_cooldown": 60, "level_up_message": "GG {{user}}, Level {{level}}!"}}}}
-10. configure_logs: {{"type": "configure_logs", "title": "...", "description": "...", "settings": {{"enabled": true, "default_channel_id": "..."}}}}
-11. configure_tempvoice: {{"type": "configure_tempvoice", "title": "...", "description": "...", "settings": {{"enabled": true, "trigger_channel_id": "...", "category_id": "...", "default_name": "🔊 {{user}}'s Channel", "default_limit": 0}}}}
-12. configure_invites: {{"type": "configure_invites", "title": "...", "description": "...", "settings": {{"enabled": true, "track_leaves": true, "count_rejoins": false}}}}
+SUPPORTED ACTIONS (include in the "actions" array):
+1. create_giveaway: {{"type": "create_giveaway", "title": "Create Giveaway: <Prize> (<Winners> Winners, <Duration>)", "description": "Deploys an interactive giveaway message to #<channel>", "channel_id": "<channel_id>", "prize": "Discord Nitro", "winners": 1, "duration_seconds": 86400, "description_text": "Click the button to enter!", "required_role_id": "<optional_role_id>", "color": "#5865F2"}}
+2. create_ticket_panel: {{"type": "create_ticket_panel", "title": "Deploy Ticket Support Panel", "description": "Posts interactive support panel with dropdown options to #<channel>", "channel_id": "<channel_id>", "category_id": "<category_id>", "support_role_ids": ["<role_id>"], "panel_title": "Support Desk", "panel_description": "Click the button or select an option to open a ticket.", "panel_instructions": "> Select a department from the dropdown to open your private channel.", "options_slots": [{{"name": "General Support", "emoji": "🎫", "description": "General assistance"}}, {{"name": "Billing & Orders", "emoji": "💳", "description": "Order inquiries"}}], "color": "#5865F2"}}
+3. create_verification_panel: {{"type": "create_verification_panel", "title": "Setup Verification in #<channel>", "description": "Deploys an interactive verification panel assigning verified role", "channel_id": "<channel_id>", "role_id": "<role_id>", "remove_role_id": "<optional_role_id>", "verification_type": "captcha"|"oneclick"|"questionnaire", "embed_title": "Server Verification", "embed_description": "Click the button below to verify your account and gain access.", "button_label": "Verify Account", "button_style": "success", "color": "#22C55E"}}
+4. create_reaction_roles: {{"type": "create_reaction_roles", "title": "Deploy Reaction Role Menu in #<channel>", "description": "Posts self-assignable role buttons in #<channel>", "channel_id": "<channel_id>", "embed_title": "Self Roles", "embed_description": "Click buttons below to toggle your roles.", "roles": [{{"role_id": "<role_id>", "label": "Updates", "emoji": "📢", "style": "primary"}}], "color": "#5865F2"}}
+5. channel_permissions: {{"type": "channel_permissions", "title": "...", "description": "...", "role_id": "...", "role_name": "...", "target_scope": "all"|"category"|"channels", "channel_type": "all"|"text"|"voice", "channel_ids": [], "category_ids": [], "exclude_channel_ids": [], "permissions": {{"view_channel": true|false|null, "send_messages": true|false|null, "read_message_history": true|false|null, "connect": true|false|null, "speak": true|false|null}}}}
+6. configure_welcome: {{"type": "configure_welcome", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#5865F2"}}}}
+7. configure_goodbye: {{"type": "configure_goodbye", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "msg_mode": "embed", "message": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#ED4245"}}}}
+8. configure_joinroles: {{"type": "configure_joinroles", "title": "...", "description": "...", "settings": {{"enabled": true, "roles": ["<role-id>"]}}}}
+9. configure_verify: {{"type": "configure_verify", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "role_id": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#57F287"}}}}
+10. configure_tickets: {{"type": "configure_tickets", "title": "...", "description": "...", "settings": {{"enabled": true, "channel_id": "...", "category_id": "...", "log_channel_id": "...", "supporter_role_ids": ["..."], "embed_title": "...", "embed_description": "..."}}}}
+11. configure_automod: {{"type": "configure_automod", "title": "...", "description": "...", "settings": {{"enabled": true, "banned_words": {{"enabled": true, "action": "warn"}}, "anti_spam": {{"enabled": true, "max_messages": 5, "time_window_sec": 3, "action": "warn"}}, "anti_link": {{"enabled": true, "action": "warn"}}, "anti_invites": {{"enabled": true, "action": "warn"}}, "anti_alt": {{"enabled": true, "min_age_days": 3, "action": "kick"}}, "ai_automod": {{"enabled": true, "action": "delete"}}}}}}
+12. configure_security: {{"type": "configure_security", "title": "...", "description": "...", "settings": {{"anti_raid": {{"enabled": true, "join_threshold": 10, "time_window": 10, "action": "kick"}}, "anti_nuke": {{"enabled": true, "action": "strip_roles"}}}}}}
+13. configure_level: {{"type": "configure_level", "title": "...", "description": "...", "settings": {{"enabled": true, "announce_channel_id": "...", "xp_per_message": 15, "xp_cooldown": 60, "level_up_message": "GG {{user}}, Level {{level}}!"}}}}
+14. configure_logs: {{"type": "configure_logs", "title": "...", "description": "...", "settings": {{"enabled": true, "default_channel_id": "..."}}}}
+15. configure_tempvoice: {{"type": "configure_tempvoice", "title": "...", "description": "...", "settings": {{"enabled": true, "trigger_channel_id": "...", "category_id": "...", "default_name": "🔊 {{user}}'s Channel", "default_limit": 0}}}}
+16. configure_invites: {{"type": "configure_invites", "title": "...", "description": "...", "settings": {{"enabled": true, "track_leaves": true, "count_rejoins": false}}}}
+17. send_message: {{"type": "send_message", "title": "...", "description": "...", "channel_id": "...", "embed_title": "...", "embed_description": "...", "embed_color": "#5865F2"}}
 
 RESPONSE FORMAT (STRICTLY PURE JSON):
 Always respond exclusively with a valid JSON object in English:
@@ -444,7 +547,7 @@ ALWAYS use real IDs from the server context above!"""
                 })
 
         if not user_message and (image_attachments or file_attachments):
-            user_message = "Analysiere die hochgeladenen Inhalte und gib mir Tipps oder passende Einstellungen für diesen Server."
+            user_message = "Analyze the uploaded content and provide suggestions or suitable configurations for this server."
 
         if not user_message:
             return web.json_response({"error": "Empty message"}, status=400)
@@ -599,6 +702,11 @@ ALWAYS use real IDs from the server context above!"""
             "configure_invites",
             "edit_channel",
             "edit_role",
+            "create_giveaway",
+            "create_ticket_panel",
+            "create_verification_panel",
+            "create_reaction_roles",
+            "send_message",
         }
         for act in raw_actions:
             if not isinstance(act, dict):
@@ -674,7 +782,7 @@ ALWAYS use real IDs from the server context above!"""
                                 )
 
                     if not role_obj:
-                        errors.append(f"Rolle '{role_name_raw or role_id_raw}' wurde auf dem Server nicht gefunden.")
+                        errors.append(f"Role '{role_name_raw or role_id_raw}' was not found on the server.")
                         continue
 
                     scope = str(act.get("target_scope") or "all").lower()
@@ -722,7 +830,7 @@ ALWAYS use real IDs from the server context above!"""
                     }
 
                     if not clean_perms:
-                        errors.append(f"Keine gültigen Berechtigungen für '{title}' angegeben.")
+                        errors.append(f"No valid permissions specified for '{title}'.")
                         continue
 
                     prev_overwrites = []
@@ -748,7 +856,7 @@ ALWAYS use real IDs from the server context above!"""
                         "type": "revert_channel_permissions",
                         "overwrites": prev_overwrites
                     })
-                    applied_summaries.append(f"{title} ({updated_ch_count} Kanäle aktualisiert)")
+                    applied_summaries.append(f"{title} ({updated_ch_count} channels updated)")
 
                 elif atype == "configure_welcome":
                     prev_cfg = load_welcome_config(guild_id)
@@ -899,6 +1007,328 @@ ALWAYS use real IDs from the server context above!"""
                             await role.edit(**edit_kwargs, reason="Orbit AI Helper")
                             applied_summaries.append(title)
 
+                elif atype == "create_giveaway":
+                    from Components.Commands.Giveaway._storage import generate_giveaway_id, save_giveaways, load_giveaways
+                    from Components.Commands.Giveaway.giveaway import send_giveaway_message
+
+                    ch_id_raw = str(act.get("channel_id") or "").strip()
+                    channel = guild.get_channel(int(ch_id_raw)) if ch_id_raw.isdigit() else None
+                    if not channel and act.get("channel_name"):
+                        cn = str(act.get("channel_name")).lstrip("#").strip().lower()
+                        channel = discord.utils.get(guild.text_channels, name=cn)
+                    if not channel:
+                        errors.append(f"Giveaway channel '{ch_id_raw or act.get('channel_name')}' not found on server.")
+                        continue
+
+                    prize = str(act.get("prize") or "Special Giveaway Prize").strip()[:100]
+                    winners = max(1, min(100, int(act.get("winners") or act.get("winners_count") or 1)))
+                    duration_sec = int(act.get("duration_seconds") or 86400)
+                    if duration_sec < 10:
+                        duration_sec = 60
+                    if duration_sec > 86400 * 30:
+                        duration_sec = 86400 * 30
+
+                    now_ts = int(time.time())
+                    end_time = now_ts + duration_sec
+                    gw_id = generate_giveaway_id(guild_id)
+
+                    color_val = 0x5865F2
+                    c_raw = act.get("color") or act.get("embed_color")
+                    if c_raw:
+                        try:
+                            if isinstance(c_raw, str) and c_raw.startswith("#"):
+                                color_val = int(c_raw.lstrip("#"), 16)
+                            elif isinstance(c_raw, int):
+                                color_val = c_raw
+                        except Exception:
+                            pass
+
+                    req_role_id = act.get("required_role_id")
+                    req_role_int = int(req_role_id) if req_role_id and str(req_role_id).isdigit() else None
+
+                    entry = {
+                        "giveaway_id": gw_id,
+                        "channel_id": channel.id,
+                        "message_id": 0,
+                        "prize": prize,
+                        "description": str(act.get("description_text") or act.get("description") or "Click the button below to participate!"),
+                        "winners": winners,
+                        "winners_count": winners,
+                        "end_timestamp": end_time,
+                        "entries": [],
+                        "ended": False,
+                        "draft": False,
+                        "author_id": 0,
+                        "required_role_id": req_role_int,
+                        "color": color_val,
+                        "created_at": now_ts
+                    }
+
+                    try:
+                        msg = await send_giveaway_message(channel, entry, guild_id)
+                        if msg:
+                            entry["message_id"] = msg.id
+                            entry["channel_id"] = msg.channel.id
+                    except Exception as gw_err:
+                        errors.append(f"Failed to post giveaway message: {gw_err}")
+                        continue
+
+                    gw_data = load_giveaways(guild_id) or {}
+                    gw_data[gw_id] = entry
+                    save_giveaways(guild_id, gw_data)
+
+                    undo_entries.append({
+                        "type": "delete_giveaway",
+                        "giveaway_id": gw_id,
+                        "channel_id": channel.id,
+                        "message_id": entry.get("message_id")
+                    })
+                    applied_summaries.append(f"Giveaway '{prize}' posted in #{channel.name}")
+
+                elif atype == "create_ticket_panel":
+                    from Components.Systems.Tickets._views import PersistentTicketPanelLayout
+                    from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
+
+                    ticket_cfg = load_ticket_config(guild_id)
+                    undo_entries.append({"type": "restore_config", "module": "tickets", "data": json.loads(json.dumps(ticket_cfg))})
+
+                    ch_id_raw = str(act.get("channel_id") or ticket_cfg.get("panel_channel_id") or "").strip()
+                    channel = guild.get_channel(int(ch_id_raw)) if ch_id_raw.isdigit() else None
+                    if not channel and act.get("channel_name"):
+                        cn = str(act.get("channel_name")).lstrip("#").strip().lower()
+                        channel = discord.utils.get(guild.text_channels, name=cn)
+                    if not channel:
+                        errors.append(f"Ticket channel '{ch_id_raw or act.get('channel_name')}' not found.")
+                        continue
+
+                    cat_id_raw = str(act.get("category_id") or ticket_cfg.get("category_id") or "").strip()
+                    if cat_id_raw and cat_id_raw.isdigit():
+                        ticket_cfg["category_id"] = int(cat_id_raw)
+
+                    sup_roles = act.get("support_role_ids") or []
+                    if sup_roles and str(sup_roles[0]).isdigit():
+                        ticket_cfg["support_role_id"] = int(sup_roles[0])
+
+                    p_title = str(act.get("panel_title") or "Support Ticket Desk")
+                    p_desc = str(act.get("panel_description") or "Click the button below to open a direct support channel with our team.")
+                    p_instr = str(act.get("panel_instructions") or "> Select your inquiry category from the menu below, then click **Create Ticket**.")
+
+                    opts = act.get("options_slots") or [
+                        {"name": "General Support", "emoji": "🎫", "description": "General questions and assistance"},
+                        {"name": "Billing & Orders", "emoji": "💳", "description": "Order inquiries and payment issues"}
+                    ]
+
+                    p_color = 0x5865F2
+                    c_raw = act.get("color") or act.get("embed_color")
+                    if c_raw:
+                        try:
+                            if isinstance(c_raw, str) and c_raw.startswith("#"):
+                                p_color = int(c_raw.lstrip("#"), 16)
+                        except Exception:
+                            pass
+
+                    view = PersistentTicketPanelLayout(
+                        title=p_title,
+                        description=p_desc,
+                        instructions=p_instr,
+                        options_slots=opts
+                    )
+                    desc_text = f"{view.panel_desc}\n\n{view.panel_instructions}" if view.panel_instructions else view.panel_desc
+                    embed = discord.Embed(
+                        title=view.panel_title,
+                        description=desc_text,
+                        color=p_color
+                    )
+                    msg = await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
+
+                    ticket_cfg["enabled"] = True
+                    ticket_cfg["panel_channel_id"] = channel.id
+                    ticket_cfg["panel_message_id"] = msg.id
+                    ticket_cfg["panel_title"] = p_title
+                    ticket_cfg["panel_description"] = p_desc
+                    ticket_cfg["panel_instructions"] = p_instr
+                    ticket_cfg["options_slots"] = opts
+                    ticket_cfg["options"] = [s.get("name", "Support") if isinstance(s, dict) else str(s) for s in opts]
+                    save_ticket_config(guild_id, ticket_cfg)
+                    applied_summaries.append(f"Ticket Support Panel posted in #{channel.name}")
+
+                elif atype == "create_verification_panel":
+                    from Components.Systems.Verify._storage import load_verify_config, save_verify_config
+
+                    verify_cfg = load_verify_config(guild_id)
+                    undo_entries.append({"type": "restore_config", "module": "verify", "data": json.loads(json.dumps(verify_cfg))})
+
+                    ch_id_raw = str(act.get("channel_id") or verify_cfg.get("channel_id") or "").strip()
+                    channel = guild.get_channel(int(ch_id_raw)) if ch_id_raw.isdigit() else None
+                    if not channel and act.get("channel_name"):
+                        cn = str(act.get("channel_name")).lstrip("#").strip().lower()
+                        channel = discord.utils.get(guild.text_channels, name=cn)
+                    if not channel:
+                        errors.append(f"Verification channel '{ch_id_raw or act.get('channel_name')}' not found.")
+                        continue
+
+                    role_id_raw = str(act.get("role_id") or verify_cfg.get("role_id") or "").strip()
+                    role_obj = guild.get_role(int(role_id_raw)) if role_id_raw.isdigit() else None
+                    if not role_obj:
+                        r_name = str(act.get("role_name") or "Verified").strip()
+                        role_obj = discord.utils.get(guild.roles, name=r_name)
+                        if not role_obj:
+                            try:
+                                role_obj = await guild.create_role(name=r_name, color=discord.Color.green(), reason="Orbit Verification Setup")
+                            except Exception:
+                                pass
+
+                    if not role_obj:
+                        errors.append("Verified role could not be resolved or created.")
+                        continue
+
+                    sys_id = secrets.token_hex(4)
+                    vtype = str(act.get("verification_type") or "captcha").lower()
+                    btn_label = str(act.get("button_label") or "Verify").strip()[:80]
+                    btn_style_str = str(act.get("button_style") or "success").lower()
+                    style_map = {
+                        "success": discord.ButtonStyle.success,
+                        "primary": discord.ButtonStyle.primary,
+                        "secondary": discord.ButtonStyle.secondary,
+                        "danger": discord.ButtonStyle.danger
+                    }
+                    btn_style = style_map.get(btn_style_str, discord.ButtonStyle.success)
+
+                    color_val = 0x22C55E
+                    c_raw = act.get("color") or act.get("embed_color")
+                    if c_raw:
+                        try:
+                            if isinstance(c_raw, str) and c_raw.startswith("#"):
+                                color_val = int(c_raw.lstrip("#"), 16)
+                        except Exception:
+                            pass
+
+                    embed = discord.Embed(
+                        title=str(act.get("embed_title") or "Server Verification"),
+                        description=str(act.get("embed_description") or "Please click the button below to verify your account and gain access to the server."),
+                        color=color_val
+                    )
+
+                    view = discord.ui.View(timeout=None)
+                    view.add_item(discord.ui.Button(label=btn_label, style=btn_style, custom_id=f"orbit:verify_start:{sys_id}"))
+                    msg = await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
+
+                    verify_cfg["enabled"] = True
+                    verify_cfg["channel_id"] = channel.id
+                    verify_cfg["role_id"] = role_obj.id
+                    rem_role_raw = str(act.get("remove_role_id") or "").strip()
+                    if rem_role_raw and rem_role_raw.isdigit():
+                        verify_cfg["remove_role_id"] = int(rem_role_raw)
+                    verify_cfg["verification_type"] = vtype
+                    verify_cfg["embed_title"] = embed.title
+                    verify_cfg["embed_description"] = embed.description
+
+                    systems = verify_cfg.get("systems") or []
+                    systems.append({
+                        "id": sys_id,
+                        "name": embed.title,
+                        "enabled": True,
+                        "deployed": True,
+                        "deployed_at": time.time(),
+                        "message_id": str(msg.id),
+                        "channel_id": str(channel.id),
+                        "role_id": str(role_obj.id),
+                        "verification_type": vtype,
+                        "embed_title": embed.title,
+                        "embed_description": embed.description,
+                        "button_label": btn_label,
+                        "button_style": btn_style_str
+                    })
+                    verify_cfg["systems"] = systems
+                    save_verify_config(guild_id, verify_cfg)
+                    applied_summaries.append(f"Verification Panel posted in #{channel.name}")
+
+                elif atype == "create_reaction_roles":
+                    ch_id_raw = str(act.get("channel_id") or "").strip()
+                    channel = guild.get_channel(int(ch_id_raw)) if ch_id_raw.isdigit() else None
+                    if not channel and act.get("channel_name"):
+                        cn = str(act.get("channel_name")).lstrip("#").strip().lower()
+                        channel = discord.utils.get(guild.text_channels, name=cn)
+                    if not channel:
+                        errors.append(f"Channel '{ch_id_raw or act.get('channel_name')}' not found.")
+                        continue
+
+                    color_val = 0x5865F2
+                    c_raw = act.get("color") or act.get("embed_color")
+                    if c_raw:
+                        try:
+                            if isinstance(c_raw, str) and c_raw.startswith("#"):
+                                color_val = int(c_raw.lstrip("#"), 16)
+                        except Exception:
+                            pass
+
+                    embed = discord.Embed(
+                        title=str(act.get("embed_title") or "Self-Assignable Roles"),
+                        description=str(act.get("embed_description") or "Click the buttons below to receive or remove roles."),
+                        color=color_val
+                    )
+
+                    view = discord.ui.View(timeout=None)
+                    role_items = act.get("roles") or []
+                    added_btns = 0
+                    for ri in role_items[:25]:
+                        if not isinstance(ri, dict):
+                            continue
+                        r_id_str = str(ri.get("role_id") or "").strip()
+                        r_obj = guild.get_role(int(r_id_str)) if r_id_str.isdigit() else None
+                        if not r_obj and ri.get("name"):
+                            r_obj = discord.utils.get(guild.roles, name=str(ri.get("name")).strip())
+                        if not r_obj:
+                            continue
+
+                        lbl = str(ri.get("label") or r_obj.name)[:80]
+                        emoji = ri.get("emoji")
+                        view.add_item(discord.ui.Button(
+                            label=lbl,
+                            emoji=emoji if emoji else None,
+                            style=discord.ButtonStyle.primary,
+                            custom_id=f"orbit:role_toggle:{r_obj.id}"
+                        ))
+                        added_btns += 1
+
+                    if added_btns == 0:
+                        errors.append("No valid roles provided for reaction role menu.")
+                        continue
+
+                    msg = await channel.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
+                    applied_summaries.append(f"Reaction Role Menu ({added_btns} roles) posted in #{channel.name}")
+
+                elif atype == "send_message":
+                    ch_id_raw = str(act.get("channel_id") or "").strip()
+                    channel = guild.get_channel(int(ch_id_raw)) if ch_id_raw.isdigit() else None
+                    if not channel and act.get("channel_name"):
+                        cn = str(act.get("channel_name")).lstrip("#").strip().lower()
+                        channel = discord.utils.get(guild.text_channels, name=cn)
+                    if not channel:
+                        errors.append(f"Channel '{ch_id_raw or act.get('channel_name')}' not found.")
+                        continue
+
+                    color_val = 0x5865F2
+                    c_raw = act.get("color") or act.get("embed_color")
+                    if c_raw:
+                        try:
+                            if isinstance(c_raw, str) and c_raw.startswith("#"):
+                                color_val = int(c_raw.lstrip("#"), 16)
+                        except Exception:
+                            pass
+
+                    title_text = str(act.get("embed_title") or act.get("title") or "").strip()
+                    desc_text = str(act.get("embed_description") or act.get("content") or act.get("message") or "").strip()
+
+                    if title_text or desc_text:
+                        embed = discord.Embed(title=title_text or None, description=desc_text or None, color=color_val)
+                        await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                    else:
+                        plain_msg = str(act.get("text") or act.get("content") or "Hello!")
+                        await channel.send(plain_msg)
+
+                    applied_summaries.append(f"Message sent to #{channel.name}")
+
             except Exception as act_err:
                 errors.append(f"{title}: {act_err}")
 
@@ -947,7 +1377,7 @@ ALWAYS use real IDs from the server context above!"""
 
         actions = body.get("actions") or []
         if not isinstance(actions, list) or not actions:
-            return web.json_response({"error": "Keine Änderungen zum Anwenden vorhanden."}, status=400)
+            return web.json_response({"error": "No changes to apply."}, status=400)
 
         res = await self._execute_actions_list(guild, actions)
         return web.json_response(res)
@@ -964,7 +1394,7 @@ ALWAYS use real IDs from the server context above!"""
 
         stack = _MEM_UNDO_STACK.get(guild_id, [])
         if not stack:
-            return web.json_response({"error": "Nichts zum Rückgängigmachen vorhanden."}, status=400)
+            return web.json_response({"error": "Nothing to undo."}, status=400)
 
         last_batch = stack.pop()
         reverted = []
@@ -980,7 +1410,15 @@ ALWAYS use real IDs from the server context above!"""
                             for pk, pv in ow_item.get("permissions", {}).items():
                                 setattr(curr_ow, pk, pv)
                             await ch.set_permissions(role, overwrite=curr_ow, reason="Orbit AI Helper Undo")
-                    reverted.append("Kanalberechtigungen wiederhergestellt")
+                    reverted.append("Channel permissions restored")
+                elif etype == "delete_giveaway":
+                    from Components.Commands.Giveaway._storage import load_giveaways, save_giveaways
+                    gw_id = entry.get("giveaway_id")
+                    gw_data = load_giveaways(guild_id) or {}
+                    if gw_id in gw_data:
+                        del gw_data[gw_id]
+                        save_giveaways(guild_id, gw_data)
+                    reverted.append(f"Giveaway {gw_id} removed")
                 elif etype == "restore_config":
                     mod = entry.get("module")
                     data = entry.get("data", {})
@@ -1007,7 +1445,7 @@ ALWAYS use real IDs from the server context above!"""
                     elif mod == "invites":
                         from Components.Database.mongodb import set_config
                         set_config("InviteConfig", guild_id, data)
-                    reverted.append(f"Modul '{mod}' zurückgesetzt")
+                    reverted.append(f"Module '{mod}' reverted")
             except Exception as e:
                 print(f"[AIHelper] Undo error: {e}")
 
