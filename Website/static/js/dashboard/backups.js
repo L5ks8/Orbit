@@ -81,8 +81,8 @@
       return;
     }
 
-    let backups = data.backups || [];
-    let config = data.config || { enabled: false, interval: 'daily', last_backup: null, next_backup: null, max_slots: MAX_SLOTS };
+    let backups = (data && Array.isArray(data.backups)) ? data.backups : (Array.isArray(data) ? data : []);
+    let config = (data && data.config) ? data.config : { enabled: false, interval: 'daily', last_backup: null, next_backup: null, max_slots: MAX_SLOTS };
 
     function renderMainView() {
       const count = backups.length;

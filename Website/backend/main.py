@@ -102,7 +102,8 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin, AIHelperMi
             return None, None
             
         perms = member.guild_permissions
-        is_admin = perms.administrator or perms.manage_guild
+        is_owner = (member.id == bot_guild.owner_id)
+        is_admin = is_owner or perms.administrator or perms.manage_guild
         
         if not is_admin:
             from Components.Systems.WebDashboard._storage import load_settings_config

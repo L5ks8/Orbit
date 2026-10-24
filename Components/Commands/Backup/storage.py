@@ -44,27 +44,63 @@ def clean_doc_for_json(doc):
             clean[k] = v
     return clean
 
+def _make_guild_query(guild_id):
+    gid_str = str(guild_id)
+    if gid_str.isdigit():
+        return {"guild_id": {"$in": [gid_str, int(gid_str)]}}
+    return {"guild_id": gid_str}
+
+def _get_candidate_collections(col_name: str):
+    _init_collections()
+    cols = []
+    if db is not None:
+        try:
+            cols.append(db[col_name])
+        except Exception:
+            pass
+    try:
+        from Components.Database.mongodb import _client
+        if _client is not None:
+            for alt_name in ("orbit", "OrbitBot", "Orbit"):
+                if db is None or alt_name != db.name:
+                    try:
+                        cols.append(_client[alt_name][col_name])
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+    return cols
+
 def get_backups(guild_id: int) -> List[Dict]:
     _init_collections()
-    if backups_col is None:
-        return []
-    try:
-        cursor = backups_col.find({"guild_id": guild_id}).sort("timestamp", pymongo.DESCENDING)
-        return [clean_doc_for_json(b) for b in cursor]
-    except Exception as e:
-        print(f"Backup Error (get_backups): {e}")
-        return []
+    query = _make_guild_query(guild_id)
+    seen_ids = set()
+    all_backups = []
+
+    for col in _get_candidate_collections("backups"):
+        try:
+            cursor = col.find(query).sort("timestamp", pymongo.DESCENDING)
+            for b in cursor:
+                bid = str(b.get("_id"))
+                if bid not in seen_ids:
+                    seen_ids.add(bid)
+                    all_backups.append(clean_doc_for_json(b))
+        except Exception as e:
+            print(f"Backup Error (get_backups from {col}): {e}")
+
+    all_backups.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
+    return all_backups[:MAX_BACKUPS]
 
 def get_backup(backup_id: str) -> Optional[Dict]:
     _init_collections()
-    if backups_col is None:
-        return None
-    try:
-        b = backups_col.find_one({"_id": backup_id})
-        return clean_doc_for_json(b) if b else None
-    except Exception as e:
-        print(f"Backup Error (get_backup): {e}")
-        return None
+    for col in _get_candidate_collections("backups"):
+        try:
+            b = col.find_one({"_id": str(backup_id)})
+            if b:
+                return clean_doc_for_json(b)
+        except Exception as e:
+            print(f"Backup Error (get_backup from {col}): {e}")
+    return None
 
 def save_backup(backup_data: Dict):
     _init_collections()
@@ -72,16 +108,16 @@ def save_backup(backup_data: Dict):
         return
     try:
         guild_id = backup_data.get("guild_id")
-        existing_doc = backups_col.find_one({"_id": backup_data["_id"]})
+        existing_doc = backups_col.find_one({"_id": str(backup_data["_id"])})
         if not existing_doc and guild_id:
-            # Enforce max 5 backups FIFO ring-buffer: delete oldest if limit reached
-            existing_backups = list(backups_col.find({"guild_id": guild_id}).sort("timestamp", pymongo.ASCENDING))
+            query = _make_guild_query(guild_id)
+            existing_backups = list(backups_col.find(query).sort("timestamp", pymongo.ASCENDING))
             while len(existing_backups) >= MAX_BACKUPS:
                 oldest = existing_backups.pop(0)
-                backups_col.delete_one({"_id": oldest["_id"]})
+                delete_backup(oldest["_id"])
 
         backups_col.update_one(
-            {"_id": backup_data["_id"]},
+            {"_id": str(backup_data["_id"])},
             {"$set": backup_data},
             upsert=True
         )
@@ -90,12 +126,11 @@ def save_backup(backup_data: Dict):
 
 def delete_backup(backup_id: str):
     _init_collections()
-    if backups_col is None:
-        return
-    try:
-        backups_col.delete_one({"_id": backup_id})
-    except Exception as e:
-        print(f"Backup Error (delete_backup): {e}")
+    for col in _get_candidate_collections("backups"):
+        try:
+            col.delete_one({"_id": str(backup_id)})
+        except Exception as e:
+            print(f"Backup Error (delete_backup from {col}): {e}")
 
 def get_backup_config(guild_id: int) -> Dict:
     _init_collections()
@@ -107,19 +142,19 @@ def get_backup_config(guild_id: int) -> Dict:
         "next_backup": None,
         "max_slots": MAX_BACKUPS
     }
-    if backup_configs_col is None:
-        return default_cfg
-    try:
-        cfg = backup_configs_col.find_one({"guild_id": guild_id})
-        if cfg:
-            cfg.pop("_id", None)
-            default_cfg.update(cfg)
-        default_cfg["max_slots"] = MAX_BACKUPS
-        default_cfg.pop("_id", None)
-        return default_cfg
-    except Exception as e:
-        print(f"Backup Error (get_backup_config): {e}")
-        return default_cfg
+    query = _make_guild_query(guild_id)
+    for col in _get_candidate_collections("backup_configs"):
+        try:
+            cfg = col.find_one(query)
+            if cfg:
+                cfg.pop("_id", None)
+                default_cfg.update(cfg)
+                default_cfg["max_slots"] = MAX_BACKUPS
+                default_cfg.pop("_id", None)
+                return default_cfg
+        except Exception as e:
+            print(f"Backup Error (get_backup_config from {col}): {e}")
+    return default_cfg
 
 def save_backup_config(guild_id: int, config_data: Dict):
     _init_collections()
@@ -129,8 +164,9 @@ def save_backup_config(guild_id: int, config_data: Dict):
         config_data["guild_id"] = guild_id
         config_data["max_slots"] = MAX_BACKUPS
         save_data = {k: v for k, v in config_data.items() if k != "_id"}
+        query = _make_guild_query(guild_id)
         backup_configs_col.update_one(
-            {"guild_id": guild_id},
+            query,
             {"$set": save_data},
             upsert=True
         )

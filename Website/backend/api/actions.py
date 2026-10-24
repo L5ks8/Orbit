@@ -3113,12 +3113,15 @@ class ActionsMixin:
         guild_id = int(guild_id_str)
 
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("is_admin"):
+        if not guild:
+            return web.json_response({"error": "Unauthorized or guild not found"}, status=403)
+        can_view = bool(user_perms.get("is_admin") or user_perms.get("can_channels") or user_perms.get("can_roles") or user_perms.get("can_messages"))
+        if not can_view:
             return web.json_response({"error": "Unauthorized: Admin permissions required"}, status=403)
 
-        from Components.Commands.Backup.storage import get_backups, get_backup_config, MAX_BACKUPS
+        from Components.Commands.Backup.storage import get_backups, get_backup_config, MAX_BACKUPS, clean_doc_for_json
         backups = get_backups(guild_id)
-        config = get_backup_config(guild_id)
+        config = clean_doc_for_json(get_backup_config(guild_id))
         if isinstance(config, dict):
             config.pop("_id", None)
 
@@ -3159,7 +3162,10 @@ class ActionsMixin:
         guild_id = int(guild_id_str)
 
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("is_admin"):
+        if not guild:
+            return web.json_response({"error": "Unauthorized or guild not found"}, status=403)
+        can_view = bool(user_perms.get("is_admin") or user_perms.get("can_channels") or user_perms.get("can_roles") or user_perms.get("can_messages"))
+        if not can_view:
             return web.json_response({"error": "Unauthorized: Admin permissions required"}, status=403)
 
         name = None
@@ -3207,13 +3213,16 @@ class ActionsMixin:
         guild_id = int(guild_id_str)
 
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("is_admin"):
+        if not guild:
+            return web.json_response({"error": "Unauthorized or guild not found"}, status=403)
+        can_view = bool(user_perms.get("is_admin") or user_perms.get("can_channels") or user_perms.get("can_roles") or user_perms.get("can_messages"))
+        if not can_view:
             return web.json_response({"error": "Unauthorized: Admin permissions required"}, status=403)
 
         from Components.Commands.Backup.storage import get_backup
         from Components.Commands.Backup.backup import restore_backup_data
         backup_data = get_backup(backup_id)
-        if not backup_data or backup_data.get("guild_id") != guild_id:
+        if not backup_data or str(backup_data.get("guild_id")) != str(guild_id):
             return web.json_response({"error": "Backup not found"}, status=404)
 
         try:
@@ -3230,12 +3239,15 @@ class ActionsMixin:
         guild_id = int(guild_id_str)
 
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("is_admin"):
+        if not guild:
+            return web.json_response({"error": "Unauthorized or guild not found"}, status=403)
+        can_view = bool(user_perms.get("is_admin") or user_perms.get("can_channels") or user_perms.get("can_roles") or user_perms.get("can_messages"))
+        if not can_view:
             return web.json_response({"error": "Unauthorized: Admin permissions required"}, status=403)
 
         from Components.Commands.Backup.storage import get_backup, delete_backup
         backup_data = get_backup(backup_id)
-        if not backup_data or backup_data.get("guild_id") != guild_id:
+        if not backup_data or str(backup_data.get("guild_id")) != str(guild_id):
             return web.json_response({"error": "Backup not found"}, status=404)
 
         try:
@@ -3251,7 +3263,10 @@ class ActionsMixin:
         guild_id = int(guild_id_str)
 
         guild, user_perms = await self._check_guild_access(request, guild_id)
-        if not guild or not user_perms.get("is_admin"):
+        if not guild:
+            return web.json_response({"error": "Unauthorized or guild not found"}, status=403)
+        can_view = bool(user_perms.get("is_admin") or user_perms.get("can_channels") or user_perms.get("can_roles") or user_perms.get("can_messages"))
+        if not can_view:
             return web.json_response({"error": "Unauthorized: Admin permissions required"}, status=403)
 
         try:
