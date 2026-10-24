@@ -1142,11 +1142,11 @@ class ConfigMixin:
                 
                 save_verify_config(guild_id, verify_cfg)
 
-            if user_perms.get("can_messages") and "autoresponder" in data:
+            if (can_admin or can_messages) and "autoresponder" in data:
                 from Components.Commands.AutoResponder._storage import save_responses
                 save_responses(guild_id, data["autoresponder"])
 
-            if user_perms.get("can_roles") and "joinroles" in data:
+            if (can_admin or can_roles) and "joinroles" in data:
                 from Components.Systems.Roles._storage import save_join_roles
                 jr_data = data["joinroles"]
                 sticky_data = jr_data.get("sticky_roles", {})
@@ -1193,7 +1193,7 @@ class ConfigMixin:
                     ]
                 })
 
-            if user_perms.get("can_channels") and "ticket" in data:
+            if (can_admin or can_channels) and "ticket" in data:
                 from Components.Systems.Tickets._storage import load_ticket_config, save_ticket_config
                 ticket_cfg = load_ticket_config(guild_id)
                 t_in = data["ticket"]
@@ -1362,7 +1362,7 @@ class ConfigMixin:
                 
                 save_ticket_config(guild_id, ticket_cfg)
 
-            if user_perms.get("can_channels") and "automation" in data:
+            if (can_admin or can_channels) and "automation" in data:
                 from Components.Commands.ChannelAutomation._storage import load_automation_config, save_automation_config
                 current_auto = load_automation_config(guild_id)
                 new_flat = data["automation"]
@@ -1408,7 +1408,7 @@ class ConfigMixin:
 
                 save_automation_config(guild_id, new_auto)
 
-            if user_perms.get("can_messages") and "logs" in data:
+            if (can_admin or can_messages) and "logs" in data:
                 l_cfg = load_log_config(guild_id)
                 l_data = data["logs"]
                 
@@ -1420,24 +1420,21 @@ class ConfigMixin:
                 l_cfg["global_exempt_channels"] = [str(c) for c in gec] if isinstance(gec, list) else []
                 l_cfg["global_exempt_roles"] = [str(r) for r in ger] if isinstance(ger, list) else []
                 
-                from Components.Systems.Automoderation.log_storage import DEFAULT_CATEGORIES
                 if "channels" in l_data and isinstance(l_data["channels"], dict):
-                    for k in DEFAULT_CATEGORIES:
-                        c = l_data["channels"].get(k)
+                    for k, c in l_data["channels"].items():
                         l_cfg["channels"][k] = str(c) if c else None
                 
                 if "roles" in l_data and isinstance(l_data["roles"], dict):
-                    for k in DEFAULT_CATEGORIES:
-                        r = l_data["roles"].get(k)
+                    for k, r in l_data["roles"].items():
                         l_cfg["roles"][k] = str(r) if r else None
                 
                 if "categories" in l_data and isinstance(l_data["categories"], dict):
-                    for k in DEFAULT_CATEGORIES:
-                        l_cfg["categories"][k] = bool(l_data["categories"].get(k, False))
+                    for k, v in l_data["categories"].items():
+                        l_cfg["categories"][k] = bool(v)
                 
                 save_log_config(guild_id, l_cfg)
 
-            if user_perms.get("can_channels") and "tempvoice" in data:
+            if (can_admin or can_channels) and "tempvoice" in data:
                 from Components.Systems.JoinToCreate._storage import load_jtc_config, save_jtc_config
                 jtc_cfg = load_jtc_config(guild_id)
                 jtc_data = data["tempvoice"]

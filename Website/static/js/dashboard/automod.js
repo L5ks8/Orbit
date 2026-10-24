@@ -983,18 +983,18 @@
                       ${renderCustomChannelSelect('select-log-msg-ch', state.logging.msg_channel, 'Select channel')}
                     </div>
                     <div class="flex gap-5">
-                      <label class="flex items-center gap-2 cursor-pointer">
+                      <div class="flex items-center gap-2">
                         ${renderCustomToggle('toggle-log-msg-edits', state.logging.msg_edits, 'Message edits')}
-                        <span class="flex items-center gap-1.5 text-xs text-neutral-400">
+                        <span class="flex items-center gap-1.5 text-xs text-neutral-400 cursor-pointer select-none" onclick="document.getElementById('toggle-log-msg-edits')?.click()">
                           <span class="text-neutral-500">${SVGS.pencil}</span>Edits
                         </span>
-                      </label>
-                      <label class="flex items-center gap-2 cursor-pointer">
+                      </div>
+                      <div class="flex items-center gap-2">
                         ${renderCustomToggle('toggle-log-msg-deletes', state.logging.msg_deletes, 'Message deletes')}
-                        <span class="flex items-center gap-1.5 text-xs text-neutral-400">
+                        <span class="flex items-center gap-1.5 text-xs text-neutral-400 cursor-pointer select-none" onclick="document.getElementById('toggle-log-msg-deletes')?.click()">
                           <span class="text-neutral-500">${SVGS.trash2}</span>Deletes
                         </span>
-                      </label>
+                      </div>
                     </div>
                   </div>
 
@@ -1008,18 +1008,18 @@
                       ${renderCustomChannelSelect('select-log-member-ch', state.logging.member_channel, 'Select channel')}
                     </div>
                     <div class="flex gap-5">
-                      <label class="flex items-center gap-2 cursor-pointer">
+                      <div class="flex items-center gap-2">
                         ${renderCustomToggle('toggle-log-member-joins', state.logging.member_joins, 'Member joins')}
-                        <span class="flex items-center gap-1.5 text-xs text-neutral-400">
+                        <span class="flex items-center gap-1.5 text-xs text-neutral-400 cursor-pointer select-none" onclick="document.getElementById('toggle-log-member-joins')?.click()">
                           ${SVGS.logIn}Joins
                         </span>
-                      </label>
-                      <label class="flex items-center gap-2 cursor-pointer">
+                      </div>
+                      <div class="flex items-center gap-2">
                         ${renderCustomToggle('toggle-log-member-leaves', state.logging.member_leaves, 'Member leaves')}
-                        <span class="flex items-center gap-1.5 text-xs text-neutral-400">
+                        <span class="flex items-center gap-1.5 text-xs text-neutral-400 cursor-pointer select-none" onclick="document.getElementById('toggle-log-member-leaves')?.click()">
                           ${SVGS.logOut}Leaves
                         </span>
-                      </label>
+                      </div>
                     </div>
                   </div>
 
@@ -1035,10 +1035,10 @@
                     <div>
                       ${renderCustomChannelSelect('select-log-voice-ch', state.logging.voice_channel, 'Select channel')}
                     </div>
-                    <label class="flex items-center gap-2 cursor-pointer">
+                    <div class="flex items-center gap-2">
                       ${renderCustomToggle('toggle-log-voice-act', state.logging.voice_activity, 'Log voice activity')}
-                      <span class="text-xs text-neutral-400">Log voice activity</span>
-                    </label>
+                      <span class="text-xs text-neutral-400 cursor-pointer select-none" onclick="document.getElementById('toggle-log-voice-act')?.click()">Log voice activity</span>
+                    </div>
                   </div>
 
                   <!-- Category 4: Mod Action Logs (Custom Dropdown) -->
@@ -1573,6 +1573,7 @@
             else if (ddId === 'select-log-mod-ch') state.logging.mod_channel = val;
             closeAllCustomDropdowns();
             renderUI();
+            if (window.AutoSave) AutoSave.trigger(saveAutomodConfig, 350);
           };
         });
       });
@@ -1640,6 +1641,7 @@
               }
             }
             renderUI();
+            if (window.AutoSave) AutoSave.trigger(saveAutomodConfig, 350);
           };
         });
 
@@ -1660,6 +1662,7 @@
               if (idx > -1) {
                 targetArr.splice(idx, 1);
                 renderUI();
+                if (window.AutoSave) AutoSave.trigger(saveAutomodConfig, 350);
               }
             }
           };

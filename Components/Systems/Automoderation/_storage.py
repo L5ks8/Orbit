@@ -77,6 +77,9 @@ def load_automod_config(guild_id: int) -> Dict[str, Any]:
 
 def save_automod_config(guild_id: int, config: Dict[str, Any]) -> None:
     with _automod_lock:
+        existing = get_config("AutoMod", guild_id) or {}
+        if isinstance(existing, dict) and "logs" in existing and "logs" not in config:
+            config["logs"] = existing["logs"]
         _automod_cache[guild_id] = config
         path = _get_file_path(guild_id)
         if path.exists():

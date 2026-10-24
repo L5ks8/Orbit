@@ -107,6 +107,12 @@ def load_log_config(guild_id: int) -> Dict[str, Any]:
 def save_log_config(guild_id: int, config: Dict[str, Any]) -> None:
     automod_data = get_config("AutoMod", guild_id) or {}
     automod_data["logs"] = config
+    try:
+        from Components.Systems.Automoderation._storage import _automod_cache
+        if guild_id in _automod_cache and isinstance(_automod_cache[guild_id], dict):
+            _automod_cache[guild_id]["logs"] = config
+    except Exception:
+        pass
     set_config("AutoMod", guild_id, automod_data)
 
 async def log_event(guild: discord.Guild, category: str, title: str, description: str, target_channel_obj: discord.abc.GuildChannel = None, executor: discord.Member = None) -> None:
