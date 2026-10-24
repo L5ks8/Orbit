@@ -864,7 +864,7 @@ DashboardTabs.Giveaways = async function(container, guildId) {
                       `).join('')}
                     </div>
                     <div class="h-px w-full bg-neutral-800 my-0.5"></div>
-                    <div class="relative flex items-center justify-center" title="Eigene Farbe wählen">
+                    <div class="relative flex items-center justify-center" title="Choose custom color">
                       <input id="gw-color-picker" type="color" value="${state.color}" class="w-6 h-6 p-0 rounded-lg border-0 cursor-pointer bg-transparent">
                     </div>
                     <input id="gw-color-input" type="text" maxlength="7" value="${state.color}" class="hidden">
