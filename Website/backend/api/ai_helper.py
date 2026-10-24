@@ -180,6 +180,31 @@ def _extract_json_payload(raw_text: str) -> Dict[str, Any]:
         except Exception:
             pass
 
+    # Salvage truncated or unclosed JSON
+    if '"reply"' in cleaned:
+        reply_m = re.search(r'"reply"\s*:\s*"((?:[^"\\]|\\.)*)"', cleaned, flags=re.DOTALL)
+        if reply_m:
+            try:
+                unescaped = json.loads(f'"{reply_m.group(1)}"')
+                return {"reply": unescaped, "actions": []}
+            except Exception:
+                return {"reply": reply_m.group(1).replace("\\n", "\n").replace('\\"', '"'), "actions": []}
+
+        unclosed_m = re.search(r'"reply"\s*:\s*"(.*)', cleaned, flags=re.DOTALL)
+        if unclosed_m:
+            rem = unclosed_m.group(1)
+            for sep in ['",\n', '",\r\n', '", "actions"', '",\n  "actions"']:
+                if sep in rem:
+                    rem = rem.split(sep)[0]
+                    break
+            return {"reply": rem.replace("\\n", "\n").replace('\\"', '"').strip(), "actions": []}
+
+    if cleaned.startswith("{") and "reply" in cleaned:
+        lines = cleaned.splitlines()
+        filtered = [l for l in lines if not l.strip().startswith("{") and not l.strip().startswith("}") and not l.strip().startswith('"actions"')]
+        if filtered:
+            return {"reply": "\n".join(filtered).strip(), "actions": []}
+
     return {"reply": cleaned or "How can I help you with your server configuration?", "actions": []}
 
 
@@ -370,6 +395,33 @@ class AIHelperMixin:
         if automod_cfg.get("enabled"): active_mods.append(f"AutoMod({', '.join(am_active)})")
         if sec_cfg.get("anti_raid", {}).get("enabled") or sec_cfg.get("anti_nuke", {}).get("enabled"): active_mods.append(f"Security({', '.join(sec_active)})")
 
+        # 6. Moderation History & Cases
+        mod_history_summary = "No recorded moderation cases yet"
+        try:
+            from Components.Commands.Cases.storage import get_cases_collection
+            from Components.Commands.ModLog._modlog_storage import get_recent_modlogs
+            cases_col = get_cases_collection()
+            recent_cases = []
+            if cases_col is not None:
+                recent_cases = list(cases_col.find({"guild_id": str(guild_id)}).sort("case_id", -1).limit(50))
+            if not recent_cases:
+                recent_cases = get_recent_modlogs(guild_id, limit=50)
+
+            if recent_cases:
+                action_counts = {}
+                reasons = []
+                for c in recent_cases:
+                    act = str(c.get("action") or c.get("action_type") or "warn").lower()
+                    action_counts[act] = action_counts.get(act, 0) + 1
+                    r = c.get("reason")
+                    if r and r != "No reason provided":
+                        reasons.append(r)
+                
+                counts_str = ", ".join([f"{act.capitalize()}: {cnt}" for act, cnt in sorted(action_counts.items(), key=lambda x: x[1], reverse=True)])
+                mod_history_summary = f"{len(recent_cases)} total logged actions ({counts_str}). Most frequent action types: {counts_str}. Sample reasons: {', '.join(reasons[:5]) if reasons else 'No reasons provided'}."
+        except Exception as e:
+            mod_history_summary = f"Lookup error: {e}"
+
         return f"""You are **Orbit AI Helper**, an intelligent Discord server co-pilot, analyst, and configuration assistant in the Orbit Dashboard.
 
 CORE CAPABILITIES:
@@ -386,7 +438,11 @@ CORE CAPABILITIES:
    - Channel Permissions: Adjust channel permissions across all channels, categories, or specific channels via "channel_permissions".
    - Self-Assignable Roles: Deploy interactive button menus via "create_reaction_roles".
    - Full Module Configuration: Configure Welcome, Goodbye, Join Roles, AutoMod, Security (Anti-Raid/Anti-Nuke), Levels, Logs, TempVoice, and Invites.
-3. STRICT RULES:
+3. MODERATION HISTORY & CASE AUDIT:
+   - When the user asks to check mod history, review moderation cases, or tell what the most frequent actions or offenses are:
+     Analyze the "Moderation History & Recent Actions" section in SERVER CONTEXT.
+     Highlight the most common moderation actions (e.g. warns vs timeouts vs bans), the total volume, the most common violation reasons, and provide actionable tips to automate or handle those specific infractions via AutoMod.
+4. STRICT RULES:
    - You are NOT a server builder! Never delete existing server structures or wipe roles.
    - ALWAYS reply in English by default!
    - Every recommended change MUST be accompanied by executable actions in the "actions" array.
@@ -395,6 +451,7 @@ CORE CAPABILITIES:
 SERVER CONTEXT:
 - Server: {guild.name} (ID: {guild.id}, Total Members: {guild.member_count}, Boost Tier: {guild.premium_tier}, Boosts: {guild.premium_subscription_count})
 - Recent 7-Day Activity: {stats_summary}
+- Moderation History & Recent Actions: {mod_history_summary}
 - Support Tickets: Enabled={ticket_cfg.get('enabled', False)}, Active Open={ticket_active_count}, Closed={ticket_closed_count}, Total Count={ticket_counter}, Panel={ticket_panel_ch}
 - Giveaways: {gw_summary}
 - Verification: {v_status}
@@ -637,7 +694,7 @@ ALWAYS use real IDs from the server context above!"""
                             models_to_try = available_models
                         req_messages = llm_messages
 
-                    current_max_tokens = 1024
+                    current_max_tokens = 4096
                     for model_name in models_to_try:
                         try:
                             payload = {
@@ -654,7 +711,7 @@ ALWAYS use real IDs from the server context above!"""
                                 "https://api.groq.com/openai/v1/chat/completions",
                                 json=payload,
                                 headers=headers,
-                                timeout=aiohttp.ClientTimeout(total=20.0),
+                                timeout=aiohttp.ClientTimeout(total=30.0),
                             ) as resp:
                                 if resp.status == 200:
                                     data = await resp.json()
@@ -666,7 +723,7 @@ ALWAYS use real IDs from the server context above!"""
                                     err_txt = await resp.text()
                                     print(f"[AIHelper] Groq model {model_name} returned {resp.status}: {err_txt[:200]}")
                                     if resp.status == 413:
-                                        current_max_tokens = min(current_max_tokens, 600)
+                                        current_max_tokens = min(current_max_tokens, 2048)
                         except Exception as req_err:
                             print(f"[AIHelper] Groq request error ({model_name}): {req_err}")
                             continue
@@ -681,6 +738,13 @@ ALWAYS use real IDs from the server context above!"""
 
         parsed = _extract_json_payload(raw_ai_output)
         reply_text = str(parsed.get("reply") or "I have analyzed your request.").strip()
+        if reply_text.startswith("{") and '"reply"' in reply_text:
+            try:
+                inner = json.loads(reply_text)
+                if isinstance(inner, dict) and "reply" in inner:
+                    reply_text = str(inner.get("reply") or reply_text).strip()
+            except Exception:
+                pass
         raw_actions = parsed.get("actions")
         if not isinstance(raw_actions, list):
             raw_actions = []

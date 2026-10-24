@@ -19,9 +19,45 @@ DashboardTabs.Builder = async function(container, guildId) {
       .replace(/"/g, '&quot;');
   }
 
+  function sanitizeMessageContent(text) {
+    if (!text || typeof text !== 'string') return '';
+    let trimmed = text.trim();
+    if (trimmed.startsWith('{') && trimmed.includes('"reply"')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed.reply === 'string') return parsed.reply;
+      } catch (_) {
+        const m = trimmed.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)"/s);
+        if (m) {
+          try {
+            return JSON.parse(`"${m[1]}"`);
+          } catch (_) {
+            return m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+          }
+        }
+        const unclosed = trimmed.match(/"reply"\s*:\s*"(.*)/s);
+        if (unclosed) {
+          let part = unclosed[1];
+          for (const sep of ['",\n', '",\r\n', '", "actions"', '",\n  "actions"']) {
+            if (part.includes(sep)) {
+              part = part.split(sep)[0];
+              break;
+            }
+          }
+          return part.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        }
+      }
+    }
+    return text;
+  }
+
   function formatMarkdown(text) {
     if (!text) return '';
+    text = sanitizeMessageContent(text);
     let html = escapeHtml(text);
+    html = html.replace(/^### (.*$)/gim, '<h4 class="text-white font-semibold text-sm mt-3 mb-1">$1</h4>');
+    html = html.replace(/^## (.*$)/gim, '<h3 class="text-white font-bold text-base mt-4 mb-2 pb-1 border-b border-white/10">$1</h3>');
+    html = html.replace(/^# (.*$)/gim, '<h2 class="text-white font-bold text-lg mt-4 mb-2 pb-1 border-b border-white/10">$1</h2>');
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
     html = html.replace(/\*([^*]+)\*/g, '<em class="text-neutral-200">$1</em>');
     html = html.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-white/[0.08] text-cyan-300 font-mono text-[12.5px]">$1</code>');
@@ -54,7 +90,19 @@ DashboardTabs.Builder = async function(container, guildId) {
       const raw = localStorage.getItem(STORAGE_CHATS_KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      if (Array.isArray(parsed)) {
+        for (const c of parsed) {
+          if (Array.isArray(c.messages)) {
+            for (const m of c.messages) {
+              if (m.role === 'assistant') {
+                m.content = sanitizeMessageContent(m.content);
+              }
+            }
+          }
+        }
+        return parsed;
+      }
+      return [];
     } catch (_) {
       return [];
     }
@@ -1316,6 +1364,15 @@ DashboardTabs.Builder = async function(container, guildId) {
       });
 
       if (res && res.chats) {
+        for (const c of res.chats) {
+          if (Array.isArray(c.messages)) {
+            for (const m of c.messages) {
+              if (m.role === 'assistant') {
+                m.content = sanitizeMessageContent(m.content);
+              }
+            }
+          }
+        }
         chats = mergeChats(res.chats, chats.filter(c => !String(c.id).startsWith('temp_')));
       }
       if (res && res.chat_id) {
