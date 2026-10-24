@@ -306,15 +306,15 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 <div>
                   <h3 class="text-sm font-semibold text-white text-balance flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                    Multi-Option Ticket-Panel
+                    Ticket-Panel (Discord Live-Vorschau)
                   </h3>
-                  <p class="text-xs text-neutral-400 mt-0.5">Zentrales Discord-Panel mit Auswahl-Dropdown für alle konfigurierten Ticket-Kategorien und 'Create Ticket' Button.</p>
+                  <p class="text-xs text-neutral-400 mt-0.5">Das zentrale Ticket-Panel in Discord mit Auswahl-Dropdown für alle konfigurierten Kategorien und 'Create Ticket' Button.</p>
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="px-2.5 py-1 rounded-lg bg-neutral-800 text-[11px] font-medium text-neutral-300 border border-neutral-700/60 tabular-nums">
-                    ${typeCount} Kategorie${typeCount === 1 ? '' : 'n'} im Menü
+                    ${typeCount} Menü-Option${typeCount === 1 ? '' : 'en'}
                   </span>
-                  <button type="button" id="btn-send-multi-panel-top" class="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl h-9 px-3.5 transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] shadow-sm">
+                  <button type="button" id="btn-send-multi-panel-top" class="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-xl h-9 px-3.5 transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] shadow-sm cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
                     Panel in Discord senden
                   </button>
@@ -408,16 +408,16 @@ DashboardTabs.Tickets = async function (container, guildId) {
                   <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-800/80">
                     <button type="button" id="btn-add-ticket-type-shortcut" class="flex items-center gap-1.5 text-xs font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                      Ticket-Typ für Dropdown hinzufügen
+                      Option für Dropdown hinzufügen
                     </button>
-                    <button type="button" id="btn-send-multi-panel-bottom" class="flex items-center gap-1.5 bg-white text-black hover:bg-neutral-200 font-medium text-xs rounded-xl h-9 px-4 transition-transform duration-150 active:scale-[0.96]">
+                    <button type="button" id="btn-send-multi-panel-bottom" class="flex items-center gap-1.5 bg-white text-black hover:bg-neutral-200 font-medium text-xs rounded-xl h-9 px-4 transition-transform duration-150 active:scale-[0.96] cursor-pointer">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-                      Multi-Option Panel in Discord senden
+                      Panel in Discord senden
                     </button>
                   </div>
                 </div>
 
-                <!-- Right: Discord Live Preview (5 cols) matching media_1792825411260_c3fb72d0.png 1:1 -->
+                <!-- Right: Discord Live Preview (5 cols) - 1:1 Discord Layout -->
                 <div class="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-[#313338] border border-[#232428] p-4 text-white font-sans text-sm select-none shadow-xl">
                   <div>
                     <div class="flex items-center justify-between pb-3 border-b border-[#232428] mb-3">
@@ -440,7 +440,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                           <span class="text-neutral-400 text-[11px] ml-1">Heute um 12:00 Uhr</span>
                         </div>
 
-                        <!-- Discord Embed Card (Green border like screenshot) -->
+                        <!-- Discord Embed Card -->
                         <div class="mt-2.5 rounded bg-[#2b2d31] border-l-4 border-l-[#248046] p-3.5 space-y-2 shadow-md">
                           <div id="pv-panel-title" class="font-bold text-white text-sm leading-snug">
                             ${escapeHtml(state.panel_title || 'Support Ticket')}
@@ -455,32 +455,40 @@ DashboardTabs.Tickets = async function (container, guildId) {
                           </div>
                         </div>
 
-                        <!-- Discord Select Menu Preview Component -->
-                        <div class="mt-3">
-                          <div class="rounded-lg bg-[#2b2d31] hover:bg-[#35373c] border border-[#1e1f22] p-2.5 flex items-center justify-between cursor-pointer transition-colors shadow-inner">
-                            <div class="flex items-center gap-2 min-w-0">
-                              <span class="text-xs text-neutral-300 truncate">Select a category...</span>
+                        <!-- Discord Select Menu Preview Component (Interactive 1:1 Discord Select Menu) -->
+                        <div class="mt-3 relative" id="pv-select-container">
+                          <button type="button" id="pv-select-btn" class="w-full rounded bg-[#2b2d31] hover:bg-[#35373c] border border-[#1e1f22] p-2.5 flex items-center justify-between cursor-pointer transition-colors shadow-inner text-left focus:outline-none">
+                            <div class="flex items-center gap-2 min-w-0" id="pv-select-display">
+                              <span class="text-xs text-neutral-300 truncate" id="pv-select-text">Select a category...</span>
                             </div>
-                            <svg class="w-3.5 h-3.5 text-neutral-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                          </div>
+                            <svg id="pv-select-arrow" class="w-3.5 h-3.5 text-neutral-400 shrink-0 transition-transform duration-150" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                          </button>
 
-                          <!-- Category Preview Chips (showing options inside the dropdown) -->
-                          <div class="flex flex-wrap gap-1 mt-2">
+                          <!-- Discord Dropdown Popover List -->
+                          <div id="pv-select-menu" class="hidden absolute left-0 right-0 top-full mt-1 bg-[#2b2d31] border border-[#1e1f22] rounded-lg shadow-2xl z-30 max-h-56 overflow-y-auto p-1 divide-y divide-[#35373c]/60">
+                            <button type="button" data-pv-opt="" class="w-full p-2 rounded text-left hover:bg-[#35373c] flex items-center justify-between group transition-colors">
+                              <span class="text-xs text-neutral-400">Select a category... (Standard)</span>
+                            </button>
                             ${state.ticketTypes.length > 0 ? state.ticketTypes.map(t => `
-                              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#2b2d31] border border-[#383a40] text-[11px] text-neutral-300">
-                                <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${t.color || '#5865F2'}"></span>
-                                <span class="truncate max-w-[130px]">${escapeHtml(t.name)}</span>
-                              </span>
+                              <button type="button" data-pv-opt="${escapeHtml(t.id)}" class="w-full p-2 rounded text-left hover:bg-[#35373c] flex items-center justify-between group transition-colors">
+                                <div class="min-w-0 flex items-center gap-2.5">
+                                  <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${t.color || '#5865F2'}"></span>
+                                  <div class="min-w-0">
+                                    <div class="text-xs font-medium text-white truncate">${escapeHtml(t.name)}</div>
+                                    ${t.description ? `<div class="text-[10px] text-neutral-400 truncate max-w-[220px]">${escapeHtml(t.description)}</div>` : ''}
+                                  </div>
+                                </div>
+                              </button>
                             `).join('') : `
-                              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#2b2d31] border border-[#383a40] text-[11px] text-neutral-400">
-                                <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-                                General Support
-                              </span>
+                              <button type="button" data-pv-opt="default" class="w-full p-2 rounded text-left hover:bg-[#35373c] flex items-center gap-2 group transition-colors">
+                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0"></span>
+                                <span class="text-xs font-medium text-white">General Support</span>
+                              </button>
                             `}
                           </div>
                         </div>
 
-                        <!-- Discord Button Component -->
+                        <!-- Discord Button Component (Single Button as in Discord) -->
                         <div class="mt-2.5">
                           <button type="button" class="bg-[#5865F2] hover:bg-[#4752C4] text-white font-medium text-xs rounded-md px-4 py-2 flex items-center gap-2 shadow transition-colors pointer-events-none">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
@@ -492,8 +500,11 @@ DashboardTabs.Tickets = async function (container, guildId) {
                   </div>
 
                   <div class="mt-4 pt-3 border-t border-[#232428] flex items-center justify-between text-xs text-neutral-400">
-                    <span class="text-[11px]">Interaktives Discord UI-Layout</span>
-                    <button type="button" id="btn-quick-send-preview" class="px-2.5 py-1 rounded bg-[#5865F2] hover:bg-[#4752C4] text-white text-[11px] font-medium transition-colors">
+                    <span class="text-[11px] flex items-center gap-1.5 text-neutral-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                      1 Zentrales Ticket-Panel
+                    </span>
+                    <button type="button" id="btn-quick-send-preview" class="px-3 py-1.5 rounded-lg bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-medium transition-[transform,background-color] active:scale-[0.96] cursor-pointer">
                       Jetzt posten
                     </button>
                   </div>
@@ -501,20 +512,26 @@ DashboardTabs.Tickets = async function (container, guildId) {
               </div>
             </div>
 
-            <!-- Ticketarten Section -->
+            <!-- Optionen im Ticket-Menü Section -->
             <div data-tour="tickets-roles" class="mb-8 scroll-mt-24">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <h3 class="text-sm font-semibold text-white text-balance">Ticketarten</h3>
+                <div>
+                  <h3 class="text-sm font-semibold text-white text-balance flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+                    Optionen im Ticket-Menü
+                  </h3>
+                  <p class="text-xs text-neutral-400 mt-0.5">Kategorien & Optionen für das zentrale Ticket-Panel mit individueller Support-Rolle, Ticket-Kategorie & Log-Kanal.</p>
+                </div>
                 <div class="flex items-center flex-wrap gap-2.5">
                   <div class="flex items-center gap-3">
-                    <span id="tkt-types-counter" class="text-xs tabular-nums text-neutral-500">${typeCount}/999 Typen</span>
+                    <span id="tkt-types-counter" class="text-xs tabular-nums text-neutral-500">${typeCount} Option${typeCount === 1 ? '' : 'en'}</span>
                     <div class="w-16 h-1 rounded-full bg-neutral-800 overflow-hidden">
                       <div id="tkt-types-progress" class="h-full rounded-full transition-all bg-white/60" style="width: ${progressPct}%;"></div>
                     </div>
                   </div>
                   <button type="button" id="btn-create-ticket-type-top" data-tour="tickets-create" class="flex items-center gap-1.5 bg-white text-black font-medium text-sm rounded-xl h-10 pl-3.5 pr-4 hover:bg-neutral-200 whitespace-nowrap transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed scroll-mt-24">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-4 h-4 flex-shrink-0"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                    Ticket-Typ erstellen
+                    Option hinzufügen
                   </button>
                 </div>
               </div>
@@ -709,7 +726,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
       bindMainEvents();
     };
 
-    // Render Ticketarten Grid
+    // Render Optionen im Ticket-Menü Grid
     const renderTicketTypesGrid = () => {
       const grid = document.getElementById('tickets-types-grid');
       const counterEl = document.getElementById('tkt-types-counter');
@@ -717,7 +734,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
       if (!grid) return;
 
       const count = state.ticketTypes.length;
-      if (counterEl) counterEl.textContent = `${count}/999 Typen`;
+      if (counterEl) counterEl.textContent = `${count} Option${count === 1 ? '' : 'en'}`;
       if (progressEl) progressEl.style.width = `${Math.min(100, count > 0 ? Math.max(4, (count / 10) * 100) : 0)}%`;
 
       const cards = state.ticketTypes.map((t) => {
@@ -725,6 +742,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         const pCh = getChannelById(t.panel_channel_id || state.panel_channel_id);
         const lCh = getChannelById(t.log_channel_id || state.log_channel_id);
         const sRole = getRoleById(t.role_id);
+        const sCat = getCategoryById(t.category_id);
         const qCount = Array.isArray(t.questions) ? t.questions.length : 0;
 
         return `
@@ -732,16 +750,16 @@ DashboardTabs.Tickets = async function (container, guildId) {
             <div>
               <div class="flex items-start justify-between gap-2">
                 <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="grid place-items-center size-9 rounded-xl shrink-0" style="background-color: ${t.color.replace('rgb(', 'rgba(').replace(')', ', 0.12)')}">
-                    <span class="w-3 h-3 rounded-full" style="background-color: ${t.color}"></span>
+                  <div class="grid place-items-center size-9 rounded-xl shrink-0" style="background-color: ${t.color ? t.color.replace('rgb(', 'rgba(').replace(')', ', 0.12)') : 'rgba(88, 101, 242, 0.12)'}">
+                    <span class="w-3 h-3 rounded-full" style="background-color: ${t.color || '#5865F2'}"></span>
                   </div>
                   <div class="min-w-0">
                     <h4 class="text-sm font-semibold text-white truncate">${escapeHtml(t.name)}</h4>
-                    <p class="text-[11px] text-neutral-500 truncate">${pCh ? `#${escapeHtml(pCh.name)}` : 'Kein spezifischer Kanal'}</p>
+                    <p class="text-[11px] text-neutral-400 truncate mt-0.5">${sCat ? `📁 ${escapeHtml(sCat.name)}` : 'Automatische Kategorie'}</p>
                   </div>
                 </div>
-                <span class="flex-shrink-0 px-1.5 py-0.5 rounded-[4px] text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap ${modeInfo.badgeClass}">
-                  ${escapeHtml(modeInfo.label)}
+                <span class="flex-shrink-0 px-2 py-0.5 rounded-[6px] text-[10px] font-semibold tracking-wide whitespace-nowrap bg-neutral-800 border border-neutral-700/60 text-neutral-300">
+                  Menü-Option
                 </span>
               </div>
 
@@ -749,16 +767,16 @@ DashboardTabs.Tickets = async function (container, guildId) {
             </div>
 
             <div class="pt-2.5 border-t border-neutral-800/80 flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 text-[11px] text-neutral-500 truncate">
-                <span class="tabular-nums">${qCount} ${qCount === 1 ? 'Feld' : 'Felder'}</span>
-                ${lCh ? `<span>· Log: #${escapeHtml(lCh.name)}</span>` : ''}
-                ${sRole ? `<span>· @${escapeHtml(sRole.name)}</span>` : ''}
+              <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-neutral-400 truncate">
+                <span class="tabular-nums px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-300 font-medium">${qCount} ${qCount === 1 ? 'Frage' : 'Fragen'}</span>
+                ${sRole ? `<span class="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 font-medium">@${escapeHtml(sRole.name)}</span>` : ''}
+                ${lCh ? `<span class="text-neutral-500 truncate">#${escapeHtml(lCh.name)}</span>` : ''}
               </div>
-              <div class="flex items-center gap-1 shrink-0">
-                <button type="button" data-send-ticket-type="${escapeHtml(t.id)}" class="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-white hover:text-black text-[11px] font-medium text-neutral-200 transition-colors" title="Einzelnes Panel in Discord senden">
-                  Panel senden
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" data-edit-btn-type="${escapeHtml(t.id)}" class="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[11px] font-medium text-neutral-200 transition-colors cursor-pointer">
+                  Bearbeiten
                 </button>
-                <button type="button" data-delete-ticket-type="${escapeHtml(t.id)}" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Löschen">
+                <button type="button" data-delete-ticket-type="${escapeHtml(t.id)}" class="p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer" title="Löschen">
                   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
               </div>
@@ -767,13 +785,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
         `;
       });
 
-      // Dashed "+ Ticket-Typ erstellen" card
+      // Dashed "+ Option hinzufügen" card
       cards.push(`
         <button type="button" id="btn-create-ticket-type-card" class="group rounded-xl border-2 border-dashed border-neutral-700 p-4 hover:border-neutral-500 hover:bg-neutral-800/30 transition-[transform,background-color,border-color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 cursor-pointer flex flex-col items-center justify-center gap-2.5 min-h-[160px]">
           <div class="w-11 h-11 rounded-xl bg-neutral-800 flex items-center justify-center transition-transform duration-150 ease-out group-hover:scale-105">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-5 h-5 text-neutral-400"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
           </div>
-          <span class="text-sm font-medium text-neutral-400">Ticket-Typ erstellen</span>
+          <span class="text-sm font-medium text-neutral-400">Option hinzufügen</span>
         </button>
       `);
 
@@ -783,42 +801,19 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
       grid.querySelectorAll('[data-edit-ticket-type]').forEach(card => {
         card.addEventListener('click', (e) => {
-          if (e.target.closest('[data-send-ticket-type]') || e.target.closest('[data-delete-ticket-type]')) return;
+          if (e.target.closest('[data-edit-btn-type]') || e.target.closest('[data-delete-ticket-type]')) return;
           const tid = card.getAttribute('data-edit-ticket-type');
           const found = state.ticketTypes.find(t => t.id === tid);
           if (found) openTicketTypeModal(found);
         });
       });
 
-      grid.querySelectorAll('[data-send-ticket-type]').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+      grid.querySelectorAll('[data-edit-btn-type]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const tid = btn.getAttribute('data-send-ticket-type');
+          const tid = btn.getAttribute('data-edit-btn-type');
           const found = state.ticketTypes.find(t => t.id === tid);
-          if (!found) return;
-          const targetChannelId = found.panel_channel_id || state.panel_channel_id;
-          if (!targetChannelId) {
-            openTicketTypeModal(found, 2);
-            if (window.Notifications) Notifications.show('Bitte wählen Sie zuerst einen Panel-Kanal aus.', 'info');
-            return;
-          }
-          const orig = btn.textContent;
-          btn.textContent = 'Sendet...';
-          btn.disabled = true;
-          try {
-            await saveTicketConfig(true);
-            await API.sendTicketPanel(guildId, {
-              channel_id: targetChannelId,
-              slot_id: found.id,
-              slot_name: found.name
-            });
-            if (window.Notifications) Notifications.show(`Panel für "${found.name}" wurde in Discord gepostet!`, 'success');
-          } catch (err) {
-            if (window.Notifications) Notifications.show(err.message || 'Fehler beim Senden des Panels', 'error');
-          } finally {
-            btn.textContent = orig;
-            btn.disabled = false;
-          }
+          if (found) openTicketTypeModal(found);
         });
       });
 
@@ -826,10 +821,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
           const tid = btn.getAttribute('data-delete-ticket-type');
+          const found = state.ticketTypes.find(t => t.id === tid);
+          const optName = found ? found.name : 'Option';
+          if (!confirm(`Möchten Sie die Option "${optName}" wirklich aus dem Ticket-Menü entfernen?`)) return;
           state.ticketTypes = state.ticketTypes.filter(t => t.id !== tid);
           renderMain();
           await saveTicketConfig(true);
-          if (window.Notifications) Notifications.show('Ticket-Typ gelöscht', 'success');
+          if (window.Notifications) Notifications.show(`Option "${optName}" wurde entfernt.`, 'info');
         });
       });
     };
@@ -1055,6 +1053,46 @@ DashboardTabs.Tickets = async function (container, guildId) {
       document.getElementById('btn-send-multi-panel-top')?.addEventListener('click', (e) => triggerSendMultiPanel(e.currentTarget));
       document.getElementById('btn-send-multi-panel-bottom')?.addEventListener('click', (e) => triggerSendMultiPanel(e.currentTarget));
       document.getElementById('btn-quick-send-preview')?.addEventListener('click', (e) => triggerSendMultiPanel(e.currentTarget));
+
+      // Discord Live Preview Select Dropdown Toggle & Option Selection
+      const pvSelectBtn = document.getElementById('pv-select-btn');
+      const pvSelectMenu = document.getElementById('pv-select-menu');
+      const pvSelectDisplay = document.getElementById('pv-select-display');
+      const pvSelectArrow = document.getElementById('pv-select-arrow');
+
+      pvSelectBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAllDropdowns();
+        const isHidden = pvSelectMenu?.classList.toggle('hidden');
+        if (pvSelectArrow) {
+          pvSelectArrow.style.transform = isHidden ? '' : 'rotate(180deg)';
+        }
+      });
+
+      pvSelectMenu?.querySelectorAll('[data-pv-opt]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const optId = btn.getAttribute('data-pv-opt');
+          const found = state.ticketTypes.find(t => String(t.id) === String(optId));
+          if (found && pvSelectDisplay) {
+            pvSelectDisplay.innerHTML = `
+              <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${found.color || '#5865F2'}"></span>
+              <span class="text-xs text-white font-medium truncate">${escapeHtml(found.name)}</span>
+            `;
+          } else if (pvSelectDisplay) {
+            pvSelectDisplay.innerHTML = `<span class="text-xs text-neutral-300 truncate">Select a category...</span>`;
+          }
+          pvSelectMenu.classList.add('hidden');
+          if (pvSelectArrow) pvSelectArrow.style.transform = '';
+        });
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#pv-select-container')) {
+          pvSelectMenu?.classList.add('hidden');
+          if (pvSelectArrow) pvSelectArrow.style.transform = '';
+        }
+      });
 
       // Multi-Panel Channel Custom Searchable Dropdown
       const panelChBtn = document.getElementById('main-dd-panel-ch-btn');
@@ -1297,7 +1335,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
               <div class="w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[85vh]" style="opacity: 1; transform: none;">
                 <div class="flex items-center justify-between gap-3 px-5 py-3 border-b border-neutral-800 flex-shrink-0">
                   <div class="flex items-center gap-1.5 min-w-0">
-                    <h2 class="text-sm font-semibold text-white truncate text-balance">Tickettyp erstellen</h2>
+                    <h2 class="text-sm font-semibold text-white truncate text-balance">Option für Ticket-Menü hinzufügen</h2>
                   </div>
                   <div class="flex items-center gap-2 flex-shrink-0">
                     <button type="button" id="tkt-modal-close" class="grid place-items-center -mr-2 size-9 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800/60 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
@@ -1775,12 +1813,14 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 </div>
               </div>
 
-              <div class="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-4 flex items-center justify-between gap-3">
-                <div>
-                  <p class="text-xs font-semibold text-white">Panel sofort im Panel-Kanal veröffentlichen</p>
-                  <p class="text-[11px] text-neutral-500">Sendet das interaktive Ticket-Panel direkt nach dem Speichern in ${pCh ? `#${escapeHtml(pCh.name)}` : 'den gewählten Kanal'}.</p>
+              <div class="rounded-2xl bg-indigo-500/10 border border-indigo-500/20 p-4 flex items-center gap-3">
+                <div class="grid place-items-center size-8 rounded-lg bg-indigo-500/20 text-indigo-400 shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 </div>
-                ${renderSwitchButton('wiz-switch-post-now', draft.post_immediately !== false)}
+                <div>
+                  <p class="text-xs font-semibold text-white">Menü-Option im zentralen Ticket-Panel</p>
+                  <p class="text-[11px] text-neutral-300">Diese Option wird im Auswahl-Dropdown des Ticket-Panels angezeigt. Sie können das Panel jederzeit über die Discord-Vorschau oder "Panel in Discord senden" posten.</p>
+                </div>
               </div>
             </div>
           `;
@@ -1835,7 +1875,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                     <span class="text-[10px] text-neutral-500 tabular-nums whitespace-nowrap">${draft.questions.length}/5 Felder</span>
                   </div>
                   <button type="button" id="wiz-btn-next" ${isNextDisabled ? 'disabled' : ''} class="flex items-center gap-1.5 bg-white text-black font-medium text-sm rounded-xl h-10 pl-4 pr-3.5 hover:bg-neutral-200 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-30 disabled:cursor-not-allowed">
-                    ${currentStep === 4 ? (isEditing ? 'Speichern' : 'Ticket-Typ erstellen') : 'Nächste'}
+                    ${currentStep === 4 ? (isEditing ? 'Option speichern' : 'Option zum Menü hinzufügen') : 'Nächste'}
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-3.5 h-3.5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                   </button>
                 </div>
@@ -2093,12 +2133,6 @@ DashboardTabs.Tickets = async function (container, guildId) {
           });
         });
 
-        // Step 4 bindings
-        document.getElementById('wiz-switch-post-now')?.addEventListener('click', () => {
-          draft.post_immediately = draft.post_immediately === false ? true : false;
-          updateSwitchVisual('wiz-switch-post-now', draft.post_immediately);
-        });
-
         // Prev / Next footer buttons
         document.getElementById('wiz-btn-prev')?.addEventListener('click', () => {
           closeAllDropdowns();
@@ -2121,7 +2155,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
             return;
           }
 
-          // Final Step 4 Submit
+          // Final Step 4 Submit: Add/Update Option in ticket panel's options list
           const existingIdx = state.ticketTypes.findIndex(t => t.id === draft.id);
           if (existingIdx >= 0) {
             state.ticketTypes[existingIdx] = draft;
@@ -2136,21 +2170,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
           closeModal();
           renderMain();
           await saveTicketConfig(true);
-
-          if (draft.post_immediately !== false && (draft.panel_channel_id || state.panel_channel_id)) {
-            try {
-              await API.sendTicketPanel(guildId, {
-                channel_id: draft.panel_channel_id || state.panel_channel_id,
-                slot_id: draft.id,
-                slot_name: draft.name
-              });
-              if (window.Notifications) Notifications.show(`Ticket-Typ "${draft.name}" erstellt & Panel in Discord gesendet!`, 'success');
-            } catch (err) {
-              if (window.Notifications) Notifications.show(`Ticket-Typ gespeichert, aber Panel-Versand fehlgeschlagen: ${err.message}`, 'error');
-            }
-          } else {
-            if (window.Notifications) Notifications.show(`Ticket-Typ "${draft.name}" gespeichert!`, 'success');
-          }
+          if (window.Notifications) Notifications.show(`Option "${draft.name}" erfolgreich zum Ticket-Menü hinzugefügt!`, 'success');
         });
       };
 
