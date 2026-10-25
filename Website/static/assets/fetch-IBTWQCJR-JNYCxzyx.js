@@ -1,3 +1,4 @@
+import { j } from "./main-DJXeaSrE.js";
 var o = new Map;
 async function w(i, { api: h = "/api/search", locale: a, tag: e } = {}) {
   const q = (i || "").trim().toLowerCase();
@@ -53,4 +54,4 @@ async function w(i, { api: h = "/api/search", locale: a, tag: e } = {}) {
   if (trees.releases) searchInTree(trees.releases, q, res, ["Release Notes"]);
   return res.slice(0, 25);
 }
-export { w as fetchDocs };
+export { w as fetchDocs, j };
