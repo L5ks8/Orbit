@@ -4,9 +4,9 @@
  */
 
 // ==========================================
-// DOCS PAGE
+
 // ==========================================
-// Pages.Docs is implemented in /js/pages/docs.js with Fumadocs / Volt notebook layout
+
 
 // ==========================================
 // GUIDES PAGE
@@ -33,7 +33,7 @@ Pages.Guides = function(container) {
               <h2 class="text-lg font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">${g.title}</h2>
               <p class="text-xs text-neutral-400 leading-relaxed">${g.desc}</p>
             </div>
-            <a href="/docs" class="text-xs text-white font-semibold flex items-center gap-1.5 hover:underline">
+            <a href="#features" class="text-xs text-white font-semibold flex items-center gap-1.5 hover:underline">
               Read Guide ${icon('arrow-right', 12)}
             </a>
           </div>

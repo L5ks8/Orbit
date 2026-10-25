@@ -78,11 +78,10 @@ const Router = {
     }
 
     // Show top navbar for public pages (hide on dashboard and settings)
-    const isDocs = path.startsWith('/docs') || path.startsWith('/wiki');
     const isDashboard = path.startsWith('/dashboard') || path === '/settings';
     const navbar = document.getElementById('main-navbar');
     if (navbar) {
-      navbar.style.display = (isDashboard || isDocs) ? 'none' : 'flex';
+      navbar.style.display = isDashboard ? 'none' : 'flex';
       this.updateNavbarUser();
     }
 
@@ -94,12 +93,6 @@ const Router = {
     // Match exact and dynamic routes
     if (path === '/') {
       return Pages.Landing(app);
-    }
-    // Docs and Wiki routing
-    const docsMatch = path.match(/^\/(?:docs|wiki)(?:\/(.*))?$/);
-    if (docsMatch) {
-      const slug = (docsMatch[1] || 'overview').replace(/\/$/, '');
-      return Pages.Docs(app, slug);
     }
     if (path === '/guides') {
       return Pages.Guides(app);

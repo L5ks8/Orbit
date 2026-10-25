@@ -327,7 +327,7 @@ Pages.Landing = function(container) {
             <ul class="space-y-3">
               <li><a href="/dashboard" class="text-sm text-neutral-400 hover:text-white transition-colors">Overview</a></li>
               <li><a href="/dashboard" class="text-sm text-neutral-400 hover:text-white transition-colors">Modules</a></li>
-              <li><a href="/docs" class="text-sm text-neutral-400 hover:text-white transition-colors">Wiki</a></li>
+
             </ul>
           </div>
           <div>
