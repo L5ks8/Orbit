@@ -86,6 +86,12 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin, AIHelperMi
                     headers["Cache-Control"] = "no-cache, must-revalidate"
                 return web.FileResponse(file_path, headers=headers)
             
+        if path == "docs" or path.startswith("docs/"):
+            docs_path = os.path.join(static_dir, "docs.html")
+            if os.path.exists(docs_path):
+                headers = {"Cache-Control": "no-cache, must-revalidate"}
+                return web.FileResponse(docs_path, headers=headers)
+
         index_path = os.path.join(static_dir, "index.html")
         if os.path.exists(index_path):
             with open(index_path, "r", encoding="utf-8") as f:

@@ -12,7 +12,7 @@
 // GUIDES PAGE
 // ==========================================
 Pages.Docs = function(container) {
-  container.innerHTML = '<div class="min-h-screen pt-32 pb-24 px-6 max-w-7xl mx-auto"></div>';
+  window.location.href = window.location.pathname.startsWith('/docs') ? window.location.pathname : '/docs';
 };
 
 Pages.Guides = function(container) {

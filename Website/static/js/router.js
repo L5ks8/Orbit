@@ -14,7 +14,7 @@ const Router = {
       const link = e.target.closest('a');
       if (link && link.getAttribute('href')?.startsWith('/') && !link.getAttribute('target') && !link.getAttribute('download')) {
         const href = link.getAttribute('href');
-        if (!href.startsWith('/api') && !href.startsWith('/auth')) {
+        if (!href.startsWith('/api') && !href.startsWith('/auth') && !href.startsWith('/docs')) {
           e.preventDefault();
           this.navigate(href);
         }
@@ -78,7 +78,7 @@ const Router = {
     }
 
     // Show top navbar for public pages (hide on dashboard and settings)
-    const isDashboard = path.startsWith('/dashboard') || path === '/settings';
+    const isDashboard = path.startsWith('/dashboard') || path === '/settings' || path === '/docs' || path.startsWith('/docs/');
     const navbar = document.getElementById('main-navbar');
     if (navbar) {
       navbar.style.display = isDashboard ? 'none' : 'flex';
@@ -91,10 +91,10 @@ const Router = {
     }
 
     // Match exact and dynamic routes
-    if (path === '/') {
+    if (path === '/' || path === '/main') {
       return Pages.Landing(app);
     }
-    if (path === '/docs') {
+    if (path === '/docs' || path.startsWith('/docs/')) {
       return Pages.Docs(app);
     }
     if (path === '/guides') {
