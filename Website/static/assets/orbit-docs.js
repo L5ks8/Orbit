@@ -1237,61 +1237,39 @@ const ORBIT_PAGE_TREE = {
   $id: "root",
   name: "Orbit Docs",
   children: [
-    { $id: "root:index.mdx", type: "page", name: "Einführung", description: "Willkommen in der offiziellen Dokumentation von Orbit.", url: "/docs" },
-    { $id: "root:quickstart.mdx", type: "page", name: "Erste Schritte", description: "Lade Orbit ein und richte deinen Server in 3 Minuten ein.", url: "/docs/quickstart" },
-    { $id: "root:sep_modules", type: "separator", name: "Dashboard Module & Tabs" },
-    {
-      type: "folder",
-      name: "Moderation & Schutz",
-      root: false,
-      children: [
-        { type: "page", name: "Auto-Moderation", url: "/docs/modules/automod", description: "Banned Words, Anti-Spam, Links & Mass-Mentions." },
-        { type: "page", name: "Verifizierung", url: "/docs/modules/verification", description: "Button-, Captcha- und Passwort-Schutz für neue Mitglieder." },
-        { type: "page", name: "Sicherheit & Anti-Raid", url: "/docs/modules/security", description: "Mass-Join Schutz, Account-Alter und Lockdown." },
-        { type: "page", name: "Inaktivitäts-Kick", url: "/docs/modules/inactivekick", description: "Automatisches Entfernen inaktiver Konten." },
-        { type: "page", name: "Entbannungsanträge", url: "/docs/modules/appeals", description: "Web-Appeals für gebannte Mitglieder." },
-        { type: "page", name: "Audit & ModLogs", url: "/docs/modules/modlog", description: "Mod-Cases und Audit-Logs für deinen Server." }
-      ]
-    },
-    {
-      type: "folder",
-      name: "Community & Support",
-      root: false,
-      children: [
-        { type: "page", name: "Welcome & Goodbye", url: "/docs/modules/welcome", description: "Begrüßungen mit Embeds und Variablen." },
-        { type: "page", name: "Leveling & XP", url: "/docs/modules/level", description: "Text- und Voice-XP mit Rollenbelohnungen." },
-        { type: "page", name: "Tickets & Support", url: "/docs/modules/tickets", description: "Support-Panels mit automatischen HTML-Transkripten." },
-        { type: "page", name: "Giveaways", url: "/docs/modules/giveaways", description: "Gewinnspiele mit Button-Teilnahme und Rerolls." },
-        { type: "page", name: "Umfragen (Polls)", url: "/docs/modules/polls", description: "Interaktive Abstimmungen mit Live-Ergebnissen." },
-        { type: "page", name: "TempVoice Channels", url: "/docs/modules/tempvoice", description: "Temporäre Join to Create Sprachkanäle." }
-      ]
-    },
-    {
-      type: "folder",
-      name: "Server-Verwaltung",
-      root: false,
-      children: [
-        { type: "page", name: "Rollen & Reaction Roles", url: "/docs/modules/roles", description: "Auto-Join Rollen und Button-Rollen." },
-        { type: "page", name: "Server-Statistiken", url: "/docs/modules/serverstats", description: "Live-Zähler für Mitglieder, Bots und Boosts." },
-        { type: "page", name: "Einladungs-Tracker", url: "/docs/modules/invites", description: "Mitglieder-Herkunft und Fake-Erkennung." },
-        { type: "page", name: "Auto-Responder", url: "/docs/modules/autoresponder", description: "Automatische Chat-Antworten und Sticky Messages." },
-        { type: "page", name: "Server-Backups", url: "/docs/modules/backups", description: "Sicherung und Wiederherstellung des Servers." },
-        { type: "page", name: "Dashboard-Einstellungen", url: "/docs/modules/settings", description: "Präfix, Sprache und Administrator-Rollen." }
-      ]
-    },
-    { $id: "root:sep_commands", type: "separator", name: "Befehle (Commands)" },
-    {
-      type: "folder",
-      name: "Befehlsreferenz",
-      root: false,
-      children: [
-        { type: "page", name: "Moderations-Befehle", url: "/docs/commands/moderation", description: "Bans, Kicks, Timeouts, Warns und Purge." },
-        { type: "page", name: "Management-Befehle", url: "/docs/commands/management", description: "Setup, Rollen, Embeds und Backups." },
-        { type: "page", name: "Community-Befehle", url: "/docs/commands/community", description: "Rank, Leaderboard, Polls und Giveaways." },
-        { type: "page", name: "Info- & Utility-Befehle", url: "/docs/commands/info", description: "Help, BotInfo, UserInfo und ServerInfo." },
-        { type: "page", name: "Admin- & Sicherheits-Befehle", url: "/docs/commands/admin", description: "Security, Anti-Raid, Whitelist und Notfallbefehle." }
-      ]
-    }
+    { $id: "root:index.mdx", type: "page", name: "Einführung", description: "Willkommen in der offiziellen Dokumentation von Orbit.", url: "/docs", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>' },
+    { $id: "root:quickstart.mdx", type: "page", name: "Erste Schritte", description: "Lade Orbit ein und richte deinen Server in 3 Minuten ein.", url: "/docs/quickstart", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket size-4"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>' },
+    
+    { $id: "root:sep_mod", type: "separator", name: "Moderation & Schutz" },
+    { type: "page", name: "Auto-Moderation", url: "/docs/modules/automod", description: "Banned Words, Anti-Spam, Links & Mass-Mentions.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert size-4"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>' },
+    { type: "page", name: "Verifizierung", url: "/docs/modules/verification", description: "Button-, Captcha- und Passwort-Schutz für neue Mitglieder.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-badge-check size-4"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"></path><path d="m9 12 2 2 4-4"></path></svg>' },
+    { type: "page", name: "Sicherheit & Anti-Raid", url: "/docs/modules/security", description: "Mass-Join Schutz, Account-Alter und Lockdown.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check size-4"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>' },
+    { type: "page", name: "Inaktivitäts-Kick", url: "/docs/modules/inactivekick", description: "Automatisches Entfernen inaktiver Konten.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-x size-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="17" x2="22" y1="8" y2="13"></line><line x1="22" x2="17" y1="8" y2="13"></line></svg>' },
+    { type: "page", name: "Entbannungsanträge", url: "/docs/modules/appeals", description: "Web-Appeals für gebannte Mitglieder.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text size-4"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>' },
+    { type: "page", name: "Audit & ModLogs", url: "/docs/modules/modlog", description: "Mod-Cases und Audit-Logs für deinen Server.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scroll size-4"><path d="M19 17V5a2 2 0 0 0-2-2H4"></path><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"></path></svg>' },
+
+    { $id: "root:sep_comm", type: "separator", name: "Community & Support" },
+    { type: "page", name: "Welcome & Goodbye", url: "/docs/modules/welcome", description: "Begrüßungen mit Embeds und Variablen.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles size-4"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>' },
+    { type: "page", name: "Leveling & XP", url: "/docs/modules/level", description: "Text- und Voice-XP mit Rollenbelohnungen.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-award size-4"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg>' },
+    { type: "page", name: "Tickets & Support", url: "/docs/modules/tickets", description: "Support-Panels mit automatischen HTML-Transkripten.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square size-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>' },
+    { type: "page", name: "Giveaways", url: "/docs/modules/giveaways", description: "Gewinnspiele mit Button-Teilnahme und Rerolls.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gift size-4"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>' },
+    { type: "page", name: "Umfragen (Polls)", url: "/docs/modules/polls", description: "Interaktive Abstimmungen mit Live-Ergebnissen.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart-3 size-4"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>' },
+    { type: "page", name: "TempVoice Channels", url: "/docs/modules/tempvoice", description: "Temporäre Join to Create Sprachkanäle.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic size-4"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>' },
+
+    { $id: "root:sep_server", type: "separator", name: "Server-Verwaltung" },
+    { type: "page", name: "Rollen & Reaction Roles", url: "/docs/modules/roles", description: "Auto-Join Rollen und Button-Rollen.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield size-4"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>' },
+    { type: "page", name: "Server-Statistiken", url: "/docs/modules/serverstats", description: "Live-Zähler für Mitglieder, Bots und Boosts.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity size-4"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>' },
+    { type: "page", name: "Einladungs-Tracker", url: "/docs/modules/invites", description: "Mitglieder-Herkunft und Fake-Erkennung.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-plus size-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" x2="19" y1="8" y2="14"></line><line x1="22" x2="16" y1="11" y2="11"></line></svg>' },
+    { type: "page", name: "Auto-Responder", url: "/docs/modules/autoresponder", description: "Automatische Chat-Antworten und Sticky Messages.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot size-4"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>' },
+    { type: "page", name: "Server-Backups", url: "/docs/modules/backups", description: "Sicherung und Wiederherstellung des Servers.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-archive size-4"><rect width="20" height="5" x="2" y="3" rx="1"></rect><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg>' },
+    { type: "page", name: "Dashboard-Einstellungen", url: "/docs/modules/settings", description: "Präfix, Sprache und Administrator-Rollen.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sliders size-4"><line x1="4" x2="4" y1="21" y2="14"></line><line x1="4" x2="4" y1="10" y2="3"></line><line x1="12" x2="12" y1="21" y2="12"></line><line x1="12" x2="12" y1="8" y2="3"></line><line x1="20" x2="20" y1="21" y2="16"></line><line x1="20" x2="20" y1="12" y2="3"></line><line x1="1" x2="7" y1="14" y2="14"></line><line x1="9" x2="15" y1="8" y2="8"></line><line x1="17" x2="23" y1="16" y2="16"></line></svg>' },
+
+    { $id: "root:sep_commands", type: "separator", name: "Befehle (Commands)", icon: void 0 },
+    { type: "page", name: "Moderations-Befehle", url: "/docs/commands/moderation", description: "Bans, Kicks, Timeouts, Warns und Purge.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hammer size-4"><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"></path><path d="m17.64 4.36 2-2a2 2 0 0 1 2.83 2.83l-2 2"></path><path d="m14 7 3 3"></path><path d="m19 12-2 2"></path></svg>' },
+    { type: "page", name: "Management-Befehle", url: "/docs/commands/management", description: "Setup, Rollen, Embeds und Backups.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-2 size-4"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>' },
+    { type: "page", name: "Community-Befehle", url: "/docs/commands/community", description: "Rank, Leaderboard, Polls und Giveaways.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users size-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>' },
+    { type: "page", name: "Info- & Utility-Befehle", url: "/docs/commands/info", description: "Help, BotInfo, UserInfo und ServerInfo.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info size-4"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>' },
+    { type: "page", name: "Admin- & Sicherheits-Befehle", url: "/docs/commands/admin", description: "Security, Anti-Raid, Whitelist und Notfallbefehle.", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock size-4"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>' }
   ]
 };
 
