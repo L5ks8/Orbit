@@ -82,52 +82,372 @@ Pages.Benchmarks = function(container) {
 // PUBLIC LEADERBOARD PAGE
 // ==========================================
 Pages.Leaderboard = async function(container, guildId) {
-  container.innerHTML = `
-    <div class="max-w-3xl mx-auto px-6 pt-32 pb-24 animate-fade-in">
-      <div id="pub-lb-loading" class="text-center py-16 text-neutral-500 text-sm">
-        <svg class="animate-spin inline mr-2 text-neutral-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        Loading server leaderboard...
+  const escapeHtml = window.escapeHtml || function(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  };
+
+  const CATEGORIES = [
+    {
+      id: 'total_xp',
+      label: 'Level & XP',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+      formatVal: (u) => `${Number(u.total_xp || u.xp || 0).toLocaleString()} XP`,
+      formatSub: (u) => `Level ${u.level || 0}`,
+      podiumPrimary: (u) => `Level ${u.level || 0}`,
+      podiumSecondary: (u) => `${Number(u.total_xp || u.xp || 0).toLocaleString()} XP`
+    },
+    {
+      id: 'invites',
+      label: 'Invites',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>',
+      formatVal: (u) => `${Number(u.value !== undefined ? u.value : (u.total || 0)).toLocaleString()} invites`,
+      formatSub: (u) => `+${u.regular || 0} / -${u.left || 0}`,
+      podiumPrimary: (u) => `${Number(u.value !== undefined ? u.value : (u.total || 0)).toLocaleString()} inv.`,
+      podiumSecondary: (u) => `+${u.regular || 0} / -${u.left || 0}`
+    },
+    {
+      id: 'voice_minutes',
+      label: 'Voice Hours',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>',
+      formatVal: (u) => `${typeof u.value === 'number' ? u.value.toFixed(1) : (Number(u.voice_minutes || 0) / 60).toFixed(1)} hrs`,
+      formatSub: (u) => `${Math.round(Number(u.voice_minutes || 0))} mins`,
+      podiumPrimary: (u) => `${typeof u.value === 'number' ? u.value.toFixed(1) : (Number(u.voice_minutes || 0) / 60).toFixed(1)} hrs`,
+      podiumSecondary: (u) => `${Math.round(Number(u.voice_minutes || 0))} mins`
+    },
+    {
+      id: 'message_count',
+      label: 'Messages',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
+      formatVal: (u) => `${Number(u.value !== undefined ? u.value : (u.message_count || u.messages || 0)).toLocaleString()} msgs`,
+      formatSub: (u) => 'Messages sent',
+      podiumPrimary: (u) => `${Number(u.value !== undefined ? u.value : (u.message_count || u.messages || 0)).toLocaleString()} msgs`,
+      podiumSecondary: (u) => 'Messages sent'
+    },
+    {
+      id: 'reaction_count',
+      label: 'Reactions',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>',
+      formatVal: (u) => `${Number(u.value !== undefined ? u.value : (u.reaction_count || u.reactions || 0)).toLocaleString()} reacts`,
+      formatSub: (u) => 'Reactions added',
+      podiumPrimary: (u) => `${Number(u.value !== undefined ? u.value : (u.reaction_count || u.reactions || 0)).toLocaleString()} reacts`,
+      podiumSecondary: (u) => 'Reactions added'
+    }
+  ];
+
+  let currentCategory = 'total_xp';
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const catParam = urlParams.get('sort') || urlParams.get('category');
+    if (catParam && CATEGORIES.some(c => c.id === catParam)) {
+      currentCategory = catParam;
+    }
+  } catch (_) {}
+
+  const cache = {};
+  let searchQuery = '';
+  let serverInfo = { guild_name: '', guild_icon: '' };
+
+  const PODIUM_THEMES = {
+    1: {
+      medal: '👑',
+      barClass: 'orbit-podium-gold',
+      numClass: 'text-amber-300 drop-shadow-[0_2px_10px_rgba(251,191,36,0.7)]',
+      ringClass: 'ring-2 ring-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.5)]',
+      totalClass: 'text-amber-300 font-extrabold',
+      subClass: 'text-amber-200/70',
+      emptyBarClass: 'orbit-podium-gold opacity-30',
+      emptyNumClass: 'text-amber-400/40',
+      avatarSize: 'w-16 h-16 sm:w-20 sm:h-20'
+    },
+    2: {
+      medal: '🥈',
+      barClass: 'orbit-podium-silver',
+      numClass: 'text-slate-100 drop-shadow-[0_2px_10px_rgba(226,232,240,0.7)]',
+      ringClass: 'ring-2 ring-slate-300 shadow-[0_0_16px_rgba(226,232,240,0.4)]',
+      totalClass: 'text-slate-100 font-extrabold',
+      subClass: 'text-slate-300/70',
+      emptyBarClass: 'orbit-podium-silver opacity-30',
+      emptyNumClass: 'text-slate-300/40',
+      avatarSize: 'w-14 h-14 sm:w-16 sm:h-16'
+    },
+    3: {
+      medal: '🥉',
+      barClass: 'orbit-podium-bronze',
+      numClass: 'text-orange-300 drop-shadow-[0_2px_10px_rgba(249,115,22,0.7)]',
+      ringClass: 'ring-2 ring-orange-500 shadow-[0_0_16px_rgba(249,115,22,0.4)]',
+      totalClass: 'text-orange-300 font-extrabold',
+      subClass: 'text-orange-200/70',
+      emptyBarClass: 'orbit-podium-bronze opacity-30',
+      emptyNumClass: 'text-orange-400/40',
+      avatarSize: 'w-12 h-12 sm:w-14 sm:h-14'
+    }
+  };
+
+  function renderPodiumSlot(entry, rank, catDef) {
+    const theme = PODIUM_THEMES[rank];
+    if (!entry) {
+      return `
+        <div class="flex flex-col items-center flex-1 min-w-[90px] max-w-[170px] relative z-10">
+          <div class="h-7 flex items-end justify-center mb-1">
+            <span class="text-sm opacity-50 select-none">${theme.medal}</span>
+          </div>
+          <div class="${theme.avatarSize} rounded-full bg-neutral-800/40 border border-white/5 flex items-center justify-center text-sm text-neutral-500 font-medium">?</div>
+          <div class="h-3 w-16 rounded bg-neutral-800/40 mt-2.5"></div>
+          <div class="h-3 w-10 rounded bg-neutral-800/30 mt-1"></div>
+          <div class="mb-1 mt-0.5 h-3"></div>
+          <div class="orbit-podium-bar orbit-podium-bar-${rank} ${theme.emptyBarClass} mt-2 flex items-end justify-center pb-3">
+            <span class="text-3xl font-black ${theme.emptyNumClass}">${rank}</span>
+          </div>
+        </div>
+      `;
+    }
+    const avatar = entry.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+    const name = escapeHtml(entry.name || entry.username || `User#${entry.user_id}`);
+    const primary = catDef.podiumPrimary(entry);
+    const secondary = catDef.podiumSecondary(entry);
+
+    return `
+      <div class="flex flex-col items-center flex-1 min-w-[90px] max-w-[170px] relative z-10 group">
+        <div class="h-7 flex items-end justify-center mb-1">
+          <span class="text-base drop-shadow-md select-none transform transition-transform group-hover:scale-110">${theme.medal}</span>
+        </div>
+        <img src="${escapeHtml(avatar)}" alt="${name}" class="${theme.avatarSize} rounded-full object-cover ${theme.ringClass} transition-transform duration-200 group-hover:scale-105" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+        <span class="text-xs sm:text-sm font-bold text-white truncate max-w-[130px] sm:max-w-[150px] mt-2 text-center" title="${name}">${name}</span>
+        <span class="text-[12px] sm:text-[13px] ${theme.totalClass} tabular-nums mt-0.5">${escapeHtml(primary)}</span>
+        <span class="text-[10px] sm:text-[11px] ${theme.subClass} tabular-nums mb-1 mt-0.5 h-3 truncate max-w-[120px]">${escapeHtml(secondary)}</span>
+        <div class="orbit-podium-bar orbit-podium-bar-${rank} ${theme.barClass} mt-2 flex items-end justify-center pb-3 transition-transform duration-200 group-hover:scale-[1.02]">
+          <span class="text-3xl font-black ${theme.numClass}">${rank}</span>
+        </div>
       </div>
-      <div id="pub-lb-content" class="hidden flex flex-col gap-4"></div>
+    `;
+  }
+
+  function renderPodium(entries, catDef) {
+    const first = entries[0] || null;
+    const second = entries[1] || null;
+    const third = entries[2] || null;
+
+    if (!first && !second && !third) {
+      return '';
+    }
+
+    return `
+      <div class="relative flex items-end justify-center px-4 pt-6 pb-0 gap-3 sm:gap-6 md:gap-8 mb-6">
+        <div class="absolute bottom-0 left-2 right-2 h-px bg-gradient-to-r from-transparent via-neutral-800 to-transparent"></div>
+        ${renderPodiumSlot(second, 2, catDef)}
+        ${renderPodiumSlot(first, 1, catDef)}
+        ${renderPodiumSlot(third, 3, catDef)}
+      </div>
+    `;
+  }
+
+  function renderListRows(entries, catDef) {
+    if (entries.length === 0) {
+      return `
+        <div class="p-10 text-center rounded-2xl bg-neutral-900/40 border border-neutral-800/60 flex flex-col items-center justify-center">
+          <div class="w-12 h-12 rounded-2xl bg-neutral-800/60 flex items-center justify-center text-neutral-400 mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>
+          </div>
+          <p class="text-sm font-semibold text-white">No active rankings yet</p>
+          <p class="text-xs text-neutral-500 mt-1">There is no recorded ${catDef.label.toLowerCase()} activity for this server yet.</p>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="flex flex-col gap-2">
+        ${entries.map(u => {
+          const avatar = u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+          const name = escapeHtml(u.name || u.username || `User#${u.user_id}`);
+          const rank = u.rank;
+          const rankColor = rank === 1 ? 'text-amber-400' : rank === 2 ? 'text-slate-300' : rank === 3 ? 'text-orange-400' : 'text-neutral-500';
+          const valStr = catDef.formatVal(u);
+          const subStr = catDef.formatSub(u);
+
+          return `
+            <div class="p-3 sm:p-4 rounded-2xl bg-neutral-900/70 hover:bg-neutral-900 border border-neutral-800/80 hover:border-neutral-700/80 transition-all flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                <span class="text-xs sm:text-sm font-black w-7 sm:w-8 text-center tabular-nums ${rankColor}">#${rank}</span>
+                <img src="${escapeHtml(avatar)}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover shrink-0 ring-1 ring-white/10" alt="${name}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                <div class="flex flex-col min-w-0">
+                  <span class="text-xs sm:text-sm font-bold text-white truncate max-w-[150px] sm:max-w-xs">${name}</span>
+                  <span class="text-[10px] sm:text-[11px] text-neutral-500 truncate">${escapeHtml(subStr)}</span>
+                </div>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="text-xs sm:text-sm font-bold text-white tabular-nums">${escapeHtml(valStr)}</span>
+                ${u.level ? `<div class="text-[10px] text-indigo-400 font-medium">Level ${u.level}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  // Shell HTML
+  container.innerHTML = `
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-20 animate-fade-in">
+      <div class="flex items-center justify-between mb-8">
+        <a href="/" class="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-400 hover:text-white transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          Back to Orbit
+        </a>
+        <a href="https://discord.com/oauth2/authorize?client_id=1413812854968127539&permissions=8&integration_type=0&scope=bot+applications.commands" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Add Orbit
+        </a>
+      </div>
+
+      <div class="text-center flex flex-col items-center mb-8">
+        <div class="relative mb-4">
+          <div class="absolute -inset-1 rounded-3xl bg-gradient-to-r from-indigo-500/30 to-purple-500/30 blur-md"></div>
+          <img id="pub-guild-icon" src="/img/logo.png" class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover ring-2 ring-white/10 shadow-xl" alt="Server Icon" onerror="this.src='/img/logo.png'">
+        </div>
+        <h1 id="pub-guild-name" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Server Leaderboard</h1>
+        <p class="text-xs sm:text-sm text-neutral-400 mt-1.5 max-w-md">Community rankings for activity, invites, voice time, and messages.</p>
+      </div>
+
+      <div class="flex items-center justify-center flex-wrap gap-1.5 sm:gap-2 mb-8 p-1.5 rounded-2xl bg-neutral-900/80 border border-neutral-800/80 backdrop-blur-sm shadow-inner max-w-2xl mx-auto">
+        ${CATEGORIES.map(cat => `
+          <button data-cat="${cat.id}" class="cat-tab-btn px-3 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${cat.id === currentCategory ? 'bg-white/10 text-white border border-white/15 shadow-sm' : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/5 border border-transparent'}">
+            ${cat.icon}
+            <span>${cat.label}</span>
+          </button>
+        `).join('')}
+      </div>
+
+      <div class="flex items-center justify-between gap-3 mb-6">
+        <div class="relative flex-1 max-w-xs">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <input type="text" id="lb-search" placeholder="Search members..." class="w-full pl-9 pr-3 py-2 rounded-xl bg-neutral-900/80 border border-neutral-800/80 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-indigo-500/80 transition-colors">
+        </div>
+        <div id="lb-count-badge" class="text-xs font-semibold text-neutral-500 tabular-nums"></div>
+      </div>
+
+      <div id="pub-lb-loading" class="text-center py-20 text-neutral-500 text-sm">
+        <svg class="animate-spin inline mr-2 text-indigo-400" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        Loading rankings...
+      </div>
+
+      <div id="pub-lb-main" class="hidden">
+        <div id="pub-lb-podium"></div>
+        <div id="pub-lb-list"></div>
+      </div>
     </div>
   `;
 
-  try {
-    const data = await API.getLeaderboard(guildId);
-    const content = document.getElementById('pub-lb-content');
+  async function loadCategory(catId) {
     const loading = document.getElementById('pub-lb-loading');
-    if (!content) return;
+    const main = document.getElementById('pub-lb-main');
+    const nameEl = document.getElementById('pub-guild-name');
+    const iconEl = document.getElementById('pub-guild-icon');
 
-    const list = Array.isArray(data) ? data : (data?.users || []);
-    content.innerHTML = `
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-white mb-2">${data.guild_name || 'Server'} Leaderboard</h1>
-        <p class="text-xs text-neutral-400">Top active chatters ranked by level and experience.</p>
-      </div>
+    // Update tab button styles
+    document.querySelectorAll('.cat-tab-btn').forEach(btn => {
+      const active = btn.getAttribute('data-cat') === catId;
+      btn.className = `cat-tab-btn px-3 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${active ? 'bg-white/10 text-white border border-white/15 shadow-sm' : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/5 border border-transparent'}`;
+    });
 
-      <div class="flex flex-col gap-2">
-        ${list.map((u, i) => `
-          <div class="p-4 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-4 min-w-0">
-              <span class="text-sm font-bold w-6 text-center ${i === 0 ? 'text-amber-400' : i === 1 ? 'text-neutral-300' : i === 2 ? 'text-amber-600' : 'text-neutral-500'}">#${i + 1}</span>
-              <img src="${u.avatar || '/img/logo.png'}" class="w-10 h-10 rounded-full shrink-0" alt="${u.name || 'User'}">
-              <div class="flex flex-col min-w-0">
-                <span class="text-xs font-bold text-white truncate">${u.name || u.user_id}</span>
-                <span class="text-[11px] text-neutral-500">XP: ${u.xp?.toLocaleString() || 0}</span>
-              </div>
-            </div>
-            <span class="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 font-bold text-xs">Level ${u.level || 0}</span>
-          </div>
-        `).join('')}
-        ${list.length === 0 ? `<div class="p-8 text-center text-neutral-500 text-xs">No active leaderboard data yet.</div>` : ''}
-      </div>
-    `;
+    const catDef = CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
 
-    loading.classList.add('hidden');
-    content.classList.remove('hidden');
-  } catch (err) {
-    container.innerHTML = `<div class="pt-32 text-center text-red-400 text-sm">Failed to load leaderboard.</div>`;
+    // Check cache
+    let data = cache[catId];
+    if (!data) {
+      if (main && !main.classList.contains('hidden')) {
+        main.style.opacity = '0.5';
+      } else if (loading) {
+        loading.classList.remove('hidden');
+      }
+
+      try {
+        data = await API.getLeaderboard(guildId, catId);
+        cache[catId] = data;
+      } catch (err) {
+        if (loading) loading.innerHTML = `<span class="text-red-400">Failed to load leaderboard data: ${escapeHtml(err.message || 'Unknown error')}</span>`;
+        return;
+      }
+    }
+
+    if (main) main.style.opacity = '1';
+    if (loading) loading.classList.add('hidden');
+    if (main) main.classList.remove('hidden');
+
+    if (data.guild_name) {
+      serverInfo.guild_name = data.guild_name;
+      if (nameEl) nameEl.textContent = `${data.guild_name} Leaderboard`;
+    }
+    if (data.guild_icon) {
+      serverInfo.guild_icon = data.guild_icon;
+      if (iconEl) iconEl.src = data.guild_icon;
+    }
+
+    const allEntries = data.entries || data.users || [];
+    renderView(allEntries, catDef);
   }
+
+  function renderView(allEntries, catDef) {
+    const podiumEl = document.getElementById('pub-lb-podium');
+    const listEl = document.getElementById('pub-lb-list');
+    const badgeEl = document.getElementById('lb-count-badge');
+
+    let filtered = allEntries;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      filtered = allEntries.filter(u => {
+        const name = (u.name || u.username || u.user_id || '').toLowerCase();
+        return name.includes(q);
+      });
+    }
+
+    if (badgeEl) {
+      badgeEl.textContent = `${filtered.length} member${filtered.length === 1 ? '' : 's'}`;
+    }
+
+    if (!searchQuery.trim()) {
+      if (podiumEl) podiumEl.innerHTML = renderPodium(allEntries.slice(0, 3), catDef);
+      const remaining = allEntries.slice(3);
+      if (listEl) listEl.innerHTML = renderListRows(remaining, catDef);
+    } else {
+      if (podiumEl) podiumEl.innerHTML = '';
+      if (listEl) listEl.innerHTML = renderListRows(filtered, catDef);
+    }
+  }
+
+  // Bind tab buttons
+  document.querySelectorAll('.cat-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const catId = btn.getAttribute('data-cat');
+      if (catId && catId !== currentCategory) {
+        currentCategory = catId;
+        try {
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.set('sort', catId);
+          window.history.replaceState({}, '', newUrl.toString());
+        } catch (_) {}
+        loadCategory(catId);
+      }
+    });
+  });
+
+  // Bind search input
+  const searchInput = document.getElementById('lb-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      const catDef = CATEGORIES.find(c => c.id === currentCategory) || CATEGORIES[0];
+      const data = cache[currentCategory];
+      if (data) {
+        renderView(data.entries || data.users || [], catDef);
+      }
+    });
+  }
+
+  // Initial load
+  await loadCategory(currentCategory);
 };
 
 // ==========================================

@@ -33,14 +33,30 @@ class GuildsMixin:
         
         guild = self.bot.get_guild(guild_id)
         if not guild:
+            try:
+                guild = await self.bot.fetch_guild(guild_id)
+            except Exception:
+                pass
+        if not guild:
             return web.json_response({"error": "Bot not in this server"}, status=404)
             
         from Components.Systems.Level._storage import get_leaderboard_by, level_from_xp
-        from Components.Commands.Level.level import LB_CATEGORIES
         
+        top = []
         if sort_key == "invites":
             from Components.Commands.Invite._storage import get_leaderboard
             top = get_leaderboard(guild_id, limit=100)
+            if not top and hasattr(guild, "invites"):
+                try:
+                    guild_invites = await asyncio.wait_for(guild.invites(), timeout=1.0)
+                    inviter_uses = {}
+                    for ginv in guild_invites:
+                        if ginv.inviter and (ginv.uses or 0) > 0:
+                            inviter_uses[ginv.inviter.id] = inviter_uses.get(ginv.inviter.id, 0) + (ginv.uses or 0)
+                    sorted_inviters = sorted(inviter_uses.items(), key=lambda x: x[1], reverse=True)[:100]
+                    top = [{"user_id": str(uid), "total": u_cnt, "regular": u_cnt, "left": 0, "bonus": 0, "fake": 0} for uid, u_cnt in sorted_inviters]
+                except Exception:
+                    pass
         else:
             top = get_leaderboard_by(guild_id, sort_key, 100)
         
@@ -51,43 +67,65 @@ class GuildsMixin:
             except (ValueError, TypeError):
                 uid = 0
                 
-            member = guild.get_member(uid) or self.bot.get_user(uid)
-            if not member and uid != 0:
+            member = None
+            if hasattr(guild, "get_member"):
+                member = guild.get_member(uid)
+            if not member:
+                member = self.bot.get_user(uid)
+            if not member and uid != 0 and i <= 10:
                 try:
-                    member = await self.bot.fetch_user(uid)
+                    member = await asyncio.wait_for(self.bot.fetch_user(uid), timeout=0.5)
                 except Exception:
                     pass
             
-            name = member.display_name if hasattr(member, 'display_name') else (member.name if member else f"User#{uid}")
-            
-            avatar_url = ""
-            if member and member.display_avatar:
-                avatar_url = str(member.display_avatar.url)
+            if member:
+                name = getattr(member, 'display_name', getattr(member, 'name', f"User#{str(uid)[-4:]}"))
+                avatar_url = str(member.display_avatar.url) if getattr(member, 'display_avatar', None) else "https://cdn.discordapp.com/embed/avatars/0.png"
+            else:
+                name = f"User#{str(uid)[-4:]}" if uid else "Unknown"
+                avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"
                 
             if sort_key == "invites":
                 val = entry.get("total", 0)
-            elif sort_key == "balance":
-                val = entry.get("balance", 0)
+            elif sort_key == "voice_minutes":
+                val = round(entry.get("voice_minutes", 0) / 60.0, 1)
+            elif sort_key == "message_count":
+                val = entry.get("message_count", 0)
+            elif sort_key == "reaction_count":
+                val = entry.get("reaction_count", 0)
             else:
-                val = entry.get(sort_key, 0)
+                val = entry.get(sort_key, entry.get("total_xp", 0))
                 
-            if sort_key == "voice_minutes":
-                val = val / 60.0
-                
+            total_xp = entry.get("total_xp", 0)
+            lvl = level_from_xp(total_xp) if sort_key != "invites" else 0
+
             results.append({
                 "rank": i,
+                "user_id": str(uid),
                 "name": name,
+                "username": name,
                 "avatar": avatar_url,
-                "level": level_from_xp(entry.get("total_xp", 0)) if sort_key != "invites" else 0,
+                "level": lvl,
                 "value": val,
-                "total_xp": entry.get("total_xp", 0)
+                "total_xp": total_xp,
+                "xp": total_xp,
+                "regular": entry.get("regular", 0),
+                "left": entry.get("left", 0),
+                "bonus": entry.get("bonus", 0),
+                "fake": entry.get("fake", 0),
+                "message_count": entry.get("message_count", 0),
+                "messages": entry.get("message_count", 0),
+                "voice_minutes": entry.get("voice_minutes", 0),
+                "reaction_count": entry.get("reaction_count", 0),
+                "reactions": entry.get("reaction_count", 0)
             })
             
         return web.json_response({
             "guild_name": guild.name,
-            "guild_icon": str(guild.icon.url) if guild.icon else "",
+            "guild_icon": str(guild.icon.url) if getattr(guild, "icon", None) else "",
             "category": sort_key,
-            "entries": results
+            "entries": results,
+            "users": results
         })
 
     async def api_stats(self, request: web.Request):

@@ -675,8 +675,9 @@ const API = {
     return await this.request('/api/uptime');
   },
 
-  async getLeaderboard(guildId) {
-    return await this.request(`/api/public_leaderboard/${guildId}`);
+  async getLeaderboard(guildId, category = 'total_xp') {
+    const q = category ? `?sort=${encodeURIComponent(category)}` : '';
+    return await this.request(`/api/public_leaderboard/${guildId}${q}`);
   },
 
   async getAppealInfo(customUrl) {
