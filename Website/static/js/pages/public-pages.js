@@ -765,24 +765,7 @@ Pages.UserSettings = async function(container) {
 };
 
 // ==========================================
-// TERMS & PRIVACY
+// TERMS & PRIVACY (Implemented in legal.js)
 // ==========================================
-Pages.Terms = function(container) {
-  container.innerHTML = `
-    <div class="max-w-3xl mx-auto px-6 pt-32 pb-24 text-neutral-300 text-sm leading-relaxed">
-      <h1 class="text-3xl font-extrabold text-white mb-6">Terms of Service</h1>
-      <p class="mb-4">By inviting or using Orbit in your Discord server, you agree to comply with Discord Terms of Service and Community Guidelines.</p>
-      <p class="mb-4">Orbit is provided "as is" without warranties of any kind. Server administrators are responsible for configuring moderation rules responsibly.</p>
-    </div>
-  `;
-};
+// Handled comprehensively in /js/pages/legal.js
 
-Pages.Privacy = function(container) {
-  container.innerHTML = `
-    <div class="max-w-3xl mx-auto px-6 pt-32 pb-24 text-neutral-300 text-sm leading-relaxed">
-      <h1 class="text-3xl font-extrabold text-white mb-6">Privacy Policy</h1>
-      <p class="mb-4">Orbit stores server configurations, log channel identifiers, and moderation records solely to provide bot functionality.</p>
-      <p class="mb-4">We do not sell or distribute personal data to third parties. Server owners may request data erasure at any time.</p>
-    </div>
-  `;
-};

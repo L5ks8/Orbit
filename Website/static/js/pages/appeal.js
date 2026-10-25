@@ -169,7 +169,7 @@
               <div class="flex items-start gap-3 p-4 rounded-xl bg-neutral-800/40 border border-neutral-700/60 text-xs sm:text-[13px] text-neutral-300">
                 <span class="text-neutral-400 shrink-0 mt-0.5">${SVGS.clock}</span>
                 <p class="leading-relaxed">
-                  Your submission will be routed directly to the server's staff review channel. Decisions are typically made within a few days. Submitting false information will result in a permanent blacklist.
+                  Your submission will be routed directly to the server's staff review channel. Decisions are typically made within a few days. Submitting false information will result in a permanent blacklist. By submitting, you acknowledge Orbit's <a href="/terms" class="text-indigo-400 underline hover:text-indigo-300">Terms</a> &amp; <a href="/privacy" class="text-indigo-400 underline hover:text-indigo-300">Privacy Policy</a>.
                 </p>
               </div>
 

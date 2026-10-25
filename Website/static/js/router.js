@@ -106,10 +106,12 @@ const Router = {
     if (path === '/benchmarks') {
       return Pages.Benchmarks(app);
     }
-    if (path === '/terms') {
+    if (path === '/terms' || path === '/tos' || path === '/nutzungsbedingungen') {
+      document.title = 'Terms of Service – Orbit';
       return Pages.Terms(app);
     }
-    if (path === '/privacy') {
+    if (path === '/privacy' || path === '/privacy-policy' || path === '/datenschutz') {
+      document.title = 'Privacy Policy – Orbit';
       return Pages.Privacy(app);
     }
     if (path === '/settings') {

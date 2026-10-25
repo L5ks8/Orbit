@@ -51,6 +51,10 @@ Pages.Verify = async function(container, token) {
           <button type="button" id="submit-verify-btn" class="w-full py-3.5 rounded-xl bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-all active:scale-95 shadow-lg cursor-pointer">
             Complete Verification
           </button>
+
+          <p class="text-[11px] text-neutral-500">
+            By verifying, you accept Orbit's <a href="/terms" class="text-neutral-400 hover:text-white underline">Terms</a> &amp; <a href="/privacy" class="text-neutral-400 hover:text-white underline">Privacy Policy</a>.
+          </p>
         </div>
       `;
 
