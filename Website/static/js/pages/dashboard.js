@@ -520,8 +520,8 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
 Pages._idlePremountAllTabs = async function(tabContainer, guildId, currentGuild) {
   const SKIP = new Set(['builder', 'ai-helper']);
   const idle = (fn) => (window.requestIdleCallback
-    ? window.requestIdleCallback(fn, { timeout: 1500 })
-    : setTimeout(fn, 120));
+    ? window.requestIdleCallback(fn, { timeout: 800 })
+    : setTimeout(fn, 50));
 
   // Wait for the shared config first so all panes render from cache, not with spinners
   try { await API.getConfig(guildId); } catch (_) {}
@@ -535,6 +535,17 @@ Pages._idlePremountAllTabs = async function(tabContainer, guildId, currentGuild)
       const t = parts[2] || 'overview';
       if (!SKIP.has(t) && !tabs.includes(t)) tabs.push(t);
     }
+  });
+
+  // Prioritize most popular tabs (automod, welcome, verification) so they are ready within 50ms!
+  const PRIORITY = ['automod', 'welcome', 'verification', 'security', 'roles', 'server-settings', 'modules'];
+  tabs.sort((a, b) => {
+    const ai = PRIORITY.indexOf(a);
+    const bi = PRIORITY.indexOf(b);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return 0;
   });
 
   const next = () => {

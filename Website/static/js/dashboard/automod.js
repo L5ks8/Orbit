@@ -113,38 +113,103 @@
   }
 
   // Master Dashboard Tab Handler
-  DashboardTabs.AutoMod = async function (container, guildId) {
-    container.innerHTML = `
-      <div class="p-8 flex items-center justify-center min-h-[400px]">
-        <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-      </div>
-    `;
-
-    // Fetch live configuration, channels, roles, and mod activity
-    let rawConfig = {};
-    let channels = [];
-    let roles = [];
-    let modActivity = [];
-    let currentGuild = { id: guildId, name: 'Server' };
-
-    try {
-      const [cfgRes, actRes] = await Promise.all([
-        API.getConfig(guildId).catch(() => ({})),
-        API.getModActivity ? API.getModActivity(guildId).catch(() => []) : Promise.resolve([])
-      ]);
-
-      rawConfig = cfgRes?.config || cfgRes || {};
-      channels = Array.isArray(cfgRes?.channels) ? cfgRes.channels : [];
-      roles = Array.isArray(cfgRes?.roles) ? cfgRes.roles : [];
-      modActivity = Array.isArray(actRes) ? actRes : [];
-
-      if (cfgRes?.guild) {
-        currentGuild = cfgRes.guild;
-      } else if (window.__currentDashboardGuildObj) {
-        currentGuild = window.__currentDashboardGuildObj;
+  
+  function renderModActivityList(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+      return `
+        <div class="p-6 text-center text-xs text-neutral-500 flex flex-col items-center justify-center h-full">
+          <span class="opacity-30 mb-2">${SVGS.gavel}</span>
+          No recent moderation actions recorded.
+        </div>
+      `;
+    }
+    return items.map(act => {
+      const actType = (act.action || 'warn').toLowerCase();
+      let badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      let iconSvg = SVGS.alertTriangle;
+      if (actType.includes('ban')) {
+        badgeClass = 'bg-red-500/10 text-red-400 border-red-500/20';
+        iconSvg = SVGS.ban;
+      } else if (actType.includes('kick')) {
+        badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+        iconSvg = SVGS.doorOpen;
+      } else if (actType.includes('timeout') || actType.includes('mute')) {
+        badgeClass = 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+        iconSvg = SVGS.timer;
       }
-    } catch (e) {
-      console.warn('[AutoMod] Fetch error:', e);
+
+      return `
+        <div class="flex items-start gap-3 px-4 sm:px-5 py-3 hover:bg-neutral-800/20 transition-[background-color] duration-150 ease-out">
+          <div class="grid place-items-center w-8 h-8 rounded-lg bg-amber-500/10 flex-shrink-0 mt-0.5">
+            ${iconSvg}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-white font-medium truncate">${escapeHtml(act.target_name || act.target_id || 'User')}</span>
+              <span class="px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider tabular-nums border ${badgeClass}">
+                ${escapeHtml(actType)}
+              </span>
+            </div>
+            <p class="text-xs text-neutral-500 mt-1 truncate">${escapeHtml(act.reason || 'No reason provided')}</p>
+          </div>
+          <span class="text-[10px] text-neutral-600 tabular-nums flex-shrink-0 mt-1.5">${formatRelativeTime(act.timestamp)}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+DashboardTabs.AutoMod = async function (container, guildId) {
+    // 0ms Cache-First check (render immediately from memory if available, never show a spinner)
+    const cachedCfg = API.getCache ? API.getCache(`config_${guildId}`) : null;
+    const cachedAct = API.getCache ? API.getCache(`modactivity_${guildId}`) : null;
+
+    let rawConfig = cachedCfg?.config || cachedCfg || {};
+    let channels = Array.isArray(cachedCfg?.channels) ? cachedCfg.channels : [];
+    let roles = Array.isArray(cachedCfg?.roles) ? cachedCfg.roles : [];
+    let modActivity = Array.isArray(cachedAct) ? cachedAct : [];
+    let currentGuild = cachedCfg?.guild || window.__currentDashboardGuildObj || { id: guildId, name: 'Server' };
+
+    const hasCachedConfig = Boolean(cachedCfg && (cachedCfg.config || cachedCfg.channels));
+
+    if (!hasCachedConfig) {
+      container.innerHTML = `
+        <div class="p-8 flex items-center justify-center min-h-[400px]">
+          <div class="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+        </div>
+      `;
+
+      try {
+        const [cfgRes, actRes] = await Promise.all([
+          API.getConfig(guildId).catch(() => ({})),
+          API.getModActivity ? API.getModActivity(guildId).catch(() => []) : Promise.resolve([])
+        ]);
+
+        rawConfig = cfgRes?.config || cfgRes || {};
+        channels = Array.isArray(cfgRes?.channels) ? cfgRes.channels : [];
+        roles = Array.isArray(cfgRes?.roles) ? cfgRes.roles : [];
+        modActivity = Array.isArray(actRes) ? actRes : [];
+
+        if (cfgRes?.guild) {
+          currentGuild = cfgRes.guild;
+        } else if (window.__currentDashboardGuildObj) {
+          currentGuild = window.__currentDashboardGuildObj;
+        }
+      } catch (e) {
+        console.warn('[AutoMod] Fetch error:', e);
+      }
+    } else {
+      // 0ms Instant Load: Config already in memory. Silently background-fetch mod activity if not yet cached
+      if (!cachedAct && API.getModActivity) {
+        API.getModActivity(guildId).then(actRes => {
+          if (Array.isArray(actRes) && actRes.length > 0) {
+            modActivity = actRes;
+            const countEl = container.querySelector('#recent-actions-count');
+            if (countEl) countEl.textContent = `${actRes.length} total`;
+            const listEl = container.querySelector('#recent-actions-list');
+            if (listEl) listEl.innerHTML = renderModActivityList(actRes);
+          }
+        }).catch(() => {});
+      }
     }
 
     const textChannels = channels.filter(c => !c.type || c.type === 'text' || c.type === 0 || c.type === 5 || (typeof c.type === 'string' && c.type.includes('text')));
@@ -778,48 +843,11 @@
                           <span class="text-neutral-400">${SVGS.gavel}</span>
                           <span class="text-sm font-medium text-white">Recent actions</span>
                         </div>
-                        <span class="text-xs text-neutral-600 tabular-nums">${actionsCount} total</span>
+                        <span class="text-xs text-neutral-600 tabular-nums" id="recent-actions-count">${actionsCount} total</span>
                       </div>
                       <div class="flex flex-col lg:flex-1 lg:min-h-0">
                         <div class="divide-y divide-neutral-800/40 overflow-y-auto scrollbar-thin max-h-[420px] lg:max-h-none lg:flex-1 lg:min-h-0" id="recent-actions-list">
-                          ${actionsCount > 0 ? modActivity.map(act => {
-                            const actType = (act.action || 'warn').toLowerCase();
-                            let badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-                            let iconSvg = SVGS.alertTriangle;
-                            if (actType.includes('ban')) {
-                              badgeClass = 'bg-red-500/10 text-red-400 border-red-500/20';
-                              iconSvg = SVGS.ban;
-                            } else if (actType.includes('kick')) {
-                              badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-                              iconSvg = SVGS.doorOpen;
-                            } else if (actType.includes('timeout') || actType.includes('mute')) {
-                              badgeClass = 'bg-orange-500/10 text-orange-400 border-orange-500/20';
-                              iconSvg = SVGS.timer;
-                            }
-
-                            return `
-                              <div class="flex items-start gap-3 px-4 sm:px-5 py-3 hover:bg-neutral-800/20 transition-[background-color] duration-150 ease-out">
-                                <div class="grid place-items-center w-8 h-8 rounded-lg bg-amber-500/10 flex-shrink-0 mt-0.5">
-                                  ${iconSvg}
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                  <div class="flex items-center gap-2">
-                                    <span class="text-sm text-white font-medium truncate">${escapeHtml(act.target_name || act.target_id || 'User')}</span>
-                                    <span class="px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider tabular-nums border ${badgeClass}">
-                                      ${escapeHtml(actType)}
-                                    </span>
-                                  </div>
-                                  <p class="text-xs text-neutral-500 mt-1 truncate">${escapeHtml(act.reason || 'No reason provided')}</p>
-                                </div>
-                                <span class="text-[10px] text-neutral-600 tabular-nums flex-shrink-0 mt-1.5">${formatRelativeTime(act.timestamp)}</span>
-                              </div>
-                            `;
-                          }).join('') : `
-                            <div class="p-6 text-center text-xs text-neutral-500 flex flex-col items-center justify-center h-full">
-                              <span class="opacity-30 mb-2">${SVGS.gavel}</span>
-                              No recent moderation actions recorded.
-                            </div>
-                          `}
+                          ${renderModActivityList(modActivity)}
                         </div>
                       </div>
                     </div>
