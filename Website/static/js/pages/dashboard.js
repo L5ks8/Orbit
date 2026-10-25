@@ -520,8 +520,8 @@ Pages.Dashboard = async function(container, guildId, tab = 'overview') {
 Pages._idlePremountAllTabs = async function(tabContainer, guildId, currentGuild) {
   const SKIP = new Set(['builder', 'ai-helper']);
   const idle = (fn) => (window.requestIdleCallback
-    ? window.requestIdleCallback(fn, { timeout: 800 })
-    : setTimeout(fn, 50));
+    ? window.requestIdleCallback(fn, { timeout: 200 })
+    : setTimeout(fn, 15));
 
   // Wait for the shared config first so all panes render from cache, not with spinners
   try { await API.getConfig(guildId); } catch (_) {}

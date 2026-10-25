@@ -50,6 +50,9 @@
   }
 
   DashboardTabs.Backups = async function (container, guildId) {
+    // 0ms Cache-First check
+  const cachedBkp = API.getCache ? API.getCache(`backups_${guildId}`) : null;
+  if (!cachedBkp) {
     container.innerHTML = `
       <div class="flex items-center justify-center min-h-[400px]">
         <div class="flex items-center gap-3 text-neutral-400">
@@ -61,6 +64,7 @@
         </div>
       </div>
     `;
+  }
 
     let data;
     try {

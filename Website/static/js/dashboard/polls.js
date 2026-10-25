@@ -38,17 +38,22 @@ DashboardTabs.Polls = async function(container, guildId) {
     return new Date(Number(unixSeconds) * 1000).toLocaleDateString('de-DE');
   }
 
-  container.innerHTML = `
-    <div class="space-y-6">
-      <div class="flex items-center justify-center p-16 text-neutral-500 text-sm">
-        <svg class="animate-spin mr-3 text-neutral-400 w-5 h-5" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-        Loading polls...
+  // 0ms Cache-First check
+  const cachedCfg = API.getCache ? API.getCache(`config_${guildId}`) : null;
+  const cachedPolls = API.getCache ? API.getCache(`polls_${guildId}`) : null;
+  if (!cachedCfg && !cachedPolls) {
+    container.innerHTML = `
+      <div class="space-y-6">
+        <div class="flex items-center justify-center p-16 text-neutral-500 text-sm">
+          <svg class="animate-spin mr-3 text-neutral-400 w-5 h-5" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          Loading polls...
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  }
 
   try {
     const [pollsRes, cfgRes] = await Promise.all([

@@ -14,11 +14,15 @@ DashboardTabs.Messages = async function (container, guildId) {
       .replace(/"/g, '&quot;');
   }
 
-  container.innerHTML = `
-    <div class="p-8 flex items-center justify-center min-h-[360px]">
-      <div class="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-    </div>
-  `;
+  // 0ms Cache-First check
+  const cachedCfg = API.getCache ? API.getCache(`config_${guildId}`) : null;
+  if (!cachedCfg) {
+    container.innerHTML = `
+      <div class="p-8 flex items-center justify-center min-h-[360px]">
+        <div class="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+      </div>
+    `;
+  }
 
   let allChannels = [];
   let savedEmbeds = [];

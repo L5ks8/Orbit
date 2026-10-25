@@ -19,24 +19,33 @@ DashboardTabs.Verification = async function(container, guildId) {
       .replace(/'/g, '&#39;');
   }
 
-  container.innerHTML = `
-    <div class="space-y-6">
-      <div class="flex items-center justify-center p-16 text-neutral-500 text-sm">
-        <svg class="animate-spin mr-3 text-neutral-400 w-5 h-5" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-        Lade Verifizierung...
+  // 0ms Cache-First check
+  const cachedCfg = API.getCache ? API.getCache(`config_${guildId}`) : null;
+  const cachedChannels = API.getCache ? API.getCache(`channels_${guildId}`) : null;
+  const cachedRoles = API.getCache ? API.getCache(`roles_${guildId}`) : null;
+
+  if (!cachedCfg) {
+    container.innerHTML = `
+      <div class="space-y-6">
+        <div class="flex items-center justify-center p-16 text-neutral-500 text-sm">
+          <svg class="animate-spin mr-3 text-neutral-400 w-5 h-5" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          Lade Verifizierung...
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  }
 
   try {
-    const [configData, rawChannels, rawRoles] = await Promise.all([
-      API.getConfig(guildId).catch(() => ({})),
-      API.getChannels(guildId).catch(() => ([])),
-      API.getRoles(guildId).catch(() => ([]))
-    ]);
+    const [configData, rawChannels, rawRoles] = cachedCfg
+      ? [cachedCfg, cachedChannels || cachedCfg.channels || [], cachedRoles || cachedCfg.roles || []]
+      : await Promise.all([
+          API.getConfig(guildId).catch(() => ({})),
+          API.getChannels(guildId).catch(() => ([])),
+          API.getRoles(guildId).catch(() => ([]))
+        ]);
 
     const vCfg = configData?.config?.verify || configData?.verify || {};
     const allChs = (Array.isArray(rawChannels) && rawChannels.length > 0)
