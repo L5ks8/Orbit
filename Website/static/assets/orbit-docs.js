@@ -1,6 +1,6 @@
 /**
- * Orbit Documentation Suite
- * Complete Documentation for all Orbit Modules, Dashboard Tabs, and Commands
+ * Orbit Documentation, Guides & Release Notes Suite
+ * 100% Native React & Fumadocs Integration
  */
 import { j, a1 as components } from "./main-DJXeaSrE.js";
 
@@ -112,7 +112,7 @@ function PageIntro() {
       e.jsx(h2, { id: "warum-orbit", children: "Warum Orbit?" }),
       e.jsx("p", {
         className: "text-neutral-300 mb-4",
-        children: "Orbit vereint über 40 Bot-Systeme in einer einzigen, harmonischen Anwendung. Du musst nicht mehr 5 verschiedene Bots auf deinem Server einrichten und bezahlen – Orbit übernimmt alles aus einer Hand."
+        children: "Orbit vereint über 40 Bot-Systeme in einer einzigen Anwendung. Du musst nicht mehr 5 verschiedene Bots auf deinem Server einrichten – Orbit übernimmt alles aus einer Hand."
       }),
       e.jsxs(Cards, {
         children: [
@@ -781,13 +781,251 @@ function PageCommandsAdmin() {
       e.jsx(CommandCard, { name: "antiraid", syntax: "/antiraid <on|off>", desc: "Aktiviert den Mass-Join Schutz manuell.", perms: "Administrator", example: "/antiraid on" }),
       e.jsx(CommandCard, { name: "whitelist", syntax: "/whitelist add <user|rolle>", desc: "Fügt Nutzer oder Rollen zur Sicherheits-Whitelist hinzu.", perms: "Administrator", example: "/whitelist add @AdminTeam" }),
       e.jsx(CommandCard, { name: "blacklist", syntax: "/blacklist add <wort>", desc: "Fügt Wörter zur globalen Blacklist hinzu.", perms: "Administrator", example: "/blacklist add scamlink" }),
-      e.jsx(CommandCard, { name: "voice setup", syntax: "/voice setup", desc: "Richtet das Join to Create TempVoice System automatisch ein.", perms: "Administrator", example: "/voice setup" })
+      e.jsx(CommandCard, { name: "voice setup", syntax: "/voice setup", desc: "Richtet das TempVoice System automatisch ein.", perms: "Administrator", example: "/voice setup" })
+    ]
+  });
+}
+
+
+function PageGuidesIndex() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Praxis-Anleitungen", color: "primary" }),
+      e.jsx("p", {
+        className: "text-lg text-neutral-300 leading-relaxed mb-6",
+        children: "Willkommen in den Orbit Guides! Hier findest du ausführliche Schritt-für-Schritt Anleitungen, wie du deinen Discord Server mit Orbit von Grund auf einrichtest, absicherst und automatisierst."
+      }),
+      e.jsx(h2, { id: "beliebte-guides", children: "Beliebte Anleitungen" }),
+      e.jsxs(Cards, {
+        children: [
+          e.jsx(Card, { title: "Server-Setup von 0 auf 100", href: "/docs/guides/server-setup", children: "Der ultimative Guide für neue Community- und Gaming-Server." }),
+          e.jsx(Card, { title: "Anti-Raid & Server absichern", href: "/docs/guides/antiraid-security", children: "So schützt du deinen Server vor Raids, Mass-Joins und Spambots." }),
+          e.jsx(Card, { title: "Support- & Ticket-System", href: "/docs/guides/tickets-support", children: "Baue ein professionelles Team-Supportsystem mit HTML-Transkripten auf." }),
+          e.jsx(Card, { title: "Leveling & Rollen-Belohnungen", href: "/docs/guides/leveling-rewards", children: "Belohne aktive Mitglieder mit Chat- und Voice-XP." }),
+          e.jsx(Card, { title: "TempVoice / Talk-System", href: "/docs/guides/tempvoice-channels", children: "Nie wieder volle Sprachkanäle: Dynamische Join to Create Talks." }),
+          e.jsx(Card, { title: "Auto-Moderation Masterclass", href: "/docs/guides/automod-moderation", children: "Wortfilter, Anti-Spam und Schwellenwerte perfekt konfigurieren." })
+        ]
+      })
+    ]
+  });
+}
+
+function PageGuideServerSetup() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Setup Guide", color: "green" }),
+      e.jsx("p", {
+        className: "text-neutral-300 leading-relaxed mb-6",
+        children: "Dieser Guide zeigt dir Schritt für Schritt, wie du deinen Discord Server mit Orbit optimal strukturierst, Berechtigungen vergibst und alle Core-Module aktivierst."
+      }),
+      e.jsx(h2, { id: "schritt-1-einladung", children: "1. Bot einladen & Rechte vergeben" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Lade Orbit über den offiziellen OAuth2-Link ein. Gib dem Bot Administrator-Rechte, damit er Kanäle und Rollen problemlos verwalten kann." }),
+      e.jsx(h2, { id: "schritt-2-rollen", children: "2. Rollenhierarchie & Berechtigungen" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Ziehe in Discord unter 'Server-Einstellungen -> Rollen' die Orbit-Rolle über alle Benutzerrollen. Orbit kann nur Rollen verwalten, die hierarchisch unter ihm stehen." }),
+      e.jsx(h2, { id: "schritt-3-kanaele", children: "3. Empfohlene Kanäle anlegen" }),
+      e.jsx("ul", { className: "list-disc pl-5 space-y-1.5 text-neutral-300 mb-4", children: [
+        e.jsx("li", { children: "#willkommen – Begrüßung neuer Mitglieder" }),
+        e.jsx("li", { children: "#verifizieren – Gate für neue Mitglieder" }),
+        e.jsx("li", { children: "#regeln – Serverregeln" }),
+        e.jsx("li", { children: "#support – Ticket-Panel für Anfragen" }),
+        e.jsx("li", { children: "#mod-logs – Interner Teamkanal für Logs" })
+      ]}),
+      e.jsx(h2, { id: "schritt-4-dashboard", children: "4. Module im Dashboard aktivieren" }),
+      e.jsx("p", { className: "text-neutral-300", children: "Gehe auf /dashboard, wähle deinen Server aus und schalte die gewünschten Tabs (AutoMod, Verification, Level, TempVoice) ein." })
+    ]
+  });
+}
+
+function PageGuideAntiRaid() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Sicherheits-Guide", color: "red" }),
+      e.jsx("p", {
+        className: "text-neutral-300 leading-relaxed mb-6",
+        children: "Raids und Bot-Angriffe können einen Server innerhalb von Sekunden ruinieren. In diesem Guide lernst du, wie du Orbit konfigurierst, um 100% vor Raids geschützt zu sein."
+      }),
+      e.jsx(h2, { id: "mass-join", children: "1. Mass-Join Schutz aktivieren" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Stelle im Security-Tab den Mass-Join Schutz auf '8 Joins in 10 Sekunden'. Tritt dieser Fall ein, sperrt Orbit neue Einladungen automatisch und schlägt im Team-Log Alarm." }),
+      e.jsx(h2, { id: "account-age", children: "2. Account Age Gate einrichten" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Setze das Mindestalter für Accounts auf mindestens 3 Tage. Die meisten Raid-Bots werden frisch registriert und werden dadurch sofort geblockt." }),
+      e.jsx(h2, { id: "notfall-befehle", children: "3. Wichtige Notfallbefehle" }),
+      e.jsx(CommandCard, { name: "lock", syntax: "/lock", desc: "Sperrt den aktuellen Kanal sofort für @everyone.", perms: "Kanäle verwalten", example: "/lock" }),
+      e.jsx(CommandCard, { name: "antiraid", syntax: "/antiraid on", desc: "Aktiviert manuell den höchsten Sicherheitsmodus.", perms: "Administrator", example: "/antiraid on" })
+    ]
+  });
+}
+
+function PageGuideTickets() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Support-Guide", color: "primary" }),
+      e.jsx("p", {
+        className: "text-neutral-300 leading-relaxed mb-6",
+        children: "Biete deinen Mitgliedern erstklassigen Support mit privaten Ticket-Kanälen, Rollen-Pings und HTML-Transkripten."
+      }),
+      e.jsx(h2, { id: "panel-erstellen", children: "1. Ticket-Panel einrichten" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Führe im gewünschten Support-Kanal den Befehl /ticket panel aus oder konfiguriere das Panel bequem im Web Dashboard." }),
+      e.jsx(h2, { id: "team-rolle", children: "2. Team-Rolle definieren" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Wähle deine Moderator- oder Supporter-Rolle aus. Nur Teammitglieder mit dieser Rolle können geöffnete Tickets einsehen." }),
+      e.jsx(h2, { id: "transkripte", children: "3. HTML-Transkripte speichern" }),
+      e.jsx("p", { className: "text-neutral-300", children: "Aktiviere den Transkript-Kanal #ticket-logs. Bei jedem Schließen eines Tickets wird der vollständige Chatverlauf als interaktive HTML-Datei gespeichert." })
+    ]
+  });
+}
+
+function PageGuideLeveling() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Community-Guide", color: "amber" }),
+      e.jsx("p", {
+        className: "text-neutral-300 leading-relaxed mb-6",
+        children: "Aktive Mitglieder sind das Herz jedes Servers. Erfahre, wie du das Leveling-System mit XP und Rollen-Belohnungen optimal einstellst."
+      }),
+      e.jsx(h2, { id: "xp-balance", children: "1. Die perfekte XP-Balance" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Standardmäßig erhalten Nutzer 15-25 XP alle 60 Sekunden für Chatnachrichten und 5-10 XP pro Minute in Sprachkanälen. Stummgeschaltete Nutzer erhalten keine Voice-XP." }),
+      e.jsx(h2, { id: "role-rewards", children: "2. Rollen-Belohnungen staffeln" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Empfohlene Belohnungsstufen: Level 5 (Stammgast), Level 15 (Fortgeschritten), Level 30 (Veteran), Level 50 (Server-Legende)." }),
+      e.jsx(h2, { id: "level-kanaele", children: "3. Spamfreier Level-Up Kanal" }),
+      e.jsx("p", { className: "text-neutral-300", children: "Lege einen Kanal #level-ups an, damit Level-Aufstiege nicht den allgemeinen Chat stören." })
+    ]
+  });
+}
+
+function PageGuideTempVoice() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Voice-Guide", color: "green" }),
+      e.jsx("p", {
+        className: "text-neutral-300 leading-relaxed mb-6",
+        children: "Keine unübersichtlichen, leeren Sprachkanäle mehr! Mit Join to Create erstellen sich Kanäle bei Bedarf von selbst."
+      }),
+      e.jsx(h2, { id: "hub-setup", children: "1. Hub-Kanal anlegen" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Nutze /voice setup oder wähle im Dashboard den Sprachkanal '➕ Talk erstellen' aus." }),
+      e.jsx(h2, { id: "owner-rechte", children: "2. Berechtigungen für Talk-Ersteller" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Der Ersteller hat die volle Kontrolle: Er kann mit /voice lock den Kanal abschließen oder mit /voice limit die Teilnehmerzahl begrenzen." }),
+      e.jsx(h2, { id: "auto-delete", children: "3. Automatisches Aufräumen" }),
+      e.jsx("p", { className: "text-neutral-300", children: "Verlässt das letzte Mitglied den Kanal, wird er von Orbit sofort gelöscht." })
+    ]
+  });
+}
+
+function PageGuideAutoMod() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Moderations-Guide", color: "purple" }),
+      e.jsx("p", {
+        className: "text-neutral-300 leading-relaxed mb-6",
+        children: "Erfahre, wie du den Content-Filter und Anti-Spam von Orbit so konfigurierst, dass Beleidigungen geblockt werden, ohne normale Gespräche zu stören."
+      }),
+      e.jsx(h2, { id: "filter-level", children: "1. Relaxed vs. Strict" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Strict erkennt Sonderzeichen-Tricks (z.B. 'f_u_c_k' oder 'w-o-r-t'). Für die meisten Server ist 'Strict' mit einer sauberen Whitelist die beste Wahl." }),
+      e.jsx(h2, { id: "anti-spam", children: "2. Anti-Spam Feinabstimmung" }),
+      e.jsx("p", { className: "text-neutral-300 mb-3", children: "Wir empfehlen 5 Nachrichten innerhalb von 3 Sekunden. Das erlaubt schnelles Tippen, stoppt aber automatisierte Makros und Spammer." }),
+      e.jsx(h2, { id: "stufenweise-strafen", children: "3. Stufenweise Bestrafung" }),
+      e.jsx("p", { className: "text-neutral-300", children: "Verwarnung beim 1. Verstoß, 10 Minuten Timeout beim 2. Verstoß, Kick oder Bann bei 3+ Verstößen." })
+    ]
+  });
+}
+
+
+function PageReleasesIndex() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Update-Historie", color: "primary" }),
+      e.jsx("p", {
+        className: "text-lg text-neutral-300 leading-relaxed mb-6",
+        children: "Alle Versionshinweise, neuen Features, Verbesserungen und Bugfixes von Orbit im Überblick."
+      }),
+      e.jsx(h2, { id: "versions-uebersicht", children: "Aktuelle Versionen" }),
+      e.jsxs(Cards, {
+        children: [
+          e.jsx(Card, { title: "Orbit v2.4 (Aktuell)", href: "/docs/releases/v2-4", children: "0ms Instant Dashboard Cache, neuer AutoMod Engine, HTML Transkripte." }),
+          e.jsx(Card, { title: "Orbit v2.3", href: "/docs/releases/v2-3", children: "TempVoice (Join to Create) und Giveaways mit Rollen-Bedingungen." }),
+          e.jsx(Card, { title: "Orbit v2.2", href: "/docs/releases/v2-2", children: "Neues Ticketsystem mit Kategorien und Umfragen (Polls) mit Prozentbalken." }),
+          e.jsx(Card, { title: "Orbit v2.1", href: "/docs/releases/v2-1", children: "Anti-Raid Shield, Account Age Gate und Notfall-Lockdown." }),
+          e.jsx(Card, { title: "Orbit v2.0", href: "/docs/releases/v2-0", children: "Vollständiger Relaunch der Bot-Architektur auf Discord Slash Commands." })
+        ]
+      })
+    ]
+  });
+}
+
+function PageReleaseV24() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Version 2.4 – Oktober 2026", color: "green" }),
+      e.jsx("p", { className: "text-neutral-300 leading-relaxed mb-6", children: "Das bisher größte Performance- und Usability-Update für Orbit!" }),
+      e.jsx(h2, { id: "highlights", children: "Wichtigste Neuerungen" }),
+      e.jsx("ul", { className: "list-disc pl-5 space-y-2 text-neutral-300 mb-6", children: [
+        e.jsxs("li", { children: [e.jsx("strong", { children: "0ms Web Dashboard: " }), "Dank Cache-First Architektur und intelligentem Hintergrund-Pre-Mounting schalten alle 18 Tabs im Dashboard verzögerungsfrei um."] }),
+        e.jsxs("li", { children: [e.jsx("strong", { children: "Überarbeitete AutoMod-Engine: " }), "Erkennt nun auch versteckte Unicode-Homoglyphen und Zero-Width-Spaces."] }),
+        e.jsxs("li", { children: [e.jsx("strong", { children: "HTML-Transkripte: " }), "Tickets werden beim Schließen formatiert als herunterladbare Web-Dateien mit Avataren und Formatierung gespeichert."] }),
+        e.jsxs("li", { children: [e.jsx("strong", { children: "Globale Suche: " }), "Die Dokumentation verfügt über eine interaktive Suche mit Ctrl + K."] })
+      ]})
+    ]
+  });
+}
+
+function PageReleaseV23() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Version 2.3 – September 2026", color: "cyan" }),
+      e.jsx("p", { className: "text-neutral-300 leading-relaxed mb-6", children: "Fokus auf Voice-Interaktion und Community-Events." }),
+      e.jsx(h2, { id: "features", children: "Neue Features" }),
+      e.jsx("ul", { className: "list-disc pl-5 space-y-2 text-neutral-300 mb-6", children: [
+        e.jsxs("li", { children: [e.jsx("strong", { children: "TempVoice: " }), "Vollautomatisches 'Join to Create' System mit Owner-Befehlen (/voice lock, /voice limit)."] }),
+        e.jsxs("li", { children: [e.jsx("strong", { children: "Giveaway-Rollen: " }), "Gewinnspiele können nun an Mindest-Rollen (z.B. Booster) gekoppelt werden."] })
+      ]})
+    ]
+  });
+}
+
+function PageReleaseV22() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Version 2.2 – August 2026", color: "purple" }),
+      e.jsx("p", { className: "text-neutral-300 leading-relaxed mb-6", children: "Neues Ticket- und Support-Management." }),
+      e.jsx(h2, { id: "features", children: "Neue Features" }),
+      e.jsx("ul", { className: "list-disc pl-5 space-y-2 text-neutral-300 mb-6", children: [
+        e.jsxs("li", { children: [e.jsx("strong", { children: "Kategorisierte Tickets: " }), "Unterstützung für bis zu 5 separate Ticket-Kategorien im Select-Menü."] }),
+        e.jsxs("li", { children: [e.jsx("strong", { children: "Interaktive Umfragen: " }), "Single- und Multiple-Choice Umfragen mit grafischen Live-Balken."] })
+      ]})
+    ]
+  });
+}
+
+function PageReleaseV21() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Version 2.1 – Juli 2026", color: "red" }),
+      e.jsx("p", { className: "text-neutral-300 leading-relaxed mb-6", children: "Erhöhter Schutz vor Bot-Netzen und Server-Raids." }),
+      e.jsx(h2, { id: "features", children: "Neue Features" }),
+      e.jsx("ul", { className: "list-disc pl-5 space-y-2 text-neutral-300 mb-6", children: [
+        e.jsxs("li", { children: [e.jsx("strong", { children: "Anti-Raid Shield: " }), "Erkennung von Mass-Joins mit automatischem Notfall-Lockdown."] }),
+        e.jsxs("li", { children: [e.jsx("strong", { children: "Account Age Gate: " }), "Automatisches Verweigern des Beitritts für neue Wegwerf-Accounts."] })
+      ]})
+    ]
+  });
+}
+
+function PageReleaseV20() {
+  return e.jsxs(e.Fragment, {
+    children: [
+      e.jsx(TitleBadge, { text: "Version 2.0 – Juni 2026", color: "amber" }),
+      e.jsx("p", { className: "text-neutral-300 leading-relaxed mb-6", children: "Kompletter Relaunch der gesamten Orbit Plattform." }),
+      e.jsx(h2, { id: "features", children: "Highlights" }),
+      e.jsx("ul", { className: "list-disc pl-5 space-y-2 text-neutral-300 mb-6", children: [
+        e.jsx("li", { children: "100% Umstellung auf Discord Slash Commands." }),
+        e.jsx("li", { children: "Moderne Microservice-Architektur mit performantem Backend." }),
+        e.jsx("li", { children: "Einführung des Web-Dashboards für Server-Admins." })
+      ]})
     ]
   });
 }
 
 
 const ORBIT_PAGES = {
+  // Docs Tab
   "index.mdx": () => Promise.resolve({
     default: PageIntro,
     frontmatter: { title: "Willkommen bei Orbit Docs", description: "Offizielle Dokumentation für den All-in-One Discord Bot Orbit.", icon: "BookOpen" },
@@ -912,16 +1150,87 @@ const ORBIT_PAGES = {
     default: PageCommandsAdmin,
     frontmatter: { title: "Admin- & Sicherheits-Befehle", description: "Befehle für Security, Whitelist, Blacklist und Notfälle.", icon: "Lock" },
     toc: [{ depth: 2, url: "#security", title: "/security" }, { depth: 2, url: "#antiraid", title: "/antiraid" }, { depth: 2, url: "#whitelist", title: "/whitelist" }]
+  }),
+
+  // Guides Tab
+  "guides/index.mdx": () => Promise.resolve({
+    default: PageGuidesIndex,
+    frontmatter: { title: "Orbit Anleitungen & Guides", description: "Ausführliche Schritt-für-Schritt Guides für deinen Server.", icon: "Compass" },
+    toc: [{ depth: 2, url: "#beliebte-guides", title: "Beliebte Anleitungen" }]
+  }),
+  "guides/server-setup.mdx": () => Promise.resolve({
+    default: PageGuideServerSetup,
+    frontmatter: { title: "Server-Setup von 0 auf 100", description: "Vollständige Einrichtung deines Discord Servers mit Orbit.", icon: "Layers" },
+    toc: [{ depth: 2, url: "#schritt-1-einladung", title: "1. Bot einladen" }, { depth: 2, url: "#schritt-2-rollen", title: "2. Rollenhierarchie" }, { depth: 2, url: "#schritt-3-kanaele", title: "3. Kanäle" }, { depth: 2, url: "#schritt-4-dashboard", title: "4. Dashboard" }]
+  }),
+  "guides/antiraid-security.mdx": () => Promise.resolve({
+    default: PageGuideAntiRaid,
+    frontmatter: { title: "Anti-Raid & Server absichern", description: "Optimaler Schutz vor Mass-Joins und Spambots.", icon: "ShieldAlert" },
+    toc: [{ depth: 2, url: "#mass-join", title: "Mass-Join Schutz" }, { depth: 2, url: "#account-age", title: "Account Age Gate" }, { depth: 2, url: "#notfall-befehle", title: "Notfallbefehle" }]
+  }),
+  "guides/tickets-support.mdx": () => Promise.resolve({
+    default: PageGuideTickets,
+    frontmatter: { title: "Support- & Ticket-System", description: "Professionelles Supportsystem mit HTML-Transkripten.", icon: "Ticket" },
+    toc: [{ depth: 2, url: "#panel-erstellen", title: "Panel erstellen" }, { depth: 2, url: "#team-rolle", title: "Team-Rolle" }, { depth: 2, url: "#transkripte", title: "Transkripte" }]
+  }),
+  "guides/leveling-rewards.mdx": () => Promise.resolve({
+    default: PageGuideLeveling,
+    frontmatter: { title: "Leveling & Rollen-Belohnungen", description: "XP-Raten und Role Rewards optimal ausbalancieren.", icon: "Award" },
+    toc: [{ depth: 2, url: "#xp-balance", title: "XP-Balance" }, { depth: 2, url: "#role-rewards", title: "Rollen-Belohnungen" }, { depth: 2, url: "#level-kanaele", title: "Level-Kanal" }]
+  }),
+  "guides/tempvoice-channels.mdx": () => Promise.resolve({
+    default: PageGuideTempVoice,
+    frontmatter: { title: "TempVoice / Join to Create", description: "Dynamische Talk-Kanäle mit automatischer Löschung.", icon: "Mic" },
+    toc: [{ depth: 2, url: "#hub-setup", title: "Hub Setup" }, { depth: 2, url: "#owner-rechte", title: "Owner Rechte" }, { depth: 2, url: "#auto-delete", title: "Auto-Delete" }]
+  }),
+  "guides/automod-moderation.mdx": () => Promise.resolve({
+    default: PageGuideAutoMod,
+    frontmatter: { title: "Auto-Moderation Masterclass", description: "Wortfilter, Anti-Spam und Schwellenwerte perfekt abstimmen.", icon: "Sliders" },
+    toc: [{ depth: 2, url: "#filter-level", title: "Filter Level" }, { depth: 2, url: "#anti-spam", title: "Anti-Spam" }, { depth: 2, url: "#stufenweise-strafen", title: "Stufenweise Strafen" }]
+  }),
+
+  // Release Notes Tab
+  "releases/index.mdx": () => Promise.resolve({
+    default: PageReleasesIndex,
+    frontmatter: { title: "Orbit Release Notes", description: "Versionshistorie und Update-Übersicht von Orbit.", icon: "ScrollText" },
+    toc: [{ depth: 2, url: "#versions-uebersicht", title: "Aktuelle Versionen" }]
+  }),
+  "releases/v2-4.mdx": () => Promise.resolve({
+    default: PageReleaseV24,
+    frontmatter: { title: "Orbit v2.4", description: "0ms Web Dashboard, neuer AutoMod Engine, HTML Transkripte.", icon: "Sparkles" },
+    toc: [{ depth: 2, url: "#highlights", title: "Wichtigste Neuerungen" }]
+  }),
+  "releases/v2-3.mdx": () => Promise.resolve({
+    default: PageReleaseV23,
+    frontmatter: { title: "Orbit v2.3", description: "TempVoice (Join to Create) und Giveaways mit Rollen-Bedingungen.", icon: "Mic" },
+    toc: [{ depth: 2, url: "#features", title: "Neue Features" }]
+  }),
+  "releases/v2-2.mdx": () => Promise.resolve({
+    default: PageReleaseV22,
+    frontmatter: { title: "Orbit v2.2", description: "Neues Ticketsystem mit Kategorien und Umfragen mit Prozentbalken.", icon: "Ticket" },
+    toc: [{ depth: 2, url: "#features", title: "Neue Features" }]
+  }),
+  "releases/v2-1.mdx": () => Promise.resolve({
+    default: PageReleaseV21,
+    frontmatter: { title: "Orbit v2.1", description: "Anti-Raid Shield, Account Age Gate und Notfall-Lockdown.", icon: "Shield" },
+    toc: [{ depth: 2, url: "#features", title: "Neue Features" }]
+  }),
+  "releases/v2-0.mdx": () => Promise.resolve({
+    default: PageReleaseV20,
+    frontmatter: { title: "Orbit v2.0", description: "Vollständiger Relaunch der Bot-Architektur auf Slash Commands.", icon: "Rocket" },
+    toc: [{ depth: 2, url: "#features", title: "Highlights" }]
   })
 };
 
-// Aliases for flat and nested paths
+// Aliases for flat and index-less routes
 for (const [k, v] of Object.entries(ORBIT_PAGES)) {
   const flat = k.split("/").pop();
   if (flat && !ORBIT_PAGES[flat]) {
     ORBIT_PAGES[flat] = v;
   }
 }
+ORBIT_PAGES["guides.mdx"] = ORBIT_PAGES["guides/index.mdx"];
+ORBIT_PAGES["releases.mdx"] = ORBIT_PAGES["releases/index.mdx"];
 
 
 const ORBIT_PAGE_TREE = {
@@ -986,9 +1295,38 @@ const ORBIT_PAGE_TREE = {
   ]
 };
 
+const ORBIT_GUIDES_TREE = {
+  $id: "root:guides",
+  name: "Orbit Guides",
+  children: [
+    { $id: "guides:index.mdx", type: "page", name: "Übersicht: Guides", description: "Alle Anleitungen für Orbit im Überblick.", url: "/docs/guides" },
+    { $id: "guides:sep_tutorials", type: "separator", name: "Schritt-für-Schritt Tutorials" },
+    { type: "page", name: "Server-Setup von 0 auf 100", url: "/docs/guides/server-setup", description: "Vollständige Einrichtung deines Discord Servers mit Orbit." },
+    { type: "page", name: "Anti-Raid & Server absichern", url: "/docs/guides/antiraid-security", description: "Mass-Join Schutz, Account Age Gate und Lockdown." },
+    { type: "page", name: "Support- & Ticket-System", url: "/docs/guides/tickets-support", description: "Support-Panels, Rollen und HTML-Transkripte." },
+    { type: "page", name: "Leveling & Rollen-Belohnungen", url: "/docs/guides/leveling-rewards", description: "XP-System und automatische Rollenbelohnungen." },
+    { type: "page", name: "TempVoice (Join to Create)", url: "/docs/guides/tempvoice-channels", description: "Temporäre Sprachkanäle mit automatischer Löschung." },
+    { type: "page", name: "Auto-Moderation Masterclass", url: "/docs/guides/automod-moderation", description: "Wortfilter, Anti-Spam und Schwellenwerte perfekt konfigurieren." }
+  ]
+};
+
+const ORBIT_RELEASES_TREE = {
+  $id: "root:releases",
+  name: "Release Notes",
+  children: [
+    { $id: "releases:index.mdx", type: "page", name: "Übersicht: Updates", description: "Chronologische Liste aller Orbit Updates.", url: "/docs/releases" },
+    { $id: "releases:sep_versions", type: "separator", name: "Versionshistorie" },
+    { type: "page", name: "Orbit v2.4 (Aktuell)", url: "/docs/releases/v2-4", description: "0ms Web Dashboard, neuer AutoMod Engine, HTML Transkripte." },
+    { type: "page", name: "Orbit v2.3", url: "/docs/releases/v2-3", description: "TempVoice und Giveaways mit Rollen-Bedingungen." },
+    { type: "page", name: "Orbit v2.2", url: "/docs/releases/v2-2", description: "Ticketsystem mit Kategorien und Umfragen mit Prozentbalken." },
+    { type: "page", name: "Orbit v2.1", url: "/docs/releases/v2-1", description: "Anti-Raid Shield, Account Age Gate und Notfall-Lockdown." },
+    { type: "page", name: "Orbit v2.0", url: "/docs/releases/v2-0", description: "Vollständiger Relaunch der Bot-Architektur auf Slash Commands." }
+  ]
+};
+
 
 const ORBIT_SEARCH_INDEX = [
-  // Core
+  // Core Docs
   { id: "/docs", type: "page", content: "Willkommen bei Orbit Docs", description: "Offizielle Dokumentation für den All-in-One Discord Bot Orbit.", url: "/docs", breadcrumbs: ["Orbit Docs"] },
   { id: "/docs/quickstart", type: "page", content: "Erste Schritte & Bot Einrichten", description: "Orbit zum Discord Server einladen, Rollen ordnen und Dashboard starten.", url: "/docs/quickstart", breadcrumbs: ["Orbit Docs"] },
 
@@ -1040,45 +1378,35 @@ const ORBIT_SEARCH_INDEX = [
   { id: "/docs/commands/moderation#slowmode", type: "heading", content: "/slowmode <sekunden>", description: "Setzt den Slowmode für den aktuellen Kanal.", url: "/docs/commands/moderation", breadcrumbs: ["Commands", "Moderation"] },
   { id: "/docs/commands/moderation#nick", type: "heading", content: "/nick <user> [neuer_name]", description: "Ändert den Server-Spitznamen eines Nutzers.", url: "/docs/commands/moderation", breadcrumbs: ["Commands", "Moderation"] },
 
-  // Commands: Management
-  { id: "/docs/commands/management#setup", type: "heading", content: "/setup", description: "Startet den interaktiven Server-Setup-Assistenten.", url: "/docs/commands/management", breadcrumbs: ["Commands", "Management"] },
-  { id: "/docs/commands/management#autorole", type: "heading", content: "/autorole set <rolle>", description: "Legt die Beitrittsrolle für neue Mitglieder fest.", url: "/docs/commands/management", breadcrumbs: ["Commands", "Management"] },
-  { id: "/docs/commands/management#reactionrole", type: "heading", content: "/reactionrole add", description: "Verknüpft ein Emoji mit einer Rolle.", url: "/docs/commands/management", breadcrumbs: ["Commands", "Management"] },
-  { id: "/docs/commands/management#embed", type: "heading", content: "/embed create", description: "Öffnet den interaktiven Embed Builder.", url: "/docs/commands/management", breadcrumbs: ["Commands", "Management"] },
-  { id: "/docs/commands/management#backup", type: "heading", content: "/backup create | load", description: "Erstellt oder lädt ein Server-Backup.", url: "/docs/commands/management", breadcrumbs: ["Commands", "Management"] },
-  { id: "/docs/commands/management#serverstats", type: "heading", content: "/serverstats setup", description: "Richtet die Live-Statistikkanäle ein.", url: "/docs/commands/management", breadcrumbs: ["Commands", "Management"] },
+  // Guides
+  { id: "/docs/guides", type: "page", content: "Orbit Anleitungen & Guides", description: "Alle Praxis-Guides für Discord Server mit Orbit.", url: "/docs/guides", breadcrumbs: ["Guides"] },
+  { id: "/docs/guides/server-setup", type: "page", content: "Server-Setup von 0 auf 100", description: "Vollständige Einrichtung deines Discord Servers mit Orbit.", url: "/docs/guides/server-setup", breadcrumbs: ["Guides", "Setup"] },
+  { id: "/docs/guides/antiraid-security", type: "page", content: "Anti-Raid & Server absichern", description: "Optimaler Schutz vor Mass-Joins und Spambots.", url: "/docs/guides/antiraid-security", breadcrumbs: ["Guides", "Sicherheit"] },
+  { id: "/docs/guides/tickets-support", type: "page", content: "Support- & Ticket-System", description: "Support-Panels, Rollen und HTML-Transkripte.", url: "/docs/guides/tickets-support", breadcrumbs: ["Guides", "Support"] },
+  { id: "/docs/guides/leveling-rewards", type: "page", content: "Leveling & Rollen-Belohnungen", description: "XP-System und automatische Rollenbelohnungen.", url: "/docs/guides/leveling-rewards", breadcrumbs: ["Guides", "Community"] },
+  { id: "/docs/guides/tempvoice-channels", type: "page", content: "TempVoice (Join to Create)", description: "Temporäre Sprachkanäle mit automatischer Löschung.", url: "/docs/guides/tempvoice-channels", breadcrumbs: ["Guides", "Voice"] },
+  { id: "/docs/guides/automod-moderation", type: "page", content: "Auto-Moderation Masterclass", description: "Wortfilter, Anti-Spam und Schwellenwerte perfekt konfigurieren.", url: "/docs/guides/automod-moderation", breadcrumbs: ["Guides", "Moderation"] },
 
-  // Commands: Community
-  { id: "/docs/commands/community#rank", type: "heading", content: "/rank [user]", description: "Zeigt die XP-Rangkarte eines Nutzers an.", url: "/docs/commands/community", breadcrumbs: ["Commands", "Community"] },
-  { id: "/docs/commands/community#leaderboard", type: "heading", content: "/leaderboard", description: "Öffnet die globale Aktivitäts-Rangliste.", url: "/docs/commands/community", breadcrumbs: ["Commands", "Community"] },
-  { id: "/docs/commands/community#giveaway", type: "heading", content: "/giveaway start", description: "Startet ein neues Giveaway im Kanal.", url: "/docs/commands/community", breadcrumbs: ["Commands", "Community"] },
-  { id: "/docs/commands/community#poll", type: "heading", content: "/poll <frage>", description: "Startet eine Umfrage im Chat.", url: "/docs/commands/community", breadcrumbs: ["Commands", "Community"] },
-  { id: "/docs/commands/community#ticket", type: "heading", content: "/ticket panel", description: "Erstellt das Support-Ticket-Panel.", url: "/docs/commands/community", breadcrumbs: ["Commands", "Community"] },
-  { id: "/docs/commands/community#afk", type: "heading", content: "/afk [nachricht]", description: "Setzt deinen Status auf AFK.", url: "/docs/commands/community", breadcrumbs: ["Commands", "Community"] },
-  { id: "/docs/commands/community#remind", type: "heading", content: "/remind <zeit>", description: "Erinnert dich nach einer Zeit per DM.", url: "/docs/commands/community", breadcrumbs: ["Commands", "Community"] },
-
-  // Commands: Info & Utility
-  { id: "/docs/commands/info#help", type: "heading", content: "/help [befehl]", description: "Zeigt die Übersicht aller Orbit Befehle.", url: "/docs/commands/info", breadcrumbs: ["Commands", "Info"] },
-  { id: "/docs/commands/info#botinfo", type: "heading", content: "/botinfo", description: "Zeigt System-Ressourcen, Ping und Uptime an.", url: "/docs/commands/info", breadcrumbs: ["Commands", "Info"] },
-  { id: "/docs/commands/info#serverinfo", type: "heading", content: "/serverinfo", description: "Detaillierte Infos zum aktuellen Server.", url: "/docs/commands/info", breadcrumbs: ["Commands", "Info"] },
-  { id: "/docs/commands/info#userinfo", type: "heading", content: "/userinfo [user]", description: "Zeigt Profil- und Rollendetails eines Nutzers.", url: "/docs/commands/info", breadcrumbs: ["Commands", "Info"] },
-  { id: "/docs/commands/info#avatar", type: "heading", content: "/avatar [user]", description: "Gibt das Profilbild in HD aus.", url: "/docs/commands/info", breadcrumbs: ["Commands", "Info"] },
-  { id: "/docs/commands/info#ping", type: "heading", content: "/ping", description: "Misst die Latenz des Bots.", url: "/docs/commands/info", breadcrumbs: ["Commands", "Info"] },
-  { id: "/docs/commands/info#steal", type: "heading", content: "/steal <emoji>", description: "Fügt ein Emoji zu deinem Server hinzu.", url: "/docs/commands/info", breadcrumbs: ["Commands", "Info"] },
-
-  // Commands: Admin & Security
-  { id: "/docs/commands/admin#security", type: "heading", content: "/security status", description: "Prüft den Zustand aller Sicherheitsfilter.", url: "/docs/commands/admin", breadcrumbs: ["Commands", "Admin"] },
-  { id: "/docs/commands/admin#antiraid", type: "heading", content: "/antiraid on | off", description: "Schaltet den Mass-Join Schutz manuell ein oder aus.", url: "/docs/commands/admin", breadcrumbs: ["Commands", "Admin"] },
-  { id: "/docs/commands/admin#whitelist", type: "heading", content: "/whitelist add", description: "Fügt Nutzer oder Rollen zur Whitelist hinzu.", url: "/docs/commands/admin", breadcrumbs: ["Commands", "Admin"] },
-  { id: "/docs/commands/admin#blacklist", type: "heading", content: "/blacklist add", description: "Fügt Wörter zur Blacklist hinzu.", url: "/docs/commands/admin", breadcrumbs: ["Commands", "Admin"] },
-  { id: "/docs/commands/admin#voice", type: "heading", content: "/voice setup", description: "Richtet das TempVoice System ein.", url: "/docs/commands/admin", breadcrumbs: ["Commands", "Admin"] }
+  // Release Notes
+  { id: "/docs/releases", type: "page", content: "Orbit Release Notes", description: "Update-Historie und Versionsübersicht.", url: "/docs/releases", breadcrumbs: ["Release Notes"] },
+  { id: "/docs/releases/v2-4", type: "page", content: "Orbit v2.4 Update", description: "0ms Web Dashboard, neuer AutoMod Engine, HTML Transkripte.", url: "/docs/releases/v2-4", breadcrumbs: ["Release Notes", "v2.4"] },
+  { id: "/docs/releases/v2-3", type: "page", content: "Orbit v2.3 Update", description: "TempVoice und Giveaways mit Rollen-Bedingungen.", url: "/docs/releases/v2-3", breadcrumbs: ["Release Notes", "v2.3"] },
+  { id: "/docs/releases/v2-2", type: "page", content: "Orbit v2.2 Update", description: "Ticketsystem mit Kategorien und Umfragen mit Prozentbalken.", url: "/docs/releases/v2-2", breadcrumbs: ["Release Notes", "v2.2"] },
+  { id: "/docs/releases/v2-1", type: "page", content: "Orbit v2.1 Update", description: "Anti-Raid Shield, Account Age Gate und Notfall-Lockdown.", url: "/docs/releases/v2-1", breadcrumbs: ["Release Notes", "v2.1"] },
+  { id: "/docs/releases/v2-0", type: "page", content: "Orbit v2.0 Update", description: "Vollständiger Relaunch der Bot-Architektur auf Slash Commands.", url: "/docs/releases/v2-0", breadcrumbs: ["Release Notes", "v2.0"] }
 ];
 
 
 window.__ORBIT_PAGES__ = ORBIT_PAGES;
 window.__ORBIT_PAGE_TREE__ = ORBIT_PAGE_TREE;
+window.__ORBIT_GUIDES_TREE__ = ORBIT_GUIDES_TREE;
+window.__ORBIT_RELEASES_TREE__ = ORBIT_RELEASES_TREE;
 window.__ORBIT_SEARCH_INDEX__ = ORBIT_SEARCH_INDEX;
-window.__DOCS_TREES__ = { docs: ORBIT_PAGE_TREE, guides: ORBIT_PAGE_TREE, releases: ORBIT_PAGE_TREE };
+window.__DOCS_TREES__ = {
+  docs: ORBIT_PAGE_TREE,
+  guides: ORBIT_GUIDES_TREE,
+  releases: ORBIT_RELEASES_TREE
+};
 
-console.log("[Orbit Docs] Loaded 25 Documentation Pages, Complete Page Tree and Search Index.");
-export { ORBIT_PAGES, ORBIT_PAGE_TREE, ORBIT_SEARCH_INDEX };
+console.log("[Orbit Docs] Loaded Orbit Documentation, Guides and Release Notes Suite.");
+export { ORBIT_PAGES, ORBIT_PAGE_TREE, ORBIT_GUIDES_TREE, ORBIT_RELEASES_TREE, ORBIT_SEARCH_INDEX };

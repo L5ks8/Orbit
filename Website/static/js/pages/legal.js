@@ -159,7 +159,6 @@
               <ul class="space-y-3">
                 <li><a href="/privacy" class="text-sm text-neutral-400 hover:text-white transition-colors">${currentLegalLang === 'de' ? 'Datenschutzerklärung' : 'Privacy Policy'}</a></li>
                 <li><a href="/terms" class="text-sm text-neutral-400 hover:text-white transition-colors">${currentLegalLang === 'de' ? 'Nutzungsbedingungen' : 'Terms of Service'}</a></li>
-                <li><a href="/status" class="text-sm text-neutral-400 hover:text-white transition-colors">${currentLegalLang === 'de' ? 'System-Status' : 'System Status'}</a></li>
               </ul>
             </div>
           </div>

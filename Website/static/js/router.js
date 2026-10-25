@@ -100,9 +100,6 @@ const Router = {
     if (path === '/guides') {
       return Pages.Guides(app);
     }
-    if (path === '/status') {
-      return Pages.Status(app);
-    }
     if (path === '/benchmarks') {
       return Pages.Benchmarks(app);
     }

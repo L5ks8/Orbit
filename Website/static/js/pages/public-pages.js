@@ -1,6 +1,6 @@
 /**
  * Orbit Public Pages
- * Documentation, Guides, Status, Benchmarks, Leaderboard, Terms, and Privacy.
+ * Documentation, Guides, Benchmarks, Leaderboard, Terms, and Privacy.
  */
 
 // ==========================================
@@ -47,42 +47,6 @@ Pages.Guides = function(container) {
   `;
 };
 
-// ==========================================
-// STATUS PAGE
-// ==========================================
-Pages.Status = async function(container) {
-  container.innerHTML = `
-    <div class="max-w-3xl mx-auto px-6 pt-32 pb-24 animate-fade-in text-center">
-      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-6">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-        All Systems Operational
-      </div>
-
-      <h1 class="text-4xl font-extrabold text-white mb-3">System Status & Latency</h1>
-      <p class="text-neutral-400 text-sm mb-12">Real-time health and uptime of Orbit services.</p>
-
-      <div class="p-8 rounded-3xl bg-neutral-900 border border-neutral-800 flex flex-col gap-4 text-left mb-8">
-        ${[
-          { name: 'Discord Gateway Connection', status: 'Operational', ping: '18ms' },
-          { name: 'API Server & Web Dashboard', status: 'Operational', ping: '12ms' },
-          { name: 'Components V2 Engine', status: 'Operational', ping: 'Instant' },
-          { name: 'Auto-Moderation Scanner', status: 'Operational', ping: '<5ms' },
-          { name: 'Database Cluster (MongoDB)', status: 'Operational', ping: '4ms' }
-        ].map(s => `
-          <div class="flex items-center justify-between p-4 rounded-xl bg-neutral-950 border border-neutral-800">
-            <span class="text-xs font-semibold text-white">${s.name}</span>
-            <div class="flex items-center gap-4">
-              <span class="text-xs text-neutral-500 font-mono">${s.ping}</span>
-              <span class="text-xs text-emerald-400 font-bold flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> ${s.status}
-              </span>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-};
 
 // ==========================================
 // BENCHMARKS PAGE
