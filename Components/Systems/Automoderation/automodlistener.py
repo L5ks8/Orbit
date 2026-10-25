@@ -139,14 +139,46 @@ class AutoModListener(commands.Cog):
             action = cfg.get("action", "warn")
             timeout_min = cfg.get("timeout_duration_min", 5)
             escalation_str, warn_count = await self._apply_action(message.author, action, timeout_min, reason)
-            embed = discord.Embed(title="Orbit AutoMod Triggered", color=0x2b2d31)
-            embed.add_field(name="Target", value=f"{message.author.mention} (`{message.author.id}`)", inline=False)
-            embed.add_field(name="Reason", value=reason, inline=True)
-            embed.add_field(name="Action Taken", value=f"`{action.upper()}` (Total Warnings: {warn_count})", inline=True)
-            if escalation_str:
-                embed.add_field(name="Escalation", value=f"`{escalation_str}`", inline=False)
+
+            clean_reason = reason[len("AutoMod: "):].strip() if reason.startswith("AutoMod: ") else reason.strip()
+            discrim = message.author.discriminator if message.author.discriminator and message.author.discriminator != "0" else "0000"
+            max_attempts = cfg.get("max_attempts") or cfg.get("max_warnings") or config.get("max_attempts") or config.get("max_warnings") or 3
+            cycle_attempts = ((warn_count - 1) % max_attempts) + 1
+            remaining_attempts = max(0, max_attempts - cycle_attempts)
+
+            if action == "warn":
+                embed = discord.Embed(title="User Warning", color=0x297fb9)
+                embed.add_field(name="User:", value=f"{message.author.name}#{discrim}\n`{message.author.id}`", inline=False)
+                embed.add_field(name="Reason:", value=clean_reason, inline=False)
+                embed.add_field(name="Remaining Attempts:", value=str(remaining_attempts), inline=False)
+                if escalation_str:
+                    embed.add_field(name="Escalation:", value=escalation_str, inline=False)
+            else:
+                embed = discord.Embed(title=f"User {action.capitalize()}", color=0x297fb9)
+                embed.add_field(name="User:", value=f"{message.author.name}#{discrim}\n`{message.author.id}`", inline=False)
+                embed.add_field(name="Reason:", value=clean_reason, inline=False)
+                embed.add_field(name="Action Taken:", value=action.upper(), inline=False)
+                if escalation_str:
+                    embed.add_field(name="Escalation:", value=escalation_str, inline=False)
+
             try:
                 await message.channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+            except Exception:
+                pass
+
+            try:
+                from Components.Commands._utils import send_moderation_dm
+                dm_action = "warned" if action == "warn" else (f"{action}ed" if not action.endswith("e") else f"{action}d")
+                await send_moderation_dm(
+                    user=message.author,
+                    guild_name=message.guild.name,
+                    action=dm_action,
+                    reason=clean_reason,
+                    duration=f"{timeout_min}m" if action == "timeout" else None,
+                    guild_id=message.guild.id,
+                    moderator=self.bot.user,
+                    warning_count=warn_count
+                )
             except Exception:
                 pass
             try:
@@ -312,12 +344,26 @@ class AutoModListener(commands.Cog):
                             
                             action = bot_cfg.get("action", "kick")
                             escalation_str, warn_count = await self._apply_action(inviter, action, 5, "AutoMod: Unauthorized bot invite")
-                            embed = discord.Embed(title="Orbit AutoMod Triggered", color=ORBIT_COLOR)
-                            embed.add_field(name="Target", value=f"{inviter.mention} (`{inviter.id}`)", inline=False)
-                            embed.add_field(name="Reason", value="Unauthorized Bot Invite", inline=True)
-                            embed.add_field(name="Action Taken", value=f"`{action.upper()}` (Total Warnings: {warn_count})", inline=True)
-                            if escalation_str:
-                                embed.add_field(name="Escalation", value=f"`{escalation_str}`", inline=False)
+
+                            discrim = inviter.discriminator if inviter.discriminator and inviter.discriminator != "0" else "0000"
+                            max_attempts = bot_cfg.get("max_attempts") or bot_cfg.get("max_warnings") or config.get("max_attempts") or config.get("max_warnings") or 3
+                            cycle_attempts = ((warn_count - 1) % max_attempts) + 1
+                            remaining_attempts = max(0, max_attempts - cycle_attempts)
+
+                            if action == "warn":
+                                embed = discord.Embed(title="User Warning", color=0x297fb9)
+                                embed.add_field(name="User:", value=f"{inviter.name}#{discrim}\n`{inviter.id}`", inline=False)
+                                embed.add_field(name="Reason:", value="Unauthorized Bot Invite", inline=False)
+                                embed.add_field(name="Remaining Attempts:", value=str(remaining_attempts), inline=False)
+                                if escalation_str:
+                                    embed.add_field(name="Escalation:", value=escalation_str, inline=False)
+                            else:
+                                embed = discord.Embed(title=f"User {action.capitalize()}", color=0x297fb9)
+                                embed.add_field(name="User:", value=f"{inviter.name}#{discrim}\n`{inviter.id}`", inline=False)
+                                embed.add_field(name="Reason:", value="Unauthorized Bot Invite", inline=False)
+                                embed.add_field(name="Action Taken:", value=action.upper(), inline=False)
+                                if escalation_str:
+                                    embed.add_field(name="Escalation:", value=escalation_str, inline=False)
                             
                             try:
                                 channel = member.guild.system_channel
@@ -328,6 +374,21 @@ class AutoModListener(commands.Cog):
                                             break
                                 if channel:
                                     await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                            except Exception:
+                                pass
+
+                            try:
+                                from Components.Commands._utils import send_moderation_dm
+                                dm_action = "warned" if action == "warn" else (f"{action}ed" if not action.endswith("e") else f"{action}d")
+                                await send_moderation_dm(
+                                    user=inviter,
+                                    guild_name=member.guild.name,
+                                    action=dm_action,
+                                    reason="Unauthorized Bot Invite",
+                                    guild_id=member.guild.id,
+                                    moderator=self.bot.user,
+                                    warning_count=warn_count
+                                )
                             except Exception:
                                 pass
                             

@@ -361,24 +361,68 @@ async def send_moderation_dm(user: discord.Member | discord.User, guild_name: st
                 send_kwargs["embed"] = embed
 
         if not send_kwargs:
-            desc = f"You were {action} in {guild_name}{f' for {duration}' if duration else ''}. | {reason}"
-            if guild_id:
+            if action.lower() in ("warned", "warn"):
+                embed = discord.Embed(title="User Warning", color=0x297fb9)
+                discrim = getattr(user, "discriminator", None)
+                discrim_str = discrim if discrim and discrim != "0" else "0000"
+                username = getattr(user, "name", "User")
+                uid = getattr(user, "id", "")
+                embed.add_field(name="User:", value=f"{username}#{discrim_str}\n`{uid}`", inline=False)
+                clean_reason = reason[len("AutoMod: "):].strip() if reason and reason.startswith("AutoMod: ") else (reason or "No reason provided").strip()
+                embed.add_field(name="Reason:", value=clean_reason, inline=False)
+                max_attempts = 3
+                if guild_id:
+                    try:
+                        from Components.Systems.Automoderation._storage import load_automod_config
+                        am_c = load_automod_config(guild_id)
+                        max_attempts = am_c.get("max_attempts") or am_c.get("max_warnings") or 3
+                    except Exception:
+                        max_attempts = 3
                 try:
-                    from Components.Systems.BanAppeals._storage import load_appeals_config
-                    appeals_cfg = load_appeals_config(guild_id)
-                    if appeals_cfg.get("enabled"):
-                        allowed = appeals_cfg.get("allowed_punishments", [])
-                        p_map = {"banned": "ban", "voice banned": "ban", "timed out": "timeout", "muted": "timeout", "voice muted": "timeout", "kicked": "kick", "warned": "warn"}
-                        if p_map.get(action) in allowed:
-                            custom_url = appeals_cfg.get("custom_url", "orbit")
-                            import urllib.parse
-                            encoded_url = urllib.parse.quote(custom_url)
-                            base_url = os.environ.get("BASE_URL")
-                            desc += f"\n\n**Appeals:** You can appeal this punishment at: {base_url}/appeal/{encoded_url}"
+                    w_num = int(warning_count) if warning_count is not None else 1
                 except Exception:
-                    pass
+                    w_num = 1
+                cycle_attempts = ((w_num - 1) % max_attempts) + 1
+                remaining_attempts = max(0, max_attempts - cycle_attempts)
+                embed.add_field(name="Remaining Attempts:", value=str(remaining_attempts), inline=False)
 
-            send_kwargs["embed"] = discord.Embed(description=desc, color=discord.Color.red())
+                if guild_id:
+                    try:
+                        from Components.Systems.BanAppeals._storage import load_appeals_config
+                        appeals_cfg = load_appeals_config(guild_id)
+                        if appeals_cfg.get("enabled"):
+                            allowed = appeals_cfg.get("allowed_punishments", [])
+                            if "warn" in allowed:
+                                custom_url = appeals_cfg.get("custom_url", "orbit")
+                                import urllib.parse
+                                encoded_url = urllib.parse.quote(custom_url)
+                                base_url = os.environ.get("BASE_URL")
+                                if base_url:
+                                    embed.add_field(name="Appeals:", value=f"You can appeal this punishment at: {base_url}/appeal/{encoded_url}", inline=False)
+                    except Exception:
+                        pass
+
+                send_kwargs["embed"] = embed
+            else:
+                desc = f"You were {action} in {guild_name}{f' for {duration}' if duration else ''}. | {reason}"
+                if guild_id:
+                    try:
+                        from Components.Systems.BanAppeals._storage import load_appeals_config
+                        appeals_cfg = load_appeals_config(guild_id)
+                        if appeals_cfg.get("enabled"):
+                            allowed = appeals_cfg.get("allowed_punishments", [])
+                            p_map = {"banned": "ban", "voice banned": "ban", "timed out": "timeout", "muted": "timeout", "voice muted": "timeout", "kicked": "kick", "warned": "warn"}
+                            if p_map.get(action) in allowed:
+                                custom_url = appeals_cfg.get("custom_url", "orbit")
+                                import urllib.parse
+                                encoded_url = urllib.parse.quote(custom_url)
+                                base_url = os.environ.get("BASE_URL")
+                                if base_url:
+                                    desc += f"\n\n**Appeals:** You can appeal this punishment at: {base_url}/appeal/{encoded_url}"
+                    except Exception:
+                        pass
+
+                send_kwargs["embed"] = discord.Embed(description=desc, color=discord.Color.red())
 
         await user.send(**send_kwargs)
     except Exception:
