@@ -46,9 +46,12 @@ class InactiveKickListener(commands.Cog):
         await self.bot.wait_until_ready()
         now = time.time()
 
-        for guild in self.bot.guilds:
+        for guild in list(self.bot.guilds):
             try:
-                cfg = load_inactive_kick_config(guild.id)
+                # Yield control to the asyncio event loop between guilds so heartbeats and events run smoothly
+                await asyncio.sleep(0.05)
+
+                cfg = await asyncio.to_thread(load_inactive_kick_config, guild.id)
                 if not cfg.get("enabled", False):
                     continue
 
@@ -79,7 +82,9 @@ class InactiveKickListener(commands.Cog):
                 kick_threshold_seconds = days * 86400
                 warn_threshold_seconds = kick_threshold_seconds - (warn_hours * 3600)
 
-                for member in list(guild.members):
+                for i, member in enumerate(list(guild.members)):
+                    if i % 30 == 0:
+                        await asyncio.sleep(0)
                     if member.bot:
                         continue
                     if member.id == guild.owner_id:

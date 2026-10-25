@@ -443,8 +443,9 @@ class BackupCommand(commands.Cog):
     async def auto_backup_loop(self):
         now = int(time.time())
         try:
-            configs = get_all_active_backup_configs()
+            configs = await asyncio.to_thread(get_all_active_backup_configs)
             for cfg in configs:
+                await asyncio.sleep(0.05)
                 guild_id = cfg.get("guild_id")
                 if not guild_id:
                     continue

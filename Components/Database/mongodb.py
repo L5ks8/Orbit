@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+import asyncio
 from pymongo import MongoClient
 from typing import Dict, Any, Optional
 
@@ -8,7 +9,24 @@ _client: Optional[MongoClient] = None
 _db = None
 _config_cache: Dict[tuple, tuple[float, Dict[str, Any]]] = {}
 _cache_lock = threading.Lock()
-CONFIG_CACHE_TTL = 60.0  # seconds
+CONFIG_CACHE_TTL = 300.0  # seconds (5 minutes cache - immediately invalidated upon set_config)
+
+_existing_collections_cache: Dict[str, set] = {}
+_existing_collections_time = 0.0
+
+def _get_collection_names(database) -> set:
+    global _existing_collections_time
+    if database is None:
+        return set()
+    now = time.time()
+    db_name = database.name
+    if db_name not in _existing_collections_cache or now - _existing_collections_time > 600.0:
+        try:
+            _existing_collections_cache[db_name] = set(database.list_collection_names())
+            _existing_collections_time = now
+        except Exception:
+            return _existing_collections_cache.get(db_name, set())
+    return _existing_collections_cache.get(db_name, set())
 
 def get_db():
     global _client, _db
@@ -22,7 +40,7 @@ def get_db():
         mongo_kwargs = {
             "serverSelectionTimeoutMS": 5000,
             "connectTimeoutMS": 5000,
-            "socketTimeoutMS": 10000,
+            "socketTimeoutMS": 5000,
             "maxPoolSize": 50
         }
         if not uri:
@@ -119,31 +137,44 @@ def get_config(collection_name: str, guild_id: Any, default_config: Dict[str, An
     try:
         db = get_db()
         if db is not None:
-            # 1. Query exact collection name
-            collection = db[collection_name]
-            doc = _query_collection_doc(collection, guild_id)
+            existing_cols = _get_collection_names(db)
+            
+            # Determine target collection if it exists in db
+            target_col = None
+            if collection_name in existing_cols:
+                target_col = collection_name
+            elif collection_name.lower() in existing_cols:
+                target_col = collection_name.lower()
+            elif collection_name.capitalize() in existing_cols:
+                target_col = collection_name.capitalize()
+            elif not existing_cols:
+                # If existing_cols failed to list, try exact name directly
+                target_col = collection_name
 
-            # 2. Fast casing fallback (lowercase or capitalized) if not found
-            if not doc and collection_name.lower() != collection_name:
-                doc = _query_collection_doc(db[collection_name.lower()], guild_id)
-            if not doc and collection_name.capitalize() != collection_name and collection_name.capitalize() != collection_name.lower():
-                doc = _query_collection_doc(db[collection_name.capitalize()], guild_id)
+            if target_col is not None:
+                doc = _query_collection_doc(db[target_col], guild_id)
 
-            # 3. Candidate database fallback (check OrbitBot, orbit, Orbit)
+            # Candidate database fallback: only if not found and a candidate DB actually has the collection
             if not doc and _client is not None:
                 for cand_name in ["OrbitBot", "orbit", "Orbit"]:
                     if db.name == cand_name:
                         continue
                     try:
                         cand_db = _client[cand_name]
-                        doc = _query_collection_doc(cand_db[collection_name], guild_id)
-                        if not doc and collection_name.lower() != collection_name:
-                            doc = _query_collection_doc(cand_db[collection_name.lower()], guild_id)
-                        if not doc and collection_name.capitalize() != collection_name and collection_name.capitalize() != collection_name.lower():
-                            doc = _query_collection_doc(cand_db[collection_name.capitalize()], guild_id)
-                        if doc:
-                            print(f"[MongoDB] Found {collection_name}:{guild_id} in candidate database '{cand_name}'")
-                            break
+                        cand_cols = _get_collection_names(cand_db)
+                        cand_target = None
+                        if collection_name in cand_cols:
+                            cand_target = collection_name
+                        elif collection_name.lower() in cand_cols:
+                            cand_target = collection_name.lower()
+                        elif collection_name.capitalize() in cand_cols:
+                            cand_target = collection_name.capitalize()
+                        
+                        if cand_target is not None:
+                            doc = _query_collection_doc(cand_db[cand_target], guild_id)
+                            if doc:
+                                print(f"[MongoDB] Found {collection_name}:{guild_id} in candidate database '{cand_name}'")
+                                break
                     except Exception:
                         pass
     except Exception as e:
@@ -209,6 +240,8 @@ def set_config(collection_name: str, guild_id: Any, config: Dict[str, Any]) -> N
         doc["_id"] = str(guild_id)
         doc["guild_id"] = str(guild_id)
         collection.replace_one({"_id": str(guild_id)}, doc, upsert=True)
+        if db.name in _existing_collections_cache:
+            _existing_collections_cache[db.name].add(collection_name)
         try:
             if isinstance(guild_id, (int, str)) and str(guild_id).isdigit():
                 collection.delete_one({"_id": int(guild_id)})
@@ -216,3 +249,11 @@ def set_config(collection_name: str, guild_id: Any, config: Dict[str, Any]) -> N
             pass
     except Exception as e:
         print(f"[MongoDB] Save error for {collection_name}:{guild_id}: {e}")
+
+async def get_config_async(collection_name: str, guild_id: Any, default_config: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Non-blocking async wrapper around get_config."""
+    return await asyncio.to_thread(get_config, collection_name, guild_id, default_config)
+
+async def set_config_async(collection_name: str, guild_id: Any, config: Dict[str, Any]) -> None:
+    """Non-blocking async wrapper around set_config."""
+    await asyncio.to_thread(set_config, collection_name, guild_id, config)
