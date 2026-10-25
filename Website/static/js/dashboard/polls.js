@@ -1,7 +1,7 @@
 /**
- * Orbit Dashboard - Polls Tab (Umfragen)
+ * Orbit Dashboard - Polls Tab
  * 1:1 PeakBot UI & Full End-to-End Functionality:
- * - Feature Header (`lucide-bar-chart3` + `Umfragen`)
+ * - Feature Header (`lucide-bar-chart3` + `Polls`)
  * - Segmented Filter Bar (`All`, `Active`, `Ended`, `Drafts`) + Active Counter (`0/999 active`) + `+ Create Poll` button
  * - Polls Grid with Active/Ended/Draft Poll Cards (3-dots action menu, live option vote bars, total votes, relative creation time) + dashed `+ Umfrage erstellen` card
  * - 3-Column `Create a Poll` Modal (`Quick Start` presets, `Question` 0/256, `Options` 1..10, live `Discord Preview`, `Channel` custom dropdown, `Duration` + `No time limit`, `Allow multiple votes`, collapsible `Advanced` settings, `Save as Draft` & `Create Poll`)
@@ -88,8 +88,8 @@ DashboardTabs.Polls = async function(container, guildId) {
       });
 
       const filterTabs = [
-        { id: 'all', label: 'Alle' },
-        { id: 'active', label: 'Aktiv' },
+        { id: 'all', label: 'All' },
+        { id: 'active', label: 'Active' },
         { id: 'ended', label: 'Ended' },
         { id: 'draft', label: 'Drafts' }
       ];
@@ -124,7 +124,7 @@ DashboardTabs.Polls = async function(container, guildId) {
                   }).join('')}
                 </div>
                 <div class="flex items-center gap-3">
-                  <span class="text-xs tabular-nums text-neutral-500">${activeCount}/999 aktiv</span>
+                  <span class="text-xs tabular-nums text-neutral-500">${activeCount}/999 active</span>
                   <div class="w-16 h-1 rounded-full bg-neutral-800 overflow-hidden">
                     <div class="h-full rounded-full transition-all bg-white/60" style="width: ${activeProgressPct}%;"></div>
                   </div>
@@ -132,7 +132,7 @@ DashboardTabs.Polls = async function(container, guildId) {
               </div>
               <div class="flex items-center gap-2.5 w-full sm:w-auto">
                 <button type="button" id="polls-top-create-btn" class="flex-1 sm:flex-none justify-center flex items-center gap-2 h-10 px-5 bg-white text-black text-sm font-semibold rounded-xl hover:bg-neutral-200 transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-4 h-4"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Umfrage erstellen
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-4 h-4"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Create Poll
                 </button>
               </div>
             </div>

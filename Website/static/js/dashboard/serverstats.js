@@ -68,7 +68,7 @@ DashboardTabs.ServerStats = async function (container, guildId) {
         { token: '{total}', label: '{total}', tip: 'Total members including bots (e.g. 1,250)' },
         { token: '{server}', label: '{server}', tip: 'Server Name' }
       ],
-      presets: ['👥 Members: {count}', '👤 Users: {count}', '👥 {server}: {count}', 'Mitglieder: {count}'],
+      presets: ['👥 Members: {count}', '👤 Users: {count}', '👥 {server}: {count}', 'Members: {count}'],
       iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users text-indigo-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`
     },
     {
@@ -118,7 +118,7 @@ DashboardTabs.ServerStats = async function (container, guildId) {
         { token: '{count}', label: '{count}', tip: 'Number of roles (e.g. 32)' },
         { token: '{server}', label: '{server}', tip: 'Server Name' }
       ],
-      presets: ['🏷️ Roles: {count}', '🛡️ Ranks: {count}', 'Rollen: {count}'],
+      presets: ['🏷️ Roles: {count}', '🛡️ Ranks: {count}', 'Roles: {count}'],
       iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tag text-amber-400"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path><path d="M7 7h.01"></path></svg>`
     }
   ];

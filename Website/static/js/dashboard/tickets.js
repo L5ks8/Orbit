@@ -240,9 +240,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
       const claimedCount = state.activeTickets.filter(t => Boolean(t.claimed_by) || t.status === 'claimed').length;
       const nowSec = Date.now() / 1000;
       const resolved7d = state.closedTickets.filter(t => t.status !== 'rejected' && (!t.closed_at || (nowSec - t.closed_at) <= 7 * 86400)).length;
-      const avgStr = (state.stats?.avg_resolution || '<1Std')
-        .replace('<1h', '<1Std')
-        .replace('h', 'Std');
+      const avgStr = state.stats?.avg_resolution || '<1h';
       return { openCount, claimedCount, resolved7d, avgStr };
     };
 
@@ -334,9 +332,9 @@ DashboardTabs.Tickets = async function (container, guildId) {
               <div id="submissions-list-container"></div>
             </div>
 
-            <!-- Einstellungen Section -->
+            <!-- Settings Section -->
             <div data-tour="tickets-channel" class="scroll-mt-24">
-              <h3 class="text-sm font-semibold text-white text-balance mb-4">Einstellungen</h3>
+              <h3 class="text-sm font-semibold text-white text-balance mb-4">Settings</h3>
               <div class="bg-neutral-900 rounded-2xl border border-neutral-800 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_14px_34px_-20px_rgba(0,0,0,0.9)]">
                 <!-- Row 1: Automatic Close Time -->
                 <div data-tour="tickets-autoclose" class="relative px-5 py-4 flex items-center justify-between gap-4 scroll-mt-24">
@@ -347,13 +345,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
                     <p class="text-sm font-medium text-white min-w-0 truncate">Automatic Close Time</p>
                     <span class="inline-flex items-center justify-center font-semibold uppercase tracking-[0.04em] leading-none tabular-nums select-none border align-middle whitespace-nowrap translate-y-px shadow-[0_1px_2px_-0.5px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] text-emerald-400 border-emerald-500/20 bg-gradient-to-b from-emerald-400/25 to-emerald-600/10 h-[19px] pl-[5px] pr-[6.5px] gap-[3px] rounded-[6px] text-[9.5px]">
                       <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles shrink-0 -ml-px opacity-90" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
-                      Anlasser
+                      Starter
                     </span>
                   </div>
                   <div class="flex items-center gap-2.5 flex-shrink-0">
                     <div id="autoclose-hours-wrap" class="flex items-center gap-1.5 ${state.auto_close_time_enabled ? '' : 'hidden'}">
                       <input id="tkt-autoclose-hours" type="number" min="1" max="720" value="${state.auto_close_time_hours}" class="w-16 px-2.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white text-center tabular-nums focus:outline-none focus:border-neutral-500">
-                      <span class="text-xs text-neutral-400">Std</span>
+                      <span class="text-xs text-neutral-400">hrs</span>
                     </div>
                     <div class="flex items-center gap-3">
                       ${renderSwitchButton('tkt-switch-autoclose', state.auto_close_time_enabled)}
@@ -363,13 +361,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                 <div class="border-t border-neutral-800/60"></div>
 
-                <!-- Row 2: Maximale offene Tickets pro Benutzer -->
+                <!-- Row 2: Maximum open tickets per user -->
                 <div class="px-5 py-4 flex items-center justify-between gap-4">
                   <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users w-4 h-4 text-blue-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
-                    <p class="text-sm font-medium text-white min-w-0 truncate">Maximale offene Tickets pro Benutzer</p>
+                    <p class="text-sm font-medium text-white min-w-0 truncate">Maximum open tickets per user</p>
                   </div>
                   <div class="w-20 flex-shrink-0">
                     <input id="tkt-input-max-open" autocomplete="off" class="w-full px-4 py-2.5 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 text-center text-sm" min="1" max="25" placeholder="3" type="number" value="${state.max_open_tickets}">
@@ -378,16 +376,16 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                 <div class="border-t border-neutral-800/60"></div>
 
-                <!-- Row 3: Format des Kanalnamens -->
+                <!-- Row 3: Channel Name Format -->
                 <div data-tour="tickets-naming" class="px-5 py-4 flex items-center justify-between gap-4 scroll-mt-24">
                   <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center flex-shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-4 h-4 text-sky-400"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
                     </div>
-                    <p class="text-sm font-medium text-white min-w-0 truncate">Format des Kanalnamens</p>
+                    <p class="text-sm font-medium text-white min-w-0 truncate">Channel Name Format</p>
                   </div>
                   <div class="w-60 flex-shrink-0">
-                    <input id="tkt-input-naming-format" autocomplete="off" class="w-full px-4 py-2 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 text-xs sm:text-sm" placeholder="{Typ}-{Nummer} · {Benutzer}" value="${escapeHtml(state.naming_format)}">
+                    <input id="tkt-input-naming-format" autocomplete="off" class="w-full px-4 py-2 bg-neutral-800 border rounded-xl text-white placeholder-neutral-500 transition-all duration-200 focus:outline-none border-neutral-700 hover:border-neutral-600 text-xs sm:text-sm" placeholder="{type}-{number} · {user}" value="${escapeHtml(state.naming_format)}">
                   </div>
                 </div>
 
@@ -410,13 +408,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                 <div class="border-t border-neutral-800/60"></div>
 
-                <!-- Row 5: Pingen Sie Support-Rollen auf ein neues Ticket -->
+                <!-- Row 5: Ping support roles on new ticket -->
                 <div class="px-5 py-4 flex items-center justify-between gap-4">
                   <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center flex-shrink-0">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-at-sign w-4 h-4 text-violet-400"><circle cx="12" cy="12" r="4"></circle><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"></path></svg>
                     </div>
-                    <p class="text-sm font-medium text-white min-w-0 truncate">Pingen Sie Support-Rollen auf ein neues Ticket</p>
+                    <p class="text-sm font-medium text-white min-w-0 truncate">Ping support roles on new ticket</p>
                   </div>
                   <div class="flex-shrink-0">
                     <div class="flex items-center gap-3">
@@ -552,10 +550,10 @@ DashboardTabs.Tickets = async function (container, guildId) {
                     <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[4px] text-[10px] font-medium bg-neutral-800 text-neutral-400 ring-1 ring-inset ring-white/10 whitespace-nowrap">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash w-2.5 h-2.5 flex-shrink-0"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
-                        ${pCh ? escapeHtml(pCh.name) : 'Kanal'}
+                        ${pCh ? escapeHtml(pCh.name) : 'Channel'}
                       </span>
                       <span class="px-1.5 py-0.5 rounded-[4px] text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap bg-emerald-500/10 text-emerald-400">
-                        Aktiv
+                        Active
                       </span>
                     </div>
                   </div>
@@ -599,7 +597,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                   <span class="text-neutral-700">·</span>
                   <div class="flex items-center gap-1 whitespace-nowrap">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield w-3 h-3 flex-shrink-0"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>
-                    <span class="tabular-nums">${rolesCount} Rolle${rolesCount === 1 ? '' : 'n'}</span>
+                    <span class="tabular-nums">${rolesCount} Role${rolesCount === 1 ? '' : 's'}</span>
                   </div>
                   <span class="text-neutral-700">·</span>
                   <div class="flex items-center gap-1 whitespace-nowrap">
@@ -679,7 +677,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
         });
       });
 
-      // Bind direct Deploy (Einsetzen) button on card
+      // Bind direct Deploy button on card
       grid.querySelectorAll('[data-deploy-panel-id]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
@@ -688,13 +686,13 @@ DashboardTabs.Tickets = async function (container, guildId) {
           if (!panel) return;
 
           if (!panel.panel_channel_id) {
-            if (window.Notifications) Notifications.show(`Bitte weisen Sie dem Ticket-Typ "${panel.name}" zuerst einen Panel-Kanal zu.`, 'info');
+            if (window.Notifications) Notifications.show(`Please assign a panel channel to ticket type "${panel.name}" first.`, 'info');
             openTicketBuilderModal(panel);
             return;
           }
 
           const origContent = btn.innerHTML;
-          btn.innerHTML = `<span>Sendet...</span>`;
+          btn.innerHTML = `<span>Sending...</span>`;
           btn.disabled = true;
 
           try {
@@ -1474,7 +1472,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
 
                 <!-- Support Roles Multi-Select -->
                 <div>
-                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Standard-Support-Rollen</label>
+                  <label class="block text-xs font-semibold text-neutral-300 mb-1.5">Default Support Roles</label>
                   <div class="p-2 bg-neutral-800 border border-neutral-700 rounded-xl flex flex-wrap items-center gap-1.5 min-h-[40px]">
                     ${(editingPanel.role_ids || []).map(rid => {
                       const r = getRoleById(rid);
@@ -1588,7 +1586,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                         </div>
                       </div>
 
-                      <!-- Ziel-Kategorie & Ping-Rollen Row -->
+                      <!-- Target Category & Ping Roles Row -->
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                         <!-- Ziel-Kategorie Searchable Dropdown -->
                         <div class="relative">
@@ -1619,12 +1617,12 @@ DashboardTabs.Tickets = async function (container, guildId) {
                           </div>
                         </div>
 
-                        <!-- Support Ping-Rollen Multi-Select -->
+                        <!-- Support Ping Roles Multi-Select -->
                         <div>
                           <label class="block text-xs font-medium text-neutral-300 mb-1.5">Support Ping Roles for this option</label>
                           <div class="p-2 bg-neutral-800 border border-neutral-700 rounded-xl flex flex-wrap items-center gap-1.5 min-h-[40px]">
                             ${optRoleIds.length === 0 ? `
-                              <span class="text-[11px] text-neutral-400 italic py-0.5 px-1">Erbt Standard-Support-Rollen (${(editingPanel.role_ids || []).length})</span>
+                              <span class="text-[11px] text-neutral-400 italic py-0.5 px-1">Inherits Default Support Roles (${(editingPanel.role_ids || []).length})</span>
                             ` : optRoleIds.map(rid => {
                               const r = getRoleById(rid);
                               if (!r) return '';
@@ -1721,7 +1719,7 @@ DashboardTabs.Tickets = async function (container, guildId) {
                 <!-- 4 KPI Tiles -->
                 <div class="grid grid-cols-2 gap-3">
                   <div class="rounded-xl p-3.5 bg-neutral-800/30 border border-neutral-800">
-                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Panel-Kanal</p>
+                    <p class="text-[10px] text-neutral-500 uppercase font-semibold tracking-wider mb-1">Panel Channel</p>
                     <p class="text-xs truncate text-neutral-200 font-medium">${panelChannel ? `#${escapeHtml(panelChannel.name)}` : 'No channel selected'}</p>
                   </div>
 

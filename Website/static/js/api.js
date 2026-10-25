@@ -826,7 +826,7 @@ const API = {
     return res;
   },
 
-  // Polls (Umfragen)
+  // Polls
   async getPolls(guildId, force = false) {
     return await this.cachedRequest(`polls_${guildId}`, () => this.request(`/api/polls/${guildId}`), force, 120000);
   },

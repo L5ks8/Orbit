@@ -50,7 +50,7 @@ DashboardTabs.Leaderboard = async function(container, guildId) {
   } catch (err) {
     if (typeof window.renderErrorState === 'function') {
       window.renderErrorState(container, {
-        title: 'Bestenliste konnte nicht geladen werden',
+        title: 'Failed to load leaderboard',
         message: 'An error occurred while fetching leaderboard data.',
         details: err?.message || String(err),
         statusCode: err?.status || 500,

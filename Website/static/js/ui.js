@@ -981,8 +981,8 @@ if (document.readyState === 'loading') {
 function renderErrorState(container, options = {}) {
   if (!container) return;
   const {
-    title = 'Seite nicht gefunden',
-    message = 'Die angeforderte Konfiguration oder Ressource konnte nicht geladen werden.',
+    title = 'Page Not Found',
+    message = 'The requested configuration or resource could not be loaded.',
     details = '',
     statusCode = 404,
     onRetry = null,

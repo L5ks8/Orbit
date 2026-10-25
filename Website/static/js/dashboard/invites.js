@@ -234,7 +234,7 @@ DashboardTabs.Invites = async function (container, guildId) {
           <img src="${escapeHtml(entry.avatar)}" alt="${escapeHtml(entry.name)}" class="${theme.avatarSize} rounded-full object-cover ${theme.ringClass} transition-transform duration-200 group-hover:scale-105">
           <span class="text-xs font-bold text-white truncate max-w-[125px] mt-2 text-center" title="${escapeHtml(entry.name)}">${escapeHtml(entry.name)}</span>
           ${state.show_inviter_count ? `
-            <span class="text-[12px] ${theme.totalClass} tabular-nums mt-1">${entry.total} Einl.</span>
+            <span class="text-[12px] ${theme.totalClass} tabular-nums mt-1">${entry.total} inv.</span>
             <span class="text-[10px] ${theme.subClass} tabular-nums mb-1 mt-0.5 h-3">+${entry.regular} / -${entry.left}</span>
           ` : `<div class="mb-1 mt-1 h-3"></div>`}
           <div class="orbit-podium-bar orbit-podium-bar-${rank} ${theme.barClass} mt-2 flex items-end justify-center pb-3 transition-transform duration-200 group-hover:scale-[1.02]">
@@ -339,19 +339,19 @@ DashboardTabs.Invites = async function (container, guildId) {
             <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path>
             <path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path>
           </svg>
-          <p class="text-xs text-neutral-600 leading-snug max-w-[200px] text-pretty">Weise Rollen automatisch zu, wenn Mitglieder einen Einladungs-Meilenstein erreichen.</p>
+          <p class="text-xs text-neutral-600 leading-snug max-w-[200px] text-pretty">Automatically assign roles when members reach an invite milestone.</p>
         </div>
       `;
     }
 
     return sorted.map((rw, idx) => {
       const roleObj = allRoles.find(r => String(r.id) === String(rw.role_id));
-      const rName = roleObj ? roleObj.name : `Rolle (${rw.role_id})`;
+      const rName = roleObj ? roleObj.name : `Role (${rw.role_id})`;
       const rColor = roleObj?.color || '#b9bbbe';
       return `
         <div class="flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl bg-neutral-800/60 border border-neutral-800 group">
           <div class="flex items-center gap-2 min-w-0">
-            <span class="px-2 py-0.5 rounded-md bg-neutral-900 border border-neutral-700/70 text-[11px] font-semibold text-white tabular-nums flex-shrink-0">${rw.invites} Einl.</span>
+            <span class="px-2 py-0.5 rounded-md bg-neutral-900 border border-neutral-700/70 text-[11px] font-semibold text-white tabular-nums flex-shrink-0">${rw.invites} inv.</span>
             <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${escapeHtml(rColor)};"></span>
             <span class="text-xs font-medium text-neutral-200 truncate">${escapeHtml(rName)}</span>
           </div>
@@ -522,11 +522,11 @@ DashboardTabs.Invites = async function (container, guildId) {
                 <div class="flex items-baseline gap-4 pt-1">
                   <div class="flex items-baseline gap-1.5">
                     <span class="text-2xl font-bold text-white tabular-nums">${uses}</span>
-                    <span class="text-[11px] text-neutral-500">Beitritte</span>
+                    <span class="text-[11px] text-neutral-500">Joins</span>
                   </div>
                   <div class="flex items-baseline gap-1 ml-auto">
                     <span class="text-xs font-semibold text-emerald-400 tabular-nums">${retention}%</span>
-                    <span class="text-[10px] text-neutral-500">aktiv</span>
+                    <span class="text-[10px] text-neutral-500">active</span>
                   </div>
                 </div>
                 <div class="h-1.5 rounded-full bg-neutral-800 overflow-hidden">
@@ -534,10 +534,10 @@ DashboardTabs.Invites = async function (container, guildId) {
                 </div>
                 <div class="flex items-center justify-between pt-1 text-[11px]">
                   <div class="flex items-center gap-3 tabular-nums">
-                    <span class="text-emerald-400/90">+${active} aktiv</span>
-                    <span class="text-rose-400/80">-${left} verl.</span>
+                    <span class="text-emerald-400/90">+${active} active</span>
+                    <span class="text-rose-400/80">-${left} left</span>
                   </div>
-                  <button type="button" data-copy-invite="https://discord.gg/${escapeHtml(src.code)}" class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors font-mono text-[11px] cursor-pointer" title="Einladungslink kopieren">
+                  <button type="button" data-copy-invite="https://discord.gg/${escapeHtml(src.code)}" class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors font-mono text-[11px] cursor-pointer" title="Copy invite link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy text-neutral-400"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
                     <span>discord.gg/${escapeHtml(src.code)}</span>
                   </button>
@@ -676,7 +676,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                               <span class="truncate">${escapeHtml(selectedRewardRole.name)}</span>
                             </span>
                           ` : `
-                            <span class="min-w-0 truncate text-sm text-neutral-500">Rolle...</span>
+                            <span class="min-w-0 truncate text-sm text-neutral-500">Role...</span>
                           `}
                           <div class="flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 ${rewardRoleDropdownOpen ? 'rotate-180' : ''}">
@@ -742,7 +742,7 @@ DashboardTabs.Invites = async function (container, guildId) {
                               ${selectedAutoPostChannel ? `
                                 <span class="min-w-0 truncate text-sm text-white"># ${escapeHtml(selectedAutoPostChannel.name)}</span>
                               ` : `
-                                <span class="min-w-0 truncate text-sm text-neutral-500">Beitragsnummer im Kanal</span>
+                                <span class="min-w-0 truncate text-sm text-neutral-500">Select channel...</span>
                               `}
                               <div class="flex items-center gap-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down w-4 h-4 text-neutral-400 transition-transform duration-200 ${autoPostChannelDropdownOpen ? 'rotate-180' : ''}">

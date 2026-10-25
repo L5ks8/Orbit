@@ -1192,9 +1192,9 @@ DashboardTabs.Roles = async function (container, guildId) {
       const renderPreviewCardHtml = () => {
         const modeInfo = MODE_META[draft.mode] || MODE_META.multi;
         const selectedChannel = getChannelById(draft.channel_id);
-        const channelName = selectedChannel ? selectedChannel.name : 'Reaktionsrollen';
+        const channelName = selectedChannel ? selectedChannel.name : 'Reaction Roles';
         const displayTitle = (!draft.embed.title || draft.embed.title === 'Role Selection')
-          ? 'Rollenauswahl'
+          ? 'Role Selection'
           : draft.embed.title;
         const hasDesc = Boolean(draft.embed.description && draft.embed.description.trim());
 
@@ -1234,7 +1234,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                     <div class="flex flex-wrap gap-1.5 mt-2">
                       ${draft.components.map(comp => {
                         const r = getRoleById(comp.role_id);
-                        const lbl = comp.label || (r ? r.name : 'Rolle');
+                        const lbl = comp.label || (r ? r.name : 'Role');
                         const dot = r ? getRoleDotColor(r) : '#99aab5';
                         if (draft.panel_type === 'reactions') {
                           return `
@@ -1305,7 +1305,7 @@ DashboardTabs.Roles = async function (container, guildId) {
         const postToDiscord = Boolean(draft.post_on_save && draft.channel_id);
         const payload = {
           ...draft,
-          name: draft.embed.title || 'Rollenauswahl',
+          name: draft.embed.title || 'Role Selection',
           components: validComps,
           post_to_discord: postToDiscord
         };
@@ -1418,14 +1418,14 @@ DashboardTabs.Roles = async function (container, guildId) {
                       </div>
                     </div>
 
-                    <!-- 4. Nachricht -->
+                    <!-- 4. Message -->
                     <div class="px-5 py-4">
-                      <p class="text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-2">Nachricht</p>
+                      <p class="text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-2">Message</p>
                       <button type="button" id="rr-toggle-msg-builder" class="group w-full flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-800/40 hover:bg-neutral-800/70 hover:border-neutral-700 px-3.5 py-3 text-left transition-[transform,background-color,border-color] duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40">
                         <span class="grid place-items-center w-9 h-9 flex-shrink-0 rounded-lg bg-indigo-500/15 text-indigo-300 group-hover:bg-indigo-500/25 transition-colors">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil w-4 h-4"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg>
                         </span>
-                        <span class="min-w-0 flex-1 text-sm font-medium text-white">Im Nachrichten-Builder bearbeiten</span>
+                        <span class="min-w-0 flex-1 text-sm font-medium text-white">Edit in Message Builder</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-4 h-4 flex-shrink-0 text-neutral-500 group-hover:text-white group-hover:translate-x-0.5 transition-[transform,color] duration-150"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                       </button>
                       ${messageBuilderExpanded ? `
@@ -1451,7 +1451,7 @@ DashboardTabs.Roles = async function (container, guildId) {
                       ` : ''}
                     </div>
 
-                    <!-- 5. Kanal & Post to Discord on save -->
+                    <!-- 5. Channel & Post to Discord on save -->
                     <div class="px-5 py-4 space-y-3">
                       <div>
                         <label class="block text-[11px] uppercase tracking-wider font-medium text-neutral-500 mb-1.5">
@@ -1501,10 +1501,10 @@ DashboardTabs.Roles = async function (container, guildId) {
                       </div>
                     </div>
 
-                    <!-- 6. Rollen (0/25) -->
+                    <!-- 6. Roles (0/25) -->
                     <div class="px-5 py-4 space-y-2.5">
                       <div class="flex items-center justify-between">
-                        <p class="text-[11px] uppercase tracking-wider font-medium text-neutral-500">Rollen</p>
+                        <p class="text-[11px] uppercase tracking-wider font-medium text-neutral-500">Roles</p>
                         <span class="text-[10.5px] text-neutral-600 tabular-nums">${draft.components.length}/25</span>
                       </div>
 
@@ -2185,7 +2185,7 @@ DashboardTabs.Roles = async function (container, guildId) {
   } catch (err) {
     if (typeof window.renderErrorState === 'function') {
       window.renderErrorState(container, {
-        title: 'Rollenkonfiguration konnte nicht geladen werden',
+        title: 'Failed to load roles configuration',
         message: 'An error occurred while fetching roles from the server. Please check your connection or reload the page.',
         details: err?.message || String(err),
         statusCode: err?.status || (err?.message && err.message.includes('500') ? 500 : 404),

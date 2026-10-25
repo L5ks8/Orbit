@@ -1,5 +1,5 @@
 /**
- * Orbit Dashboard - Verification Tab (Verifizierung)
+ * Orbit Dashboard - Verification Tab
  * 1:1 PeakBot UI & Full End-to-End Functionality:
  * - Feature Header + Quick Setup Banner ("Start Setup")
  * - 4 Live Counter Chips (Systems, Deployed, Auto-kick, Questionnaire) + "View analytics" link
@@ -32,7 +32,7 @@ DashboardTabs.Verification = async function(container, guildId) {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
           </svg>
-          Lade Verifizierung...
+          Loading verification...
         </div>
       </div>
     `;
@@ -146,14 +146,14 @@ DashboardTabs.Verification = async function(container, guildId) {
             systems
           }
         });
-        if (!silent && window.Toast) Toast.success('Verifizierungs-Einstellungen gespeichert!');
+        if (!silent && window.Toast) Toast.success('Verification settings saved!');
       } catch (err) {
         if (window.Toast) Toast.error('Failed to save: ' + (err.message || err));
       }
     }
 
     function getChannelName(cid) {
-      if (!cid) return 'Kein Kanal';
+      if (!cid) return 'No channel';
       const ch = textChannels.find(c => String(c.id) === String(cid));
       return ch ? `#${ch.name}` : `#${cid}`;
     }
@@ -260,7 +260,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                 </span>
               ` : `
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  Keine Rolle
+                  No Role
                 </span>
               `}
 
@@ -625,7 +625,7 @@ DashboardTabs.Verification = async function(container, guildId) {
       if (!editorOpen || !editingSystem) return '';
       const sys = editingSystem;
       const roleOpts = roles.map(r => ({ value: String(r.id), label: `@ ${r.name}` }));
-      const roleOptsWithNone = [{ value: '', label: 'Keine (Deaktiviert)' }, ...roleOpts];
+      const roleOptsWithNone = [{ value: '', label: 'None (Disabled)' }, ...roleOpts];
       const channelOpts = textChannels.map(c => ({ value: String(c.id), label: `# ${c.name}` }));
 
       const btnColors = {
@@ -645,8 +645,8 @@ DashboardTabs.Verification = async function(container, guildId) {
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-4 h-4"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
                 </div>
                 <div class="min-w-0">
-                  <h3 class="text-sm font-semibold text-white truncate">Verifizierungs-System konfigurieren</h3>
-                  <p class="text-[11px] text-neutral-500">Passe Rollen, Modus, Auto-Kick, Fragebogen und das Discord-Embed an</p>
+                  <h3 class="text-sm font-semibold text-white truncate">Configure Verification System</h3>
+                  <p class="text-[11px] text-neutral-500">Customize roles, mode, auto-kick, questionnaire, and Discord embed</p>
                 </div>
               </div>
               <button id="sys-editor-close" type="button" class="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer">
@@ -661,11 +661,11 @@ DashboardTabs.Verification = async function(container, guildId) {
                 <!-- Name & Mode -->
                 <div class="rounded-xl border border-neutral-800 bg-neutral-950/50 p-4 space-y-3">
                   <div>
-                    <label class="block text-xs font-medium text-neutral-300 mb-1">System-Name</label>
+                    <label class="block text-xs font-medium text-neutral-300 mb-1">System Name</label>
                     <input id="ed-sys-name" type="text" maxlength="60" value="${escapeHtml(sys.name || 'Verification System')}" class="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none focus:border-neutral-600">
                   </div>
                   <div>
-                    <label class="block text-xs font-medium text-neutral-300 mb-1.5">Verifizierungs-Methode</label>
+                    <label class="block text-xs font-medium text-neutral-300 mb-1.5">Verification Method</label>
                     <div class="grid grid-cols-2 gap-2">
                       ${Object.entries(MODE_META).map(([key, m]) => `
                         <button type="button" data-ed-vtype="${key}" class="text-left p-3 rounded-xl border transition-all cursor-pointer ${
@@ -675,7 +675,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                         }">
                           <div class="text-xs font-semibold text-white flex items-center justify-between">
                             <span>${escapeHtml(m.label)}</span>
-                            ${sys.verification_type === key ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-normal">Aktiv</span>' : ''}
+                            ${sys.verification_type === key ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-normal">Active</span>' : ''}
                           </div>
                           <div class="text-[10px] text-neutral-500 mt-1 leading-snug">${escapeHtml(m.desc)}</div>
                         </button>
@@ -686,9 +686,9 @@ DashboardTabs.Verification = async function(container, guildId) {
 
                 <!-- Channel & Roles -->
                 <div class="rounded-xl border border-neutral-800 bg-neutral-950/50 p-4 space-y-3">
-                  <div class="text-xs font-semibold text-white">Kanal & Rollen</div>
+                  <div class="text-xs font-semibold text-white">Channel & Roles</div>
                   <div>
-                    <label class="block text-[11px] text-neutral-400 mb-1">Verifizierungs-Kanal</label>
+                    <label class="block text-[11px] text-neutral-400 mb-1">Verification Channel</label>
                     ${window.renderCustomSelect ? window.renderCustomSelect({
                       id: 'ed-channel-select',
                       options: channelOpts,
@@ -699,7 +699,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label class="block text-[11px] text-neutral-400 mb-1">Verifizierte Rolle (wird vergeben)</label>
+                      <label class="block text-[11px] text-neutral-400 mb-1">Verified Role (given on verify)</label>
                       ${window.renderCustomSelect ? window.renderCustomSelect({
                         id: 'ed-vrole-select',
                         options: roleOpts,
@@ -709,12 +709,12 @@ DashboardTabs.Verification = async function(container, guildId) {
                       }) : ''}
                     </div>
                     <div>
-                      <label class="block text-[11px] text-neutral-400 mb-1">Unverifizierte Rolle (wird entfernt)</label>
+                      <label class="block text-[11px] text-neutral-400 mb-1">Unverified Role (removed on verify)</label>
                       ${window.renderCustomSelect ? window.renderCustomSelect({
                         id: 'ed-urole-select',
                         options: roleOptsWithNone,
                         value: String(sys.remove_role_id || ''),
-                        placeholder: 'Keine (Optional)',
+                        placeholder: 'None (Optional)',
                         onChange: (v) => { editingSystem.remove_role_id = v; }
                       }) : ''}
                     </div>
@@ -723,16 +723,16 @@ DashboardTabs.Verification = async function(container, guildId) {
 
                 <!-- Auto-Kick & Questionnaire -->
                 <div class="rounded-xl border border-neutral-800 bg-neutral-950/50 p-4 space-y-3">
-                  <div class="text-xs font-semibold text-white">Auto-Kick & Fragebogen</div>
+                  <div class="text-xs font-semibold text-white">Auto-Kick & Questionnaire</div>
                   <div class="grid grid-cols-2 gap-3">
                     <div>
-                      <label class="block text-[11px] text-neutral-400 mb-1">Timeout-Aktion</label>
+                      <label class="block text-[11px] text-neutral-400 mb-1">Timeout Action</label>
                       ${window.renderCustomSelect ? window.renderCustomSelect({
                         id: 'ed-timeout-action-select',
                         options: [
-                          { value: 'none', label: 'Keine Aktion (Deaktiviert)' },
-                          { value: 'kick', label: 'Mitglied kicken (Auto-Kick)' },
-                          { value: 'ban', label: 'Mitglied bannen (Auto-Ban)' }
+                          { value: 'none', label: 'No action (Disabled)' },
+                          { value: 'kick', label: 'Kick member (Auto-Kick)' },
+                          { value: 'ban', label: 'Ban member (Auto-Ban)' }
                         ],
                         value: String(sys.timeout_action || 'none'),
                         placeholder: 'Select action...',
@@ -747,7 +747,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                       }) : ''}
                     </div>
                     <div>
-                      <label class="block text-[11px] text-neutral-400 mb-1">Zeitlimit (Minuten)</label>
+                      <label class="block text-[11px] text-neutral-400 mb-1">Time Limit (minutes)</label>
                       <input id="ed-timeout-mins" type="number" min="0" max="10080" value="${Number(sys.timeout_minutes) || 0}" class="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none focus:border-neutral-600">
                     </div>
                   </div>
@@ -756,8 +756,8 @@ DashboardTabs.Verification = async function(container, guildId) {
                   <div class="pt-2 border-t border-neutral-800/80">
                     <div class="flex items-center justify-between mb-2">
                       <div>
-                        <span class="text-xs font-medium text-white">Fragebogen (Questionnaire)</span>
-                        <p class="text-[10px] text-neutral-500">Fragen im Discord-Modal vor der Verifizierung stellen</p>
+                        <span class="text-xs font-medium text-white">Questionnaire</span>
+                        <p class="text-[10px] text-neutral-500">Ask short questions in a Discord modal before verifying</p>
                       </div>
                       <button type="button" id="ed-add-question-btn" class="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[11px] font-medium text-white transition-colors cursor-pointer">+ Add question</button>
                     </div>
@@ -765,15 +765,15 @@ DashboardTabs.Verification = async function(container, guildId) {
                       ${(sys.questions || []).map((q, idx) => `
                         <div class="p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 space-y-1.5">
                           <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Frage ${idx + 1}</span>
-                            <button type="button" data-ed-del-q="${idx}" class="text-[10px] text-red-400 hover:underline cursor-pointer">Entfernen</button>
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Question ${idx + 1}</span>
+                            <button type="button" data-ed-del-q="${idx}" class="text-[10px] text-red-400 hover:underline cursor-pointer">Remove</button>
                           </div>
-                          <input type="text" data-ed-q-text="${idx}" value="${escapeHtml(q.question || '')}" placeholder="Frage eingeben..." class="w-full px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none">
-                          <input type="text" data-ed-q-ans="${idx}" value="${escapeHtml(q.answer || '')}" placeholder="Erwartete Antwort (optional, Komma-getrennt, leer = jede Antwort)" class="w-full px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-[11px] text-neutral-400 focus:outline-none">
+                          <input type="text" data-ed-q-text="${idx}" value="${escapeHtml(q.question || '')}" placeholder="Enter question..." class="w-full px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs text-white focus:outline-none">
+                          <input type="text" data-ed-q-ans="${idx}" value="${escapeHtml(q.answer || '')}" placeholder="Expected answer (optional, comma-separated, empty = any answer)" class="w-full px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-[11px] text-neutral-400 focus:outline-none">
                         </div>
                       `).join('')}
                       ${(!sys.questions || sys.questions.length === 0) ? `
-                        <p class="text-[11px] text-neutral-500 italic">Noch keine Fragen konfiguriert.</p>
+                        <p class="text-[11px] text-neutral-500 italic">No questions configured yet.</p>
                       ` : ''}
                     </div>
                   </div>
@@ -783,27 +783,27 @@ DashboardTabs.Verification = async function(container, guildId) {
                 <div class="rounded-xl border border-neutral-800 bg-neutral-950/50 p-4 space-y-3">
                   <div class="text-xs font-semibold text-white">Discord Panel Design</div>
                   <div>
-                    <label class="block text-[11px] text-neutral-400 mb-1">Embed-Titel</label>
+                    <label class="block text-[11px] text-neutral-400 mb-1">Embed Title</label>
                     <input id="ed-embed-title" type="text" maxlength="120" value="${escapeHtml(sys.embed_title || '')}" class="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none focus:border-neutral-600">
                   </div>
                   <div>
-                    <label class="block text-[11px] text-neutral-400 mb-1">Embed-Beschreibung</label>
+                    <label class="block text-[11px] text-neutral-400 mb-1">Embed Description</label>
                     <textarea id="ed-embed-desc" rows="3" data-no-autoresize="true" class="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none focus:border-neutral-600 resize-none">${escapeHtml(sys.embed_description || '')}</textarea>
                   </div>
                   <div class="grid grid-cols-2 gap-3">
                     <div>
-                      <label class="block text-[11px] text-neutral-400 mb-1">Button-Text</label>
+                      <label class="block text-[11px] text-neutral-400 mb-1">Button Text</label>
                       <input id="ed-btn-label" type="text" maxlength="50" value="${escapeHtml(sys.button_label || 'Verify')}" class="w-full px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none focus:border-neutral-600">
                     </div>
                     <div>
-                      <label class="block text-[11px] text-neutral-400 mb-1">Button-Stil</label>
+                      <label class="block text-[11px] text-neutral-400 mb-1">Button Style</label>
                       ${window.renderCustomSelect ? window.renderCustomSelect({
                         id: 'ed-btn-style-select',
                         options: [
                           { value: 'success', label: 'Green (Success)' },
                           { value: 'primary', label: 'Blurple (Primary)' },
-                          { value: 'secondary', label: 'Grau (Secondary)' },
-                          { value: 'danger', label: 'Rot (Danger)' }
+                          { value: 'secondary', label: 'Gray (Secondary)' },
+                          { value: 'danger', label: 'Red (Danger)' }
                         ],
                         value: String(sys.button_style || 'success'),
                         placeholder: 'Select style...',
@@ -818,7 +818,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                     </div>
                   </div>
                   <div>
-                    <label class="block text-[11px] text-neutral-400 mb-1.5">Embed-Farbe</label>
+                    <label class="block text-[11px] text-neutral-400 mb-1.5">Embed Color</label>
                     <div class="flex flex-wrap items-center gap-1.5">
                       ${COLOR_SWATCHES.map(c => `
                         <button type="button" data-ed-color="${c}" class="w-5 h-5 rounded-full border transition-transform cursor-pointer ${
@@ -829,9 +829,9 @@ DashboardTabs.Verification = async function(container, guildId) {
                     </div>
                   </div>
                   <div>
-                    <label class="block text-[11px] text-neutral-400 mb-1">Banner-Bild URL (oder Upload)</label>
+                    <label class="block text-[11px] text-neutral-400 mb-1">Banner Image URL (or upload)</label>
                     <div class="flex items-center gap-2">
-                      <input id="ed-embed-image" type="text" value="${escapeHtml(sys.embed_image || '')}" placeholder="https://... oder /img/default_verify.png (oder 'none')" class="flex-1 px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none">
+                      <input id="ed-embed-image" type="text" value="${escapeHtml(sys.embed_image || '')}" placeholder="https://... or /img/default_verify.png (or 'none')" class="flex-1 px-3 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-white focus:outline-none">
                       <label class="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-xs text-neutral-200 cursor-pointer shrink-0">
                         Upload
                         <input id="ed-image-upload" type="file" accept="image/*" class="hidden">
@@ -844,7 +844,7 @@ DashboardTabs.Verification = async function(container, guildId) {
               <!-- Right Column: Live Discord Preview (5 cols) -->
               <div class="lg:col-span-5">
                 <div class="sticky top-0 space-y-2">
-                  <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Live Discord-Vorschau</div>
+                  <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Live Discord Preview</div>
                   <div class="rounded-2xl bg-[#313338] border border-neutral-800 p-4 text-[#dbdee1] font-sans shadow-inner">
                     <div class="flex items-start gap-3">
                       <img src="/img/logo.png" alt="Orbit" class="w-9 h-9 rounded-full object-cover shrink-0">
@@ -852,7 +852,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                         <div class="flex items-center gap-1.5">
                           <span class="text-[13px] font-semibold text-white">Orbit</span>
                           <span class="px-1 py-0.2 rounded text-[9px] font-bold bg-[#5865F2] text-white uppercase">APP</span>
-                          <span class="text-[10px] text-[#949ba4] ml-1">Heute um 14:20 Uhr</span>
+                          <span class="text-[10px] text-[#949ba4] ml-1">Today at 2:20 PM</span>
                         </div>
                         <div id="ed-preview-embed" class="mt-1.5 rounded bg-[#2b2d31] border-l-4 p-3 space-y-1.5" style="border-left-color: ${escapeHtml(sys.embed_color || '#5865F2')}">
                           <div id="ed-preview-title" class="text-sm font-semibold text-white break-words">${escapeHtml(sys.embed_title || 'Server Verification')}</div>
@@ -906,7 +906,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                 <span class="flex items-center justify-center text-neutral-500 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check w-5 h-5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
                 </span>
-                <h1 class="text-base font-medium text-white truncate">Verifizierung</h1>
+                <h1 class="text-base font-medium text-white truncate">Verification</h1>
               </div>
             </div>
           </div>
@@ -962,7 +962,7 @@ DashboardTabs.Verification = async function(container, guildId) {
                 <div class="p-3 rounded-xl bg-neutral-900 border border-neutral-800 group-hover:border-neutral-700 group-hover:scale-110 transition-[transform,border-color] duration-150 ease-out">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus w-5 h-5"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
                 </div>
-                <span class="text-sm font-medium">System erstellen</span>
+                <span class="text-sm font-medium">Create System</span>
               </button>
             </div>
 
@@ -1405,7 +1405,7 @@ DashboardTabs.Verification = async function(container, guildId) {
               if (window.Toast) Toast.error('Maximum of 5 questions per Discord modal.');
               return;
             }
-            editingSystem.questions.push({ question: '', placeholder: 'Deine Antwort...', answer: '' });
+            editingSystem.questions.push({ question: '', placeholder: 'Your answer...', answer: '' });
             editingSystem.questionnaire_enabled = true;
             render();
           };
@@ -1552,7 +1552,7 @@ DashboardTabs.Verification = async function(container, guildId) {
               }
               editorOpen = false;
               editingSystem = null;
-              if (window.Toast) Toast.success('System gespeichert & Panel im Kanal bereitgestellt!');
+              if (window.Toast) Toast.success('System saved & panel deployed in channel!');
             } catch (err) {
               if (window.Toast) Toast.error('Failed to deploy: ' + (err.message || err));
             } finally {

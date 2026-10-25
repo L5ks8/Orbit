@@ -323,16 +323,16 @@ DashboardTabs.Builder = async function(container, guildId) {
     },
     {
       key: 'logs',
-      title: 'Protokollierung',
-      desc: 'Serverereignisse protokollieren',
+      title: 'Audit Logging',
+      desc: 'Log server events and mod actions',
       color: 'rgb(155, 89, 182)',
       isEnabled: () => Boolean(cfg?.logs?.enabled || cfg?.config?.logs?.enabled),
-      prompt: 'Richte die Server-Protokollierung (Logging) mit einem passenden Log-Kanal auf diesem Server ein.',
+      prompt: 'Set up server logging with a dedicated log channel on this server.',
       svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scroll-text w-[18px] h-[18px] flex-shrink-0 opacity-75" style="color: rgb(155, 89, 182);"><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"></path><path d="M19 17V5a2 2 0 0 0-2-2H4"></path><path d="M15 8h-5"></path><path d="M15 12h-5"></path></svg>`
     },
     {
       key: 'banned_words',
-      title: 'Inhaltsfilter',
+      title: 'Content Filter',
       desc: 'Block bad words and profanity',
       color: 'rgb(52, 152, 219)',
       isEnabled: () => Boolean(cfg?.automod?.banned_words?.enabled || cfg?.config?.automod?.banned_words?.enabled),
@@ -341,7 +341,7 @@ DashboardTabs.Builder = async function(container, guildId) {
     },
     {
       key: 'anti_spam',
-      title: 'Spam-Schutz',
+      title: 'Anti-Spam',
       desc: 'Stop message spam and flooding',
       color: 'rgb(249, 115, 22)',
       isEnabled: () => Boolean(cfg?.automod?.anti_spam?.enabled || cfg?.config?.automod?.anti_spam?.enabled),
@@ -350,17 +350,17 @@ DashboardTabs.Builder = async function(container, guildId) {
     },
     {
       key: 'anti_link',
-      title: 'Linkfilter',
-      desc: 'Kontrollieren Sie Links und Einladungen',
+      title: 'Link Filter',
+      desc: 'Control links and invite links',
       color: 'rgb(56, 189, 248)',
       isEnabled: () => Boolean(cfg?.automod?.anti_link?.enabled || cfg?.automod?.anti_invites?.enabled || cfg?.config?.automod?.anti_link?.enabled),
-      prompt: 'Aktiviere den Linkfilter und Discord-Einladungsfilter in der Auto-Moderation.',
+      prompt: 'Enable the link filter and Discord invite blocker in Auto-Moderation.',
       svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link2-off w-[18px] h-[18px] flex-shrink-0 opacity-75" style="color: rgb(56, 189, 248);"><path d="M9 17H7A5 5 0 0 1 7 7"></path><path d="M15 7h2a5 5 0 0 1 4 8"></path><line x1="8" x2="12" y1="12" y2="12"></line><line x1="2" x2="22" y1="2" y2="22"></line></svg>`
     },
     {
       key: 'anti_raid',
       title: 'Anti-Raid',
-      desc: 'Stoppen Sie Join-Raid-Bursts',
+      desc: 'Stop join-raid bursts',
       color: 'rgb(220, 38, 38)',
       isEnabled: () => Boolean(cfg?.security?.anti_raid?.enabled || cfg?.config?.security?.anti_raid?.enabled),
       prompt: 'Enable anti-raid protection for this server to automatically mitigate join-raid attacks.',
@@ -368,7 +368,7 @@ DashboardTabs.Builder = async function(container, guildId) {
     },
     {
       key: 'anti_nuke',
-      title: 'Anti-Atomkraft',
+      title: 'Anti-Nuke',
       desc: 'Block mass deletion and ban attacks',
       color: 'rgb(237, 66, 69)',
       isEnabled: () => Boolean(cfg?.security?.anti_nuke?.enabled || cfg?.config?.security?.anti_nuke?.enabled),
@@ -378,7 +378,7 @@ DashboardTabs.Builder = async function(container, guildId) {
     {
       key: 'anti_alt',
       title: 'Suspicious Accounts',
-      desc: 'Markieren Sie riskante neue Konten',
+      desc: 'Flag suspicious new accounts',
       color: 'rgb(245, 158, 11)',
       isEnabled: () => Boolean(cfg?.automod?.anti_alt?.enabled || cfg?.config?.automod?.anti_alt?.enabled),
       prompt: 'Enable protection against suspicious new accounts (anti-alt) with an account age threshold of 3 days.',
@@ -440,7 +440,7 @@ DashboardTabs.Builder = async function(container, guildId) {
     if (!idText) return;
     navigator.clipboard?.writeText(String(idText)).catch(() => {});
     if (window.Toast) {
-      window.Toast.success(`${labelText ? labelText + ' ' : ''}ID kopiert: ${idText}`);
+      window.Toast.success(`${labelText ? labelText + ' ' : ''}ID copied: ${idText}`);
     }
     if (btnEl) {
       const origHtml = btnEl.innerHTML;
@@ -526,7 +526,7 @@ DashboardTabs.Builder = async function(container, guildId) {
           pendingAttachments.push(att);
         }
       } catch (_) {
-        if (window.Toast) window.Toast.error(`Konnte Datei "${file.name}" nicht lesen.`);
+        if (window.Toast) window.Toast.error(`Could not read file "${file.name}".`);
       }
     }
     quickAddDropdownOpen = false;
