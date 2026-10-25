@@ -72,6 +72,12 @@ class WebDashboard(AuthMixin, ConfigMixin, GuildsMixin, ActionsMixin, AIHelperMi
         import os
         path = request.match_info.get("tail", "").lstrip("/")
         
+        if path.startswith("_serverFn"):
+            return web.json_response({})
+            
+        if path == "api/search":
+            return web.json_response([])
+
         if path.startswith("api/") or path.startswith("auth/"):
             return web.Response(text="Not Found", status=404)
             
