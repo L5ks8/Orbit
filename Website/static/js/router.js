@@ -94,6 +94,9 @@ const Router = {
     if (path === '/') {
       return Pages.Landing(app);
     }
+    if (path === '/docs') {
+      return Pages.Docs(app);
+    }
     if (path === '/guides') {
       return Pages.Guides(app);
     }

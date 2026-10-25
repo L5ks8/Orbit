@@ -11,6 +11,10 @@
 // ==========================================
 // GUIDES PAGE
 // ==========================================
+Pages.Docs = function(container) {
+  container.innerHTML = '<div class="min-h-screen pt-32 pb-24 px-6 max-w-7xl mx-auto"></div>';
+};
+
 Pages.Guides = function(container) {
   const guides = [
     { title: 'Setting Up Auto-Moderation', time: '3 min read', desc: 'Learn how to configure blocked words, invite filters, and automatic timeouts.' },
