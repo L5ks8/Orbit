@@ -6,8 +6,11 @@
  * - California Consumer Privacy Act (CCPA / CPRA)
  * - Children's Online Privacy Protection Act (COPPA)
  * 
- * Includes interactive Table of Contents, EN/DE Language Switcher,
- * Real-time Clause Search, Print/PDF Export, and Deep-link Copier.
+ * Styled with the unified Orbit Docs design system:
+ * - Fumadocs-inspired callouts (info, warning, security) with accent indicator lines
+ * - High-legibility typography with generous reading widths ([--fd-layout-width: 1400px])
+ * - 100% SVG Lucide icons (Zero emojis)
+ * - Interactive Table of Contents, Real-time search, bilingual EN/DE support, and PDF print.
  */
 
 (function() {
@@ -73,17 +76,55 @@
   }
   window.filterLegalSections = filterLegalSections;
 
+  // Unified Docs Callout Component
+  function renderCallout(type, title, text) {
+    const configs = {
+      info: {
+        border: 'border-blue-500/25',
+        bg: 'bg-blue-500/[0.04]',
+        line: 'bg-blue-500',
+        textColor: 'text-blue-400',
+        icon: `<svg class="w-5 h-5 shrink-0 text-blue-400 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`
+      },
+      warning: {
+        border: 'border-amber-500/25',
+        bg: 'bg-amber-500/[0.04]',
+        line: 'bg-amber-500',
+        textColor: 'text-amber-400',
+        icon: `<svg class="w-5 h-5 shrink-0 text-amber-400 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>`
+      },
+      security: {
+        border: 'border-emerald-500/25',
+        bg: 'bg-emerald-500/[0.04]',
+        line: 'bg-emerald-500',
+        textColor: 'text-emerald-400',
+        icon: `<svg class="w-5 h-5 shrink-0 text-emerald-400 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`
+      }
+    };
+    const c = configs[type] || configs.info;
+    return `
+      <div class="my-5 flex gap-3.5 rounded-xl border ${c.border} ${c.bg} p-4 text-sm text-neutral-300 shadow-sm">
+        <div class="w-1 ${c.line} rounded-full shrink-0 my-0.5"></div>
+        ${c.icon}
+        <div class="flex flex-col gap-1 min-w-0 flex-1">
+          ${title ? `<span class="font-semibold text-white text-sm">${title}</span>` : ''}
+          <div class="text-neutral-300 text-xs sm:text-sm leading-relaxed">${text}</div>
+        </div>
+      </div>
+    `;
+  }
+
   function getSharedFooter() {
     return `
       <footer class="border-t border-neutral-800 bg-neutral-950 py-16 px-6 mt-20">
-        <div class="max-w-7xl mx-auto">
+        <div class="max-w-[1400px] mx-auto">
           <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
             <div class="col-span-2">
               <div class="flex items-center gap-3 mb-4">
                 <img src="/img/logo.png" alt="Orbit" width="32" height="32" class="rounded-xl">
                 <span class="text-xl font-bold text-white">Orbit</span>
               </div>
-              <p class="text-sm text-neutral-400 max-w-sm mb-6">
+              <p class="text-sm text-neutral-400 max-w-sm mb-6 leading-relaxed">
                 ${currentLegalLang === 'de' 
                   ? 'Der moderne All-in-One Discord Bot für Server-Builder, Community-Leader und Gaming-Netzwerke.' 
                   : 'The modern, all-in-one Discord bot engineered for server builders, community leaders, and gaming networks.'}
@@ -138,18 +179,18 @@
     return `
       <div class="relative overflow-hidden pt-32 pb-16 border-b border-neutral-800/80 bg-gradient-to-b from-neutral-900/40 via-neutral-950 to-neutral-950">
         <!-- Subtle Glow Effects -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent blur-3xl pointer-events-none"></div>
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent blur-3xl pointer-events-none"></div>
 
-        <div class="max-w-7xl mx-auto px-6 relative z-10">
+        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <!-- Top Badges Row -->
           <div class="flex flex-wrap items-center gap-3 mb-6">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 text-neutral-300 text-xs font-medium">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-300 text-xs font-medium shadow-sm">
               <svg class="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              ${isDe ? 'Offizielle Rechtsdokumentation' : 'Official Legal Documentation'}
+              <span>${isDe ? 'Offizielle Rechtsdokumentation' : 'Official Legal Documentation'}</span>
             </div>
             <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              ${isDe ? 'Discord ToS & DSGVO / CCPA Konform' : 'Discord ToS & GDPR / CCPA Compliant'}
+              <span>${isDe ? 'Discord ToS & DSGVO / CCPA Konform' : 'Discord ToS & GDPR / CCPA Compliant'}</span>
             </div>
             <span class="text-xs text-neutral-500 hidden sm:inline">·</span>
             <span class="text-xs text-neutral-400">${isDe ? 'Zuletzt aktualisiert: 25. Oktober 2026 (Version 2.4)' : 'Last Updated: October 25, 2026 (Version 2.4)'}</span>
@@ -157,14 +198,14 @@
 
           <!-- Page Title & Description -->
           <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
-            <div>
+            <div class="max-w-3xl">
               <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight mb-4">
                 ${isTerms 
                   ? (isDe ? 'Nutzungsbedingungen' : 'Terms of Service')
                   : (isDe ? 'Datenschutzerklärung' : 'Privacy Policy')
                 }
               </h1>
-              <p class="text-neutral-400 text-sm sm:text-base max-w-2xl leading-relaxed">
+              <p class="text-neutral-400 text-sm sm:text-base leading-relaxed">
                 ${isTerms
                   ? (isDe 
                       ? 'Diese Bedingungen regeln die Nutzung des Orbit Discord Bots, des Web Dashboards, der Verifizierungs- und Appeal-Portale sowie aller zugehörigen Dienste.'
@@ -178,13 +219,15 @@
 
             <!-- Language & Action Controls -->
             <div class="flex flex-wrap items-center gap-3">
-              <!-- Language Switcher Pill -->
-              <div class="inline-flex p-1 bg-neutral-900 border border-neutral-800 rounded-xl">
-                <button type="button" onclick="setLegalLanguage('en')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${!isDe ? 'bg-indigo-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}">
-                  🇺🇸 English
+              <!-- Language Switcher Pill (Using SVG Icons, No Emojis) -->
+              <div class="inline-flex p-1 bg-neutral-900 border border-neutral-800 rounded-xl shadow-sm">
+                <button type="button" onclick="setLegalLanguage('en')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${!isDe ? 'bg-indigo-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  <span>English</span>
                 </button>
-                <button type="button" onclick="setLegalLanguage('de')" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${isDe ? 'bg-indigo-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}">
-                  🇩🇪 Deutsch
+                <button type="button" onclick="setLegalLanguage('de')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${isDe ? 'bg-indigo-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  <span>Deutsch</span>
                 </button>
               </div>
 
@@ -199,7 +242,7 @@
           <!-- Quick Navigation Tabs & Real-time Search Bar -->
           <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 pt-4 border-t border-neutral-800/60">
             <!-- Document Tabs -->
-            <div class="inline-flex p-1 bg-neutral-900 border border-neutral-800 rounded-2xl w-fit">
+            <div class="inline-flex p-1 bg-neutral-900 border border-neutral-800 rounded-2xl w-fit shadow-sm">
               <a href="/terms" class="px-5 py-2.5 rounded-xl text-xs font-semibold transition-all ${isTerms ? 'bg-white text-neutral-950 shadow-md font-bold' : 'text-neutral-400 hover:text-white'}">
                 ${isDe ? 'Nutzungsbedingungen (Terms)' : 'Terms of Service'}
               </a>
@@ -239,10 +282,7 @@
         content: `
           <p class="mb-4">Willkommen bei <strong>Orbit</strong>. Durch das Einladen des Orbit Discord Bots auf einen Server, den Zugriff auf das Web Dashboard (<a href="/" class="text-indigo-400 underline">orbitbot.net</a>), die Nutzung unserer Slash-Befehle oder die Interaktion mit unseren Verifizierungs-, Appeal- oder Ticketsystemen schließen Sie einen rechtsverbindlichen Vertrag mit den Betreibern von Orbit ab.</p>
           <p class="mb-4">Wenn Sie diesen Nutzungsbedingungen („Bedingungen“) nicht zustimmen, dürfen Sie Orbit weder einladen noch in irgendeiner Weise nutzen. Durch die fortgesetzte Nutzung erklären Sie, dass Sie diese Bedingungen vollständig gelesen, verstanden haben und akzeptieren.</p>
-          <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-400 my-4">
-            <strong class="text-white block mb-1">Kurzzusammenfassung (TL;DR):</strong>
-            Orbit ist ein Discord-Bot und Server-Management-Tool. Durch die Nutzung stimmen Sie diesen Regeln zu. Wenn Sie nicht einverstanden sind, entfernen Sie den Bot bitte von Ihrem Server.
-          </div>
+          ${renderCallout('info', 'Kurzzusammenfassung (TL;DR):', 'Orbit ist ein Discord-Bot und Server-Management-Tool. Durch die Nutzung stimmen Sie diesen Regeln zu. Wenn Sie nicht einverstanden sind, entfernen Sie den Bot bitte von Ihrem Server.')}
         `
       },
       {
@@ -263,7 +303,7 @@
         content: `
           <p class="mb-4">Orbit ist eine unabhängige Drittanbieter-Anwendung. Orbit wird <strong>weder von Discord Inc. betrieben, noch gesponsert, empfohlen oder steht in sonstiger offizieller Verbindung zu Discord Inc.</strong></p>
           <p class="mb-4">Ihre Nutzung von Orbit unterliegt zwingend auch den folgenden offiziellen Discord-Richtlinien:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li><a href="https://discord.com/terms" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline">Discord Nutzungsbedingungen (Terms of Service)</a></li>
             <li><a href="https://discord.com/guidelines" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline">Discord Community-Richtlinien (Community Guidelines)</a></li>
             <li><a href="https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline">Discord Entwickler-Richtlinien (Developer Terms of Service)</a></li>
@@ -278,31 +318,49 @@
         badge: 'Lizenz',
         content: `
           <p class="mb-4">Orbit gewährt Ihnen eine persönliche, widerrufliche, nicht-exklusive, nicht übertragbare Lizenz zur Nutzung der Orbit-Dienste für die Verwaltung und Moderation Ihrer Discord-Server.</p>
-          <p class="mb-4">Der Leistungsumfang umfasst unter anderem:</p>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-4">
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">⚡ Server Automation & Builder</span>
-              Automatische Kanaleinrichtung, Rollenhierarchien, Server-Vorlagen und dynamische Server-Statistiken.
+          <p class="mb-4">Der Leistungsumfang umfasst unter anderem folgende Module:</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 my-4">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Server Automation & Builder</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Automatische Kanaleinrichtung, Rollenhierarchien, Server-Vorlagen und dynamische Server-Statistiken.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">🛡️ Auto-Moderation Engine</span>
-              Echtzeit-Regex-Filter, Erkennung unerwünschter Einladungslinks, Anti-Spam, Caps-Lock- und Erwähnungsbegrenzung.
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>Auto-Moderation Engine</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Echtzeit-Regex-Filter, Erkennung unerwünschter Einladungslinks, Anti-Spam, Caps-Lock- und Erwähnungsbegrenzung.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">🎫 Support-Ticket-System</span>
-              Interaktive Ticket-Panels, automatische Transkripte und Mitarbeiter-Zuweisung.
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/></svg>
+                <span>Support-Ticket-System</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Interaktive Ticket-Panels, automatische Transkripte und Mitarbeiter-Zuweisung.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">⚖️ Web-Verifizierung & Ban-Appeals</span>
-              Eigenständiges Webportal für Entsperrungsanträge und Captcha-Verifizierung.
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 13-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10"/><path d="m16 16 6-6"/></svg>
+                <span>Web-Verifizierung & Appeals</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Eigenständiges Webportal für Entsperrungsanträge und Captcha-Verifizierung.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">🏆 Leveling & Leaderboards</span>
-              Nachrichten- und Voice-XP-Berechnung, Rollenbelohnungen und öffentliche Bestenlisten.
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+                <span>Leveling & Leaderboards</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Nachrichten- und Voice-XP-Berechnung, Rollenbelohnungen und öffentliche Bestenlisten.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">🔊 Join-to-Create Voice & Backups</span>
-              Temporäre Sprachkanäle und Strukturen-Backups zur Serversicherung.
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-pink-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                <span>Join-to-Create Voice & Backups</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Temporäre Sprachkanäle und Strukturen-Backups zur Serversicherung.</p>
             </div>
           </div>
         `
@@ -314,15 +372,13 @@
         badge: 'Haftung Administrator',
         content: `
           <p class="mb-4">Server-Eigentümer und Administratoren, die Orbit auf ihren Server einladen oder Berechtigungen erteilen, tragen die alleinige Verantwortung für:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li>Die dem Bot zugewiesenen Discord-Berechtigungen (z. B. Administrator, Rollen verwalten, Mitglieder bannen/kicken).</li>
             <li>Die Konfiguration von automatischen Sanktionen (z. B. automatische Timeouts, Kicks oder Banns bei Filter-Treffern).</li>
             <li>Den Schutz von Zugängen und die Zuweisung von Manager-Rollen im Web-Dashboard.</li>
             <li>Die Rechtmäßigkeit der von ihnen eingestellten Wortfilter, Regeln und benutzerdefinierten Antworten.</li>
           </ul>
-          <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 my-4">
-            <strong>Wichtiger Hinweis:</strong> Orbit führt Moderationsmaßnahmen automatisiert basierend auf den von IHNEN gewählten Einstellungen aus. Orbit haftet nicht für unbeabsichtigte Sanktionen, gelöschte Kanäle oder Rollenänderungen, die durch fehlerhafte Einstellungen von Server-Administratoren entstanden sind.
-          </div>
+          ${renderCallout('warning', 'Wichtiger Hinweis für Server-Administratoren:', 'Orbit führt Moderationsmaßnahmen automatisiert basierend auf den von IHNEN gewählten Einstellungen aus. Orbit haftet nicht für unbeabsichtigte Sanktionen, gelöschte Kanäle oder Rollenänderungen, die durch fehlerhafte Einstellungen von Server-Administratoren entstanden sind.')}
         `
       },
       {
@@ -332,7 +388,7 @@
         badge: 'Fair Use',
         content: `
           <p class="mb-4">Bei der Nutzung von Orbit sind folgende Handlungen ausdrücklich untersagt:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li><strong>Rechtswidrige Inhalte:</strong> Die Verbreitung von Kinderpornografie (CSAM), Terrorpropaganda, Betrug, Drogenhandel oder Schadsoftware über Orbit-Befehle oder Embeds.</li>
             <li><strong>Missbrauch & Exploits:</strong> Das Ausnutzen von Sicherheitslücken, Race Conditions oder Fehlern im Bot oder Dashboard. Sicherheitslücken sind unverzüglich dem Orbit-Team zu melden.</li>
             <li><strong>Angriffe auf die Infrastruktur:</strong> Durchführung von Denial-of-Service-Angriffen (DDoS), Überlastung der API durch Skripte oder Umgehung unserer Rate-Limits.</li>
@@ -349,26 +405,26 @@
         title: 'Funktionsspezifische Bestimmungen',
         badge: 'Module',
         content: `
-          <div class="space-y-4 text-xs">
-            <div class="border-l-2 border-indigo-500 pl-4">
-              <h4 class="font-bold text-white text-sm mb-1">7.1 Auto-Moderation</h4>
-              <p class="text-neutral-300">Die Auto-Moderation ist ein heuristisches Assistenzsystem. Obwohl sie mit Sub-Millisekunden-Geschwindigkeit arbeitet, garantiert Orbit keine 100%ige Erkennung aller schädlichen Inhalte und schließt Fehlalarme („False Positives“) nicht aus.</p>
+          <div class="space-y-4 text-sm">
+            <div class="border-l-2 border-indigo-500 pl-4 py-1">
+              <h4 class="font-bold text-white mb-1">7.1 Auto-Moderation</h4>
+              <p class="text-neutral-300 leading-relaxed">Die Auto-Moderation ist ein heuristisches Assistenzsystem. Obwohl sie mit Sub-Millisekunden-Geschwindigkeit arbeitet, garantiert Orbit keine 100%ige Erkennung aller schädlichen Inhalte und schließt Fehlalarme („False Positives“) nicht aus.</p>
             </div>
-            <div class="border-l-2 border-indigo-500 pl-4">
-              <h4 class="font-bold text-white text-sm mb-1">7.2 Support-Tickets & Transkripte</h4>
-              <p class="text-neutral-300">In Tickets ausgetauschte Nachrichten verbleiben auf Ihrem Discord-Server. Wenn Transkripte exportiert werden, geschieht dies zur Dokumentation für das Server-Team. Server-Betreiber sind für den vertraulichen Umgang mit Ticket-Inhalten verantwortlich.</p>
+            <div class="border-l-2 border-indigo-500 pl-4 py-1">
+              <h4 class="font-bold text-white mb-1">7.2 Support-Tickets & Transkripte</h4>
+              <p class="text-neutral-300 leading-relaxed">In Tickets ausgetauschte Nachrichten verbleiben auf Ihrem Discord-Server. Wenn Transkripte exportiert werden, geschieht dies zur Dokumentation für das Server-Team. Server-Betreiber sind für den vertraulichen Umgang mit Ticket-Inhalten verantwortlich.</p>
             </div>
-            <div class="border-l-2 border-indigo-500 pl-4">
-              <h4 class="font-bold text-white text-sm mb-1">7.3 Ban-Appeal-Portal & Verifizierung</h4>
-              <p class="text-neutral-300">Nutzer, die einen Entsperrungsantrag einreichen, verpflichten sich zu wahrheitsgemäßen Angaben. Die Entscheidung über einen Pardon liegt ausschließlich beim jeweiligen Server-Team, nicht bei Orbit.</p>
+            <div class="border-l-2 border-indigo-500 pl-4 py-1">
+              <h4 class="font-bold text-white mb-1">7.3 Ban-Appeal-Portal & Verifizierung</h4>
+              <p class="text-neutral-300 leading-relaxed">Nutzer, die einen Entsperrungsantrag einreichen, verpflichten sich zu wahrheitsgemäßen Angaben. Die Entscheidung über einen Pardon liegt ausschließlich beim jeweiligen Server-Team, nicht bei Orbit.</p>
             </div>
-            <div class="border-l-2 border-indigo-500 pl-4">
-              <h4 class="font-bold text-white text-sm mb-1">7.4 Leveling & XP-System</h4>
-              <p class="text-neutral-300">Erreichte Erfahrungspunkte (XP) und Ränge besitzen keinen Geldwert. Server-Eigentümer können XP jederzeit zurücksetzen. Orbit behält sich vor, durch Spam-Bots manipulierte Levelstände zu bereinigen.</p>
+            <div class="border-l-2 border-indigo-500 pl-4 py-1">
+              <h4 class="font-bold text-white mb-1">7.4 Leveling & XP-System</h4>
+              <p class="text-neutral-300 leading-relaxed">Erreichte Erfahrungspunkte (XP) und Ränge besitzen keinen Geldwert. Server-Eigentümer können XP jederzeit zurücksetzen. Orbit behält sich vor, durch Spam-Bots manipulierte Levelstände zu bereinigen.</p>
             </div>
-            <div class="border-l-2 border-indigo-500 pl-4">
-              <h4 class="font-bold text-white text-sm mb-1">7.5 Server-Backups</h4>
-              <p class="text-neutral-300">Server-Backups sichern Kanal- und Rollenstrukturen. Orbit speichert keine privaten Nachrichtenverläufe von Nutzern im Backup. Backups werden ohne Gewähr auf dauerhafte Verfügbarkeit bereitgestellt.</p>
+            <div class="border-l-2 border-indigo-500 pl-4 py-1">
+              <h4 class="font-bold text-white mb-1">7.5 Server-Backups</h4>
+              <p class="text-neutral-300 leading-relaxed">Server-Backups sichern Kanal- und Rollenstrukturen. Orbit speichert keine privaten Nachrichtenverläufe von Nutzern im Backup. Backups werden ohne Gewähr auf dauerhafte Verfügbarkeit bereitgestellt.</p>
             </div>
           </div>
         `
@@ -402,7 +458,7 @@
         content: `
           <p class="mb-4">Sie können diesen Vertrag jederzeit beenden, indem Sie den Orbit Bot von Ihrem Discord-Server entfernen und das Web Dashboard nicht mehr nutzen.</p>
           <p class="mb-4">Orbit behält sich das Recht vor, den Zugriff für einzelne Nutzer, IP-Adressen oder ganze Discord-Server fristlos zu sperren, wenn:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li>Gegen diese Nutzungsbedingungen oder die Discord Community-Richtlinien verstoßen wird.</li>
             <li>Die Stabilität der Orbit-Infrastruktur durch übermäßige Anfragen gefährdet wird.</li>
             <li>Rechtliche Verpflichtungen oder behördliche Anordnungen dies erfordern.</li>
@@ -445,12 +501,12 @@
         badge: 'Support',
         content: `
           <p class="mb-4">Bei Fragen zu diesen Nutzungsbedingungen oder Problemen mit Orbit erreichen Sie unser Team über folgende Kanäle:</p>
-          <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-300">
-            <p class="font-bold text-white mb-1">Orbit Community & Support Server</p>
-            <p class="mb-3">Öffnen Sie ein Ticket in unserem Support-Server für sofortige Hilfe:</p>
-            <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors">
+          <div class="p-5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-sm text-neutral-300">
+            <p class="font-bold text-white mb-1.5">Orbit Community & Support Server</p>
+            <p class="mb-4 text-neutral-400">Öffnen Sie ein Ticket in unserem Support-Server für sofortige Hilfe:</p>
+            <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors text-xs sm:text-sm">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-              Discord Support Server beitreten
+              <span>Discord Support Server beitreten</span>
             </a>
           </div>
         `
@@ -464,10 +520,7 @@
         content: `
           <p class="mb-4">Welcome to <strong>Orbit</strong>. By inviting the Orbit Discord bot to your Discord server, accessing our web dashboard (<a href="/" class="text-indigo-400 underline">orbitbot.net</a>), executing slash commands, or interacting with our verification, support ticket, or appeal portals, you enter into a legally binding contract with the developers and operators of Orbit („we“, „us“, or „our“).</p>
           <p class="mb-4">If you do not agree to these Terms of Service („Terms“), you must not invite, access, or use Orbit. By continuing to use the service, you affirm that you have read, understood, and agreed to be bound by these Terms in full.</p>
-          <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-400 my-4">
-            <strong class="text-white block mb-1">Plain English Summary (TL;DR):</strong>
-            Orbit is an all-in-one Discord bot and management suite. Using Orbit means you accept these rules. If you do not agree, simply kick or ban the bot from your server.
-          </div>
+          ${renderCallout('info', 'Plain English Summary (TL;DR):', 'Orbit is an all-in-one Discord bot and management suite. Using Orbit means you accept these rules. If you do not agree, simply kick or ban the bot from your server.')}
         `
       },
       {
@@ -488,7 +541,7 @@
         content: `
           <p class="mb-4">Orbit is an independent third-party Discord application. Orbit is <strong>not operated, sponsored, endorsed, or officially affiliated with Discord Inc.</strong></p>
           <p class="mb-4">Your usage of Orbit is strictly conditional on full compliance with Discord's governing terms:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li><a href="https://discord.com/terms" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline">Discord Terms of Service</a></li>
             <li><a href="https://discord.com/guidelines" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline">Discord Community Guidelines</a></li>
             <li><a href="https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline">Discord Developer Terms of Service</a></li>
@@ -504,30 +557,48 @@
         content: `
           <p class="mb-4">Orbit grants you a revocable, non-exclusive, non-transferable, limited license to utilize Orbit and its web interfaces solely for legitimate Discord server administration, community building, and moderation.</p>
           <p class="mb-4">Orbit provides a rich suite of automation and management modules:</p>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-4">
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">⚡ Server Automation & Builder</span>
-              Automated channel blueprints, role hierarchies, template presets, and real-time counter channels.
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 my-4">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Server Automation & Builder</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Automated channel blueprints, role hierarchies, template presets, and real-time counter channels.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">🛡️ Auto-Moderation Engine</span>
-              Sub-millisecond regex scanning, invite link filtering, anti-spam, mention limits, and auto-timeouts.
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>Auto-Moderation Engine</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Sub-millisecond regex scanning, invite link filtering, anti-spam, mention limits, and auto-timeouts.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">🎫 Support Ticket System</span>
-              Multi-category interactive ticket panels, staff routing, and secure transcript exports.
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/></svg>
+                <span>Support Ticket System</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Multi-category interactive ticket panels, staff routing, and secure transcript exports.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">⚖️ Web Verification & Appeals</span>
-              Dedicated web portal for banned users to request pardons and captcha verification gates.
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 13-7.5 7.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 10"/><path d="m16 16 6-6"/></svg>
+                <span>Web Verification & Appeals</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Dedicated web portal for banned users to request pardons and captcha verification gates.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">🏆 Leveling & Public Leaderboards</span>
-              Message and voice XP progression, role rewards, and web leaderboards.
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+                <span>Leveling & Leaderboards</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Message and voice XP progression, role rewards, and web leaderboards.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs">
-              <span class="font-bold text-white block mb-1">🔊 Join-to-Create Voice & Backups</span>
-              Ephemeral auto-created voice rooms and structural template backups.
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                <svg class="w-4 h-4 text-pink-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                <span>Join-to-Create Voice & Backups</span>
+              </div>
+              <p class="text-neutral-400 text-xs leading-relaxed">Ephemeral auto-created voice rooms and structural template backups.</p>
             </div>
           </div>
         `
@@ -539,15 +610,13 @@
         badge: 'Admin Duties',
         content: `
           <p class="mb-4">Server owners and authorized administrators who invite Orbit or assign bot roles maintain full responsibility for:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li>Granting appropriate Discord permissions (e.g. Administrator, Manage Roles, Ban Members, Manage Channels).</li>
             <li>Configuring automatic sanctions (e.g. timeout durations, automatic kicks, or permanent bans triggered by AutoMod rules).</li>
             <li>Protecting dashboard login credentials and assigning manager roles strictly to trusted community staff.</li>
             <li>The legality and appropriateness of custom word blacklists, automated responses, and server rule presets.</li>
           </ul>
-          <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 my-4">
-            <strong>Important Notice:</strong> Orbit executes moderation actions autonomously based on YOUR chosen configuration. Orbit bears no liability for accidental bans, deleted channels, or role demotions resulting from misconfigured settings or rogue staff.
-          </div>
+          ${renderCallout('warning', 'Important Notice for Server Administrators:', 'Orbit executes moderation actions autonomously based on YOUR chosen configuration. Orbit bears no liability for accidental bans, deleted channels, or role demotions resulting from misconfigured settings or rogue staff.')}
         `
       },
       {
@@ -557,7 +626,7 @@
         badge: 'AUP',
         content: `
           <p class="mb-4">When using Orbit, you agree NOT to engage in any of the following prohibited behaviors:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li><strong>Illegal Activities:</strong> Distributing child sexual abuse material (CSAM), terroristic threats, fraud, narcotics, malware, or stolen credentials via Orbit.</li>
             <li><strong>Exploits & Vulnerabilities:</strong> Exploiting software bugs, race conditions, or logic flaws. Discovered security issues must be responsibly disclosed to the Orbit team immediately.</li>
             <li><strong>Infrastructure Attacks:</strong> Launching Denial of Service (DDoS) attacks, flood-requesting endpoints, or circumventing API rate limiters.</li>
@@ -574,26 +643,26 @@
         title: 'Feature-Specific Terms & Operational Disclaimers',
         badge: 'Modules',
         content: `
-          <div class="space-y-4 text-xs">
-            <div class="border-l-2 border-indigo-500 pl-4">
-              <h4 class="font-bold text-white text-sm mb-1">7.1 Auto-Moderation Engine</h4>
-              <p class="text-neutral-300">AutoMod is a heuristic helper system. While engineered for sub-millisecond regex processing, Orbit does not guarantee 100% detection of all illicit material, nor can it guarantee total absence of false positive detections.</p>
+          <div class="space-y-4 text-sm">
+            <div class="border-l-2 border-indigo-500 pl-4 py-1">
+              <h4 class="font-bold text-white mb-1">7.1 Auto-Moderation Engine</h4>
+              <p class="text-neutral-300 leading-relaxed">AutoMod is a heuristic helper system. While engineered for sub-millisecond regex processing, Orbit does not guarantee 100% detection of all illicit material, nor can it guarantee total absence of false positive detections.</p>
             </div>
-            <div class="border-l-2 border-indigo-500 pl-4">
-              <h4 class="font-bold text-white text-sm mb-1">7.2 Support Tickets & Transcripts</h4>
-              <p class="text-neutral-300">Messages within ticket channels exist within your guild's environment. When transcripts are generated, they are preserved for server audit purposes. Server administrators are responsible for the confidentiality of user disclosures in tickets.</p>
+            <div class="border-l-2 border-indigo-500 pl-4 py-1">
+              <h4 class="font-bold text-white mb-1">7.2 Support Tickets & Transcripts</h4>
+              <p class="text-neutral-300 leading-relaxed">Messages within ticket channels exist within your guild's environment. When transcripts are generated, they are preserved for server audit purposes. Server administrators are responsible for the confidentiality of user disclosures in tickets.</p>
             </div>
-            <div class="border-l-2 border-indigo-500 pl-4">
-              <h4 class="font-bold text-white text-sm mb-1">7.3 Ban Appeal Portal & Verification Gates</h4>
-              <p class="text-neutral-300">Users submitting pardon requests agree to provide truthful statements. The ultimate decision to pardon or reject an appeal rests solely with that server's moderation team, not with Orbit developers.</p>
+            <div class="border-l-2 border-indigo-500 pl-4 py-1">
+              <h4 class="font-bold text-white mb-1">7.3 Ban Appeal Portal & Verification Gates</h4>
+              <p class="text-neutral-300 leading-relaxed">Users submitting pardon requests agree to provide truthful statements. The ultimate decision to pardon or reject an appeal rests solely with that server's moderation team, not with Orbit developers.</p>
             </div>
-            <div class="border-l-2 border-indigo-500 pl-4">
-              <h4 class="font-bold text-white text-sm mb-1">7.4 Leveling, XP & Leaderboards</h4>
-              <p class="text-neutral-300">Experience points (XP) and leaderboard ranks hold no monetary or real-world value. Server owners may reset or adjust XP at any time. Orbit reserves the right to wipe artificial XP generated through automated chat loops.</p>
+            <div class="border-l-2 border-indigo-500 pl-4 py-1">
+              <h4 class="font-bold text-white mb-1">7.4 Leveling, XP & Leaderboards</h4>
+              <p class="text-neutral-300 leading-relaxed">Experience points (XP) and leaderboard ranks hold no monetary or real-world value. Server owners may reset or adjust XP at any time. Orbit reserves the right to wipe artificial XP generated through automated chat loops.</p>
             </div>
-            <div class="border-l-2 border-indigo-500 pl-4">
-              <h4 class="font-bold text-white text-sm mb-1">7.5 Server Backups & Templates</h4>
-              <p class="text-neutral-300">Server backups store structural outlines (channel names, permissions, and roles). Orbit never backs up private chat histories or member DM archives. Backups are offered as a convenience without warranty of eternal storage.</p>
+            <div class="border-l-2 border-indigo-500 pl-4 py-1">
+              <h4 class="font-bold text-white mb-1">7.5 Server Backups & Templates</h4>
+              <p class="text-neutral-300 leading-relaxed">Server backups store structural outlines (channel names, permissions, and roles). Orbit never backs up private chat histories or member DM archives. Backups are offered as a convenience without warranty of eternal storage.</p>
             </div>
           </div>
         `
@@ -627,7 +696,7 @@
         content: `
           <p class="mb-4">You may terminate your agreement with Orbit at any time by kicking the bot from your server and discontinuing web dashboard usage.</p>
           <p class="mb-4">Orbit reserves the right to immediately suspend, blacklist, or terminate access for any user, guild, or IP address if:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li>You breach any provision of these Terms or Discord's Community Guidelines.</li>
             <li>Your server exhibits behavior that threatens the performance or security of Orbit.</li>
             <li>Required by law enforcement or competent regulatory authorities.</li>
@@ -670,12 +739,12 @@
         badge: 'Support',
         content: `
           <p class="mb-4">For any inquiries, legal concerns, or technical support regarding these Terms, please contact our support team:</p>
-          <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-300">
-            <p class="font-bold text-white mb-1">Orbit Community & Support Server</p>
-            <p class="mb-3">Open a ticket in our official Discord server for rapid assistance:</p>
-            <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors">
+          <div class="p-5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-sm text-neutral-300">
+            <p class="font-bold text-white mb-1.5">Orbit Community & Support Server</p>
+            <p class="mb-4 text-neutral-400">Open a ticket in our official Discord server for rapid assistance:</p>
+            <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors text-xs sm:text-sm">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-              Join Discord Support Server
+              <span>Join Discord Support Server</span>
             </a>
           </div>
         `
@@ -686,12 +755,12 @@
       <div class="min-h-screen bg-neutral-950 text-neutral-100 font-sans">
         ${getLegalHeader('terms')}
 
-        <div class="max-w-7xl mx-auto px-6 py-12">
+        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            <!-- Table of Contents Sidebar (Sticky) -->
-            <aside class="hidden lg:block lg:col-span-4 sticky top-28 space-y-4">
-              <div class="p-5 rounded-2xl bg-neutral-900/60 border border-neutral-800 backdrop-blur-md">
+            <!-- Table of Contents Sidebar (3 Cols / 25%) -->
+            <aside class="hidden lg:block lg:col-span-3 sticky top-28 space-y-4">
+              <div class="p-5 rounded-2xl bg-neutral-900/60 border border-neutral-800 backdrop-blur-md shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                   <h3 class="text-xs uppercase tracking-wider text-neutral-400 font-bold">
                     ${isDe ? 'Inhaltsverzeichnis' : 'Table of Contents'}
@@ -700,7 +769,7 @@
                 </div>
                 <nav class="space-y-1 max-h-[calc(100vh-220px)] overflow-y-auto pr-1" style="scrollbar-width: thin;">
                   ${sections.map(s => `
-                    <a href="#${s.id}" data-target="${s.id}" class="toc-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all group">
+                    <a href="#${s.id}" data-target="${s.id}" class="toc-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-neutral-400 hover:text-white hover:bg-neutral-800/60 transition-all group">
                       <span class="w-5 text-[10px] font-mono text-neutral-500 group-hover:text-indigo-400 font-bold">${s.num}</span>
                       <span class="truncate flex-1">${s.title}</span>
                     </a>
@@ -708,46 +777,50 @@
                 </nav>
               </div>
 
-              <!-- Quick Support Box -->
-              <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-neutral-900 to-neutral-900 border border-indigo-500/20 text-xs">
-                <p class="font-bold text-white mb-1">${isDe ? 'Brauchen Sie rechtliche Auskunft?' : 'Need Legal Support?'}</p>
+              <!-- Quick Support Box (Docs Style) -->
+              <div class="p-5 rounded-2xl bg-neutral-900/60 border border-neutral-800 text-xs shadow-sm">
+                <div class="flex items-center gap-2 font-semibold text-white mb-1.5">
+                  <svg class="w-4 h-4 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span>${isDe ? 'Brauchen Sie rechtliche Auskunft?' : 'Need Legal Support?'}</span>
+                </div>
                 <p class="text-neutral-400 mb-3 leading-relaxed">${isDe ? 'Unser Support-Team beantwortet Fragen zu unseren Richtlinien gerne auf unserem Discord-Server.' : 'Our team is available on Discord to answer questions regarding our Terms and data processing.'}</p>
                 <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 font-semibold">
-                  ${isDe ? 'Support-Server öffnen' : 'Open Support Server'} &rarr;
+                  <span>${isDe ? 'Support-Server öffnen' : 'Open Support Server'}</span>
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
               </div>
             </aside>
 
-            <!-- Main Sections List -->
-            <main class="lg:col-span-8 space-y-6">
+            <!-- Main Content (9 Cols / 75% - Spacious Reading Width) -->
+            <main class="lg:col-span-9 space-y-6 min-w-0">
               
-              <!-- Quick Overview Card -->
-              <div class="p-6 sm:p-8 rounded-3xl bg-neutral-900/40 border border-neutral-800 text-xs text-neutral-300 space-y-3 leading-relaxed">
+              <!-- Quick Overview Card (Fumadocs Card Style) -->
+              <div class="p-6 sm:p-8 rounded-2xl bg-neutral-900/40 border border-neutral-800 text-sm text-neutral-300 space-y-4 leading-relaxed shadow-sm">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
-                    ✓
+                  <div class="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                   </div>
                   <div>
-                    <h3 class="text-sm font-bold text-white">${isDe ? 'Auf einen Blick: Die wichtigsten Kernpunkte' : 'Key Highlights at a Glance'}</h3>
-                    <p class="text-[11px] text-neutral-400">${isDe ? 'Wichtige Regeln verständlich zusammengefasst' : 'Essential rules summarized for convenience'}</p>
+                    <h3 class="text-base font-bold text-white">${isDe ? 'Auf einen Blick: Die wichtigsten Kernpunkte' : 'Key Highlights at a Glance'}</h3>
+                    <p class="text-xs text-neutral-400">${isDe ? 'Wichtige Regeln verständlich zusammengefasst' : 'Essential rules summarized for convenience'}</p>
                   </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
-                    <span class="text-white font-semibold block mb-0.5">${isDe ? '1. Nicht mit Discord affiliiert' : '1. Not Affiliated with Discord'}</span>
-                    <span class="text-neutral-400">${isDe ? 'Orbit ist ein eigenständiges Bot-Projekt, das alle Discord-Entwicklerregeln befolgt.' : 'Orbit is an independent bot complying strictly with Discord developer policies.'}</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                  <div class="p-4 rounded-xl bg-neutral-950/70 border border-neutral-800/80">
+                    <span class="text-white font-semibold block mb-1 text-sm">${isDe ? '1. Nicht mit Discord affiliiert' : '1. Not Affiliated with Discord'}</span>
+                    <span class="text-neutral-400 text-xs sm:text-sm leading-relaxed">${isDe ? 'Orbit ist ein eigenständiges Bot-Projekt, das alle Discord-Entwicklerregeln befolgt.' : 'Orbit is an independent bot complying strictly with Discord developer policies.'}</span>
                   </div>
-                  <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
-                    <span class="text-white font-semibold block mb-0.5">${isDe ? '2. Verantwortung des Server-Teams' : '2. Admin Responsibility'}</span>
-                    <span class="text-neutral-400">${isDe ? 'Administratoren bestimmen Auto-Mod-Regeln, Ticket-Rollen und Sanktionen selbst.' : 'Admins are responsible for their assigned permissions, auto-mod filters, and staff access.'}</span>
+                  <div class="p-4 rounded-xl bg-neutral-950/70 border border-neutral-800/80">
+                    <span class="text-white font-semibold block mb-1 text-sm">${isDe ? '2. Verantwortung des Server-Teams' : '2. Admin Responsibility'}</span>
+                    <span class="text-neutral-400 text-xs sm:text-sm leading-relaxed">${isDe ? 'Administratoren bestimmen Auto-Mod-Regeln, Ticket-Rollen und Sanktionen selbst.' : 'Admins are responsible for their assigned permissions, auto-mod filters, and staff access.'}</span>
                   </div>
-                  <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
-                    <span class="text-white font-semibold block mb-0.5">${isDe ? '3. Kein Missbrauch & kein Raid' : '3. Zero Abuse Tolerance'}</span>
-                    <span class="text-neutral-400">${isDe ? 'Exploits, DDoS, Massen-Spam oder Raids führen zur sofortigen permanenten Sperrung.' : 'Exploiting, raiding, spamming, or attacking the API leads to immediate blacklisting.'}</span>
+                  <div class="p-4 rounded-xl bg-neutral-950/70 border border-neutral-800/80">
+                    <span class="text-white font-semibold block mb-1 text-sm">${isDe ? '3. Kein Missbrauch & kein Raid' : '3. Zero Abuse Tolerance'}</span>
+                    <span class="text-neutral-400 text-xs sm:text-sm leading-relaxed">${isDe ? 'Exploits, DDoS, Massen-Spam oder Raids führen zur sofortigen permanenten Sperrung.' : 'Exploiting, raiding, spamming, or attacking the API leads to immediate blacklisting.'}</span>
                   </div>
-                  <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
-                    <span class="text-white font-semibold block mb-0.5">${isDe ? '4. Bereitstellung ohne Gewähr' : '4. As-Is Provision'}</span>
-                    <span class="text-neutral-400">${isDe ? 'Orbit wird ohne Garantie auf 100%ige Verfügbarkeit bei externen Discord-Ausfällen bereitgestellt.' : 'Orbit is provided as-is without warranty for downtime caused by external Discord outages.'}</span>
+                  <div class="p-4 rounded-xl bg-neutral-950/70 border border-neutral-800/80">
+                    <span class="text-white font-semibold block mb-1 text-sm">${isDe ? '4. Bereitstellung ohne Gewähr' : '4. As-Is Provision'}</span>
+                    <span class="text-neutral-400 text-xs sm:text-sm leading-relaxed">${isDe ? 'Orbit wird ohne Garantie auf 100%ige Verfügbarkeit bei externen Discord-Ausfällen bereitgestellt.' : 'Orbit is provided as-is without warranty for downtime caused by external Discord outages.'}</span>
                   </div>
                 </div>
               </div>
@@ -758,24 +831,24 @@
                 ${isDe ? 'Keine Abschnitte passend zu Ihrem Suchbegriff gefunden.' : 'No clauses match your search query.'}
               </div>
 
-              <!-- Clause Cards -->
+              <!-- Clause Cards (Spacious, Beautiful Docs Typography) -->
               ${sections.map(s => `
-                <section id="${s.id}" class="legal-section p-6 sm:p-8 rounded-3xl bg-neutral-900/50 border border-neutral-800/80 hover:border-neutral-700/80 transition-all scroll-mt-32">
+                <section id="${s.id}" class="legal-section p-6 sm:p-8 rounded-2xl bg-neutral-900/40 border border-neutral-800/80 hover:border-neutral-700/80 transition-all scroll-mt-28 shadow-sm">
                   <div class="flex items-start justify-between gap-4 mb-4">
                     <div class="flex items-center gap-3">
-                      <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-neutral-800 border border-neutral-700/60 text-xs font-mono font-bold text-indigo-400">
+                      <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-neutral-800 border border-neutral-700/60 text-xs font-mono font-bold text-indigo-400 shrink-0">
                         ${s.num}
                       </span>
                       <div>
-                        <h2 class="text-base sm:text-lg font-bold text-white">${s.title}</h2>
+                        <h2 class="text-base sm:text-xl font-bold text-white tracking-tight">${s.title}</h2>
                         <span class="inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">${s.badge}</span>
                       </div>
                     </div>
-                    <button type="button" onclick="copySectionLink('${s.id}')" class="p-2 text-neutral-500 hover:text-white rounded-lg hover:bg-neutral-800 transition-colors" title="${isDe ? 'Link zu diesem Abschnitt kopieren' : 'Copy link to this section'}">
+                    <button type="button" onclick="copySectionLink('${s.id}')" class="p-2 text-neutral-500 hover:text-white rounded-lg hover:bg-neutral-800 transition-colors shrink-0 cursor-pointer" title="${isDe ? 'Link zu diesem Abschnitt kopieren' : 'Copy link to this section'}">
                       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                     </button>
                   </div>
-                  <div class="text-xs sm:text-sm text-neutral-300 leading-relaxed pt-2">
+                  <div class="text-sm sm:text-[15px] text-neutral-300 leading-relaxed pt-2">
                     ${s.content}
                   </div>
                 </section>
@@ -814,7 +887,7 @@
         badge: 'Rechtsgrundlagen',
         content: `
           <p class="mb-4">Die Verarbeitung personenbezogener Daten durch Orbit erfolgt ausschließlich auf Basis der gesetzlichen Rechtsgrundlagen nach Art. 6 Abs. 1 DSGVO:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li><strong>Vertragserfüllung (Art. 6 Abs. 1 lit. b DSGVO):</strong> Zur Bereitstellung der von Server-Eigentümern und Mitgliedern angeforderten Bot-Funktionen (z. B. Ticket-Erstellung, Rollenvergabe, XP-Berechnung, Web-Dashboard-Authentifizierung).</li>
             <li><strong>Berechtigte Interessen (Art. 6 Abs. 1 lit. f DSGVO):</strong> Gewährleistung der Server-Sicherheit, Abwehr von Raids und Spam, Auto-Moderation, Schutz vor Missbrauch und DDoS-Angriffen sowie Optimierung unserer Systemleistung.</li>
             <li><strong>Einwilligung (Art. 6 Abs. 1 lit. a DSGVO):</strong> Freiwillige Angaben in Ban-Appeal-Formularen oder benutzerdefinierten Einstellungen.</li>
@@ -830,50 +903,50 @@
         content: `
           <p class="mb-4">Orbit verfolgt den Grundsatz der <strong>Datenminimierung (Art. 5 Abs. 1 lit. c DSGVO)</strong>. Es werden nur die Daten erhoben, die für den Betrieb der gewünschten Funktionen technisch zwingend erforderlich sind.</p>
           
-          <div class="overflow-x-auto my-4 border border-neutral-800 rounded-2xl bg-neutral-950">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-neutral-900/80 text-neutral-400 border-b border-neutral-800 font-semibold">
+          <div class="overflow-x-auto my-5 border border-neutral-800 rounded-xl bg-neutral-900/30">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-neutral-900/90 text-neutral-300 border-b border-neutral-800 font-semibold uppercase tracking-wider text-xs">
                 <tr>
-                  <th class="p-3.5">Datenkategorie</th>
-                  <th class="p-3.5">Genaue Datenpunkte</th>
-                  <th class="p-3.5">Zweck der Verarbeitung</th>
+                  <th class="px-4 py-3.5">Datenkategorie</th>
+                  <th class="px-4 py-3.5">Genaue Datenpunkte</th>
+                  <th class="px-4 py-3.5">Zweck der Verarbeitung</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-neutral-900 text-neutral-300">
+              <tbody class="divide-y divide-neutral-800/60 text-neutral-300">
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Discord-Benutzerdaten</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Snowflake-ID (User ID), Benutzername, Avatar-Hash, Global Name</td>
-                  <td class="p-3.5">Zuordnung von Level-XP, Rollen, Dashboard-Login und Verifizierung.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Discord-Benutzerdaten</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Snowflake-ID (User ID), Benutzername, Avatar-Hash, Global Name</td>
+                  <td class="px-4 py-3.5">Zuordnung von Level-XP, Rollen, Dashboard-Login und Verifizierung.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Server- & Gildendaten</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Guild-ID, Server-Name, Rollen-IDs, Kanal-IDs, Berechtigungs-Bits</td>
-                  <td class="p-3.5">Speicherung von Modul-Konfigurationen und Server-Builder-Strukturen.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Server- & Gildendaten</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Guild-ID, Server-Name, Rollen-IDs, Kanal-IDs, Berechtigungs-Bits</td>
+                  <td class="px-4 py-3.5">Speicherung von Modul-Konfigurationen und Server-Builder-Strukturen.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Echtzeit-Nachrichteninhalte</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Text der Nachricht (flüchtig im Arbeitsspeicher)</td>
-                  <td class="p-3.5">Nur zur Ausführung von Auto-Mod-Regeln (<5ms). <strong>Keine dauerhafte Speicherung von Chat-Nachrichten!</strong></td>
+                  <td class="px-4 py-3.5 font-bold text-white">Echtzeit-Nachrichteninhalte</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Text der Nachricht (flüchtig im Arbeitsspeicher)</td>
+                  <td class="px-4 py-3.5">Nur zur Ausführung von Auto-Mod-Regeln (<5ms). <strong>Keine dauerhafte Speicherung von Chat-Nachrichten!</strong></td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Support-Tickets & Transkripte</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Ticket-Kanal, Ersteller-ID, Bearbeiter-ID, Text-Transkript</td>
-                  <td class="p-3.5">Dokumentation von Kundensupport-Fällen für das jeweilige Server-Team.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Support-Tickets & Transkripte</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Ticket-Kanal, Ersteller-ID, Bearbeiter-ID, Text-Transkript</td>
+                  <td class="px-4 py-3.5">Dokumentation von Kundensupport-Fällen für das jeweilige Server-Team.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Ban-Appeals (Entsperrung)</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Bann-Grund, Rechtfertigungstext, Discord-Tag, Antragszeit</td>
-                  <td class="p-3.5">Prüfung von Entsperrungsanträgen durch Server-Moderatoren.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Ban-Appeals (Entsperrung)</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Bann-Grund, Rechtfertigungstext, Discord-Tag, Antragszeit</td>
+                  <td class="px-4 py-3.5">Prüfung von Entsperrungsanträgen durch Server-Moderatoren.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Gamification / Leveling</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">XP-Zähler, Level-Zahl, Nachrichten-Zähler, Bestenlisten-Rang</td>
-                  <td class="p-3.5">Berechnung von Level-Aufstiegen und öffentlichen Ranglisten.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Gamification / Leveling</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">XP-Zähler, Level-Zahl, Nachrichten-Zähler, Bestenlisten-Rang</td>
+                  <td class="px-4 py-3.5">Berechnung von Level-Aufstiegen und öffentlichen Ranglisten.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Web-Dashboard & Session</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Session-Cookie (<span class="font-mono text-indigo-400">orbit_session</span>), Zeitzone, Sprache</td>
-                  <td class="p-3.5">Sichere Benutzerauthentifizierung und Speicherung von Anzeigeoptionen.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Web-Dashboard & Session</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Session-Cookie (<span class="font-mono text-indigo-400">orbit_session</span>), Zeitzone, Sprache</td>
+                  <td class="px-4 py-3.5">Sichere Benutzerauthentifizierung und Speicherung von Anzeigeoptionen.</td>
                 </tr>
               </tbody>
             </table>
@@ -888,45 +961,45 @@
         content: `
           <p class="mb-4">Personenbezogene Daten werden nur so lange gespeichert, wie es für den jeweiligen Verarbeitungszweck erforderlich ist oder gesetzliche Aufbewahrungsfristen bestehen:</p>
           
-          <div class="overflow-x-auto my-4 border border-neutral-800 rounded-2xl bg-neutral-950">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-neutral-900/80 text-neutral-400 border-b border-neutral-800 font-semibold">
+          <div class="overflow-x-auto my-5 border border-neutral-800 rounded-xl bg-neutral-900/30">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-neutral-900/90 text-neutral-300 border-b border-neutral-800 font-semibold uppercase tracking-wider text-xs">
                 <tr>
-                  <th class="p-3.5">Bereich</th>
-                  <th class="p-3.5">Reguläre Aufbewahrungsdauer</th>
-                  <th class="p-3.5">Löschungs-Trigger / Mechanismus</th>
+                  <th class="px-4 py-3.5">Bereich</th>
+                  <th class="px-4 py-3.5">Reguläre Aufbewahrungsdauer</th>
+                  <th class="px-4 py-3.5">Löschungs-Trigger / Mechanismus</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-neutral-900 text-neutral-300">
+              <tbody class="divide-y divide-neutral-800/60 text-neutral-300">
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Gilden-Konfigurationen</td>
-                  <td class="p-3.5">Dauer der Bot-Anwesenheit</td>
-                  <td class="p-3.5">Wird <strong>30 Tage</strong> nach Entfernen des Bots von der Gilde unwiderruflich gelöscht.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Gilden-Konfigurationen</td>
+                  <td class="px-4 py-3.5">Dauer der Bot-Anwesenheit</td>
+                  <td class="px-4 py-3.5">Wird <strong>30 Tage</strong> nach Entfernen des Bots von der Gilde unwiderruflich gelöscht.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">User-XP & Level-Daten</td>
-                  <td class="p-3.5">Dauer der Mitgliedschaft</td>
-                  <td class="p-3.5">Auf Anfrage oder bei Server-Daten-Reset durch den Eigentümer sofort gelöscht.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">User-XP & Level-Daten</td>
+                  <td class="px-4 py-3.5">Dauer der Mitgliedschaft</td>
+                  <td class="px-4 py-3.5">Auf Anfrage über unser Support-Team oder bei Server-Daten-Reset durch den Eigentümer sofort gelöscht.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Moderations-Protokolle</td>
-                  <td class="p-3.5">Server-Audit-Zeitraum</td>
-                  <td class="p-3.5">Löschbar durch Server-Staff oder automatische Bereinigung.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Moderations-Protokolle</td>
+                  <td class="px-4 py-3.5">Server-Audit-Zeitraum</td>
+                  <td class="px-4 py-3.5">Löschbar durch Server-Staff oder automatische Bereinigung.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Ban-Appeals</td>
-                  <td class="p-3.5">Maximal 90 Tage nach Fallabschluss</td>
-                  <td class="p-3.5">Automatisches Purging nach Ablauf von 90 Tagen.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Ban-Appeals</td>
+                  <td class="px-4 py-3.5">Maximal 90 Tage nach Fallabschluss</td>
+                  <td class="px-4 py-3.5">Automatisches Purging nach Ablauf von 90 Tagen.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Web-Dashboard Sessions</td>
-                  <td class="p-3.5">7 Tage</td>
-                  <td class="p-3.5">Automatischer Verfall nach 7 Tagen oder sofort beim Klick auf „Sign out“.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Web-Dashboard Sessions</td>
+                  <td class="px-4 py-3.5">7 Tage</td>
+                  <td class="px-4 py-3.5">Automatischer Verfall nach 7 Tagen oder sofort beim Klick auf „Sign out“.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Server-Zugriffs-Logs (IPs)</td>
-                  <td class="p-3.5">7 bis 14 Tage</td>
-                  <td class="p-3.5">Automatische Protokollrotation zur Abwehr von DDoS-Angriffen.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Server-Zugriffs-Logs (IPs)</td>
+                  <td class="px-4 py-3.5">7 bis 14 Tage</td>
+                  <td class="px-4 py-3.5">Automatische Protokollrotation zur Abwehr von DDoS-Angriffen.</td>
                 </tr>
               </tbody>
             </table>
@@ -941,7 +1014,7 @@
         content: `
           <p class="mb-4"><strong>Orbit verkauft, vermietet oder handelt niemals mit Ihren personenbezogenen Daten.</strong> Es findet kein Profiling zu Werbezwecken statt.</p>
           <p class="mb-4">Zur Bereitstellung unserer Infrastruktur setzen wir ausgewählte, hochsichere Dienstleister (Auftragsverarbeiter) ein:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li><strong>Discord Inc. (USA):</strong> Als Plattformbetreiber für den Empfang von Gateway-Events, REST-API-Befehlen und OAuth2-Authentifizierung. Es gelten die Discord Developer Data Protection Agreements.</li>
             <li><strong>MongoDB Inc. (Atlas Cloud):</strong> Verschlüsselte Datenbank-Cluster zur Speicherung von Server-Einstellungen und Session-Informationen.</li>
             <li><strong>Cloudflare Inc. / Datacenter:</strong> Bereitstellung von SSL/TLS-Zertifikaten, DDoS-Schutz und Auslieferung statischer Web-Dateien.</li>
@@ -955,18 +1028,18 @@
         badge: 'Cookies',
         content: `
           <p class="mb-4">Orbit verwendet ausschließlich technisch zwingend notwendige Cookies und lokale Speicherobjekte (LocalStorage). Wir setzen <strong>keine Tracking-, Werbe- oder Marketing-Cookies</strong> von Drittanbietern ein.</p>
-          <div class="space-y-2 text-xs mb-4">
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+          <div class="space-y-2.5 text-xs sm:text-sm mb-4">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-mono text-indigo-400 font-bold">orbit_session</span>
-              <p class="text-neutral-400 mt-1">Verschlüsseltes HTTP-only Cookie zur Aufrechterhaltung Ihrer Login-Sitzung im Web-Dashboard. Läuft nach 7 Tagen ab.</p>
+              <p class="text-neutral-400 mt-1 leading-relaxed">Verschlüsseltes HTTP-only Cookie zur Aufrechterhaltung Ihrer Login-Sitzung im Web-Dashboard. Läuft nach 7 Tagen ab.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-mono text-indigo-400 font-bold">orbit_cookie_consent</span>
-              <p class="text-neutral-400 mt-1">Speichert die Bestätigung des Cookie-Hinweises in Ihrem Browser.</p>
+              <p class="text-neutral-400 mt-1 leading-relaxed">Speichert die Bestätigung des Cookie-Hinweises in Ihrem Browser.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-mono text-indigo-400 font-bold">orbit_lang & orbit_tz</span>
-              <p class="text-neutral-400 mt-1">Speichert Ihre gewählte Sprache und Zeitzone für die korrekte Zeitanzeige im Dashboard.</p>
+              <p class="text-neutral-400 mt-1 leading-relaxed">Speichert Ihre gewählte Sprache und Zeitzone für die korrekte Zeitanzeige im Dashboard.</p>
             </div>
           </div>
         `
@@ -978,7 +1051,7 @@
         badge: 'Sicherheit',
         content: `
           <p class="mb-4">Wir schützen Ihre Daten durch modernste technische und organisatorische Maßnahmen nach Art. 32 DSGVO:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li><strong>Verschlüsselung in der Übertragung:</strong> Alle Web- und API-Verbindungen sind lückenlos mit TLS 1.3 / HTTPS verschlüsselt.</li>
             <li><strong>Datenbank-Sicherheit:</strong> Streng isolierte MongoDB-Verbindungen mit IP-Whitelisting und Credential-Tresoren.</li>
             <li><strong>Rollenbasierter Zugriff (RBAC):</strong> Server-Dashboards sind nur für authentifizierte Server-Eigentümer oder explizit berechtigte Administratoren einsehbar.</li>
@@ -993,28 +1066,28 @@
         badge: 'Ihre Rechte',
         content: `
           <p class="mb-4">Als betroffene Person stehen Ihnen nach der DSGVO umfassende Rechte zu:</p>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mb-4">
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs sm:text-sm mb-4">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Auskunftsrecht (Art. 15 DSGVO)</strong>
               Sie können jederzeit eine Bestätigung und Auskunft über die zu Ihrer Person verarbeiteten Daten verlangen.
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Recht auf Berichtigung (Art. 16 DSGVO)</strong>
               Sie haben das Recht auf Berichtigung unrichtiger Daten oder Vervollständigung unvollständiger Angaben.
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Recht auf Löschung (Art. 17 DSGVO)</strong>
               Sie können die unverzügliche Löschung („Recht auf Vergessenwerden“) Ihrer bei uns gespeicherten Daten verlangen.
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Recht auf Datenübertragbarkeit (Art. 20)</strong>
               Sie können Ihre Daten in einem strukturierten, gängigen JSON-Format anfordern.
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Einschränkung der Verarbeitung (Art. 18)</strong>
               Recht auf Einschränkung der Verarbeitung bei bestrittener Richtigkeit.
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Beschwerderecht (Art. 77 DSGVO)</strong>
               Recht auf Beschwerde bei einer Datenschutzaufsichtsbehörde (z. B. BfDI oder Landesdatenschutzbeauftragter).
             </div>
@@ -1028,10 +1101,7 @@
         badge: 'CCPA / CPRA',
         content: `
           <p class="mb-4">Gemäß dem California Consumer Privacy Act (CCPA) und dem California Privacy Rights Act (CPRA) haben Einwohner Kaliforniens das Recht zu erfahren, welche persönlichen Informationen gesammelt werden, und deren Löschung zu verlangen.</p>
-          <div class="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 mb-4">
-            <strong>Kein Verkauf von Daten („Do Not Sell My Info“):</strong> Orbit verkauft oder teilt keine persönlichen Daten von Nutzern für kommerzielle Zwecke oder verhaltensbasierte Werbung.
-          </div>
-          <p>Sie werden bei der Ausübung Ihrer CCPA-Rechte in keiner Weise diskriminiert.</p>
+          ${renderCallout('security', 'Kein Verkauf von Daten (Do Not Sell My Info):', 'Orbit verkauft oder teilt keine persönlichen Daten von Nutzern für kommerzielle Zwecke oder verhaltensbasierte Werbung. Sie werden bei der Ausübung Ihrer CCPA-Rechte in keiner Weise diskriminiert.')}
         `
       },
       {
@@ -1051,18 +1121,18 @@
         badge: 'Löschung / Export',
         content: `
           <p class="mb-4">Wir machen es Ihnen einfach, von Ihrem Recht auf Datenlöschung Gebrauch zu machen:</p>
-          <div class="space-y-3 text-xs mb-4">
-            <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+          <div class="space-y-3.5 text-xs sm:text-sm mb-4">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-bold text-white block mb-1">Schritt 1: Support-Ticket eröffnen</span>
-              <p class="text-neutral-400 mb-2">Treten Sie unserem offiziellen <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline">Support-Server</a> bei und eröffnen Sie ein Datenschutz- bzw. Lösungs-Ticket unter Angabe Ihrer 18-stelligen Discord Snowflake-ID.</p>
+              <p class="text-neutral-400 leading-relaxed">Treten Sie unserem offiziellen <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline">Support-Server</a> bei und eröffnen Sie ein Datenschutz- bzw. Lösch-Ticket unter Angabe Ihrer 18-stelligen Discord Snowflake-ID.</p>
             </div>
-            <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-bold text-white block mb-1">Schritt 2: Server-Daten & Dashboard</span>
-              <p class="text-neutral-400 mb-2">Server-Eigentümer können serverbezogene Daten direkt im Dashboard verwalten oder zurücksetzen. Nach dem Entfernen des Bots von einem Server werden alle Gildenkonfigurationen nach 30 Tagen automatisch unwiderruflich gelöscht.</p>
+              <p class="text-neutral-400 leading-relaxed">Server-Eigentümer können serverbezogene Daten direkt im Dashboard verwalten oder zurücksetzen. Nach dem Entfernen des Bots von einem Server werden alle Gildenkonfigurationen nach 30 Tagen automatisch unwiderruflich gelöscht.</p>
             </div>
-            <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-bold text-white block mb-1">Schritt 3: Bestätigung innerhalb von 30 Tagen</span>
-              <p class="text-neutral-400">Gemäß Art. 12 Abs. 3 DSGVO werden alle verifizierten Löschanfragen innerhalb von maximal 30 Tagen vollständig aus sämtlichen Primärdatenbanken entfernt.</p>
+              <p class="text-neutral-400 leading-relaxed">Gemäß Art. 12 Abs. 3 DSGVO werden alle verifizierten Löschanfragen innerhalb von maximal 30 Tagen vollständig aus sämtlichen Primärdatenbanken entfernt.</p>
             </div>
           </div>
         `
@@ -1084,12 +1154,12 @@
         badge: 'Kontakt',
         content: `
           <p class="mb-4">Für alle Fragen zum Datenschutz, Auskunftsersuchen oder Löschanträge wenden Sie sich bitte an:</p>
-          <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-300">
-            <p class="font-bold text-white mb-1">Orbit Data Protection Support</p>
-            <p class="mb-3">Erreichbar über unseren offiziellen Discord-Support-Server:</p>
-            <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors">
+          <div class="p-5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-sm text-neutral-300">
+            <p class="font-bold text-white mb-1.5">Orbit Data Protection Support</p>
+            <p class="mb-4 text-neutral-400">Erreichbar über unseren offiziellen Discord-Support-Server:</p>
+            <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors text-xs sm:text-sm">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-              Datenschutz-Ticket auf Discord eröffnen
+              <span>Datenschutz-Ticket auf Discord eröffnen</span>
             </a>
           </div>
         `
@@ -1113,7 +1183,7 @@
         badge: 'Legal Bases',
         content: `
           <p class="mb-4">Under GDPR Article 6, every processing operation conducted by Orbit relies on a defined lawful basis:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li><strong>Contractual Necessity (Art. 6(1)(b) GDPR):</strong> Required to deliver bot commands, guild setups, support tickets, role distribution, leveling metrics, and authenticated dashboard access requested by users and server managers.</li>
             <li><strong>Legitimate Interests (Art. 6(1)(f) GDPR):</strong> Enforcing auto-moderation filters, defending servers against raid attacks, rate limiting, bot protection, and maintaining the stability and security of our high-throughput backend.</li>
             <li><strong>Consent (Art. 6(1)(a) GDPR):</strong> Freely given when submitting voluntary ban appeals or configuring custom guild embeds.</li>
@@ -1129,50 +1199,50 @@
         content: `
           <p class="mb-4">Orbit adheres to the principle of <strong>Data Minimization (GDPR Art. 5(1)(c))</strong>. We only collect the minimal identifiers essential to operate the features you enable.</p>
           
-          <div class="overflow-x-auto my-4 border border-neutral-800 rounded-2xl bg-neutral-950">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-neutral-900/80 text-neutral-400 border-b border-neutral-800 font-semibold">
+          <div class="overflow-x-auto my-5 border border-neutral-800 rounded-xl bg-neutral-900/30">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-neutral-900/90 text-neutral-300 border-b border-neutral-800 font-semibold uppercase tracking-wider text-xs">
                 <tr>
-                  <th class="p-3.5">Data Category</th>
-                  <th class="p-3.5">Specific Data Points</th>
-                  <th class="p-3.5">Operational Purpose</th>
+                  <th class="px-4 py-3.5">Data Category</th>
+                  <th class="px-4 py-3.5">Specific Data Points</th>
+                  <th class="px-4 py-3.5">Operational Purpose</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-neutral-900 text-neutral-300">
+              <tbody class="divide-y divide-neutral-800/60 text-neutral-300">
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Discord Identity Data</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Snowflake User ID, Username, Avatar Hash, Global Display Name</td>
-                  <td class="p-3.5">User level tracking, verification gate authentication, and dashboard session mapping.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Discord Identity Data</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Snowflake User ID, Username, Avatar Hash, Global Display Name</td>
+                  <td class="px-4 py-3.5">User level tracking, verification gate authentication, and dashboard session mapping.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Guild & Hierarchy Data</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Guild ID, Server Name, Channel IDs, Role IDs, Permission Flags</td>
-                  <td class="p-3.5">Preserving server builder blueprints, auto-mod channel rules, and staff role permissions.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Guild & Hierarchy Data</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Guild ID, Server Name, Channel IDs, Role IDs, Permission Flags</td>
+                  <td class="px-4 py-3.5">Preserving server builder blueprints, auto-mod channel rules, and staff role permissions.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Real-Time Chat Messages</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Ephemeral message text (processed in RAM only)</td>
-                  <td class="p-3.5">Evaluated in <5ms against regex word filters to block invites and toxicity. <strong>Messages are never permanently stored or sold.</strong></td>
+                  <td class="px-4 py-3.5 font-bold text-white">Real-Time Chat Messages</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Ephemeral message text (processed in RAM only)</td>
+                  <td class="px-4 py-3.5">Evaluated in <5ms against regex word filters to block invites and toxicity. <strong>Messages are never permanently stored or sold.</strong></td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Support Tickets & Transcripts</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Ticket channel ID, creator ID, claimed staff ID, transcript text</td>
-                  <td class="p-3.5">Audit logging and customer support documentation for the respective server administration.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Support Tickets & Transcripts</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Ticket channel ID, creator ID, claimed staff ID, transcript text</td>
+                  <td class="px-4 py-3.5">Audit logging and customer support documentation for the respective server administration.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Ban Appeal Submissions</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Ban reason, justification statement, applicant tag, submission date</td>
-                  <td class="p-3.5">Review and adjudication of pardon requests by server moderation staff.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Ban Appeal Submissions</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Ban reason, justification statement, applicant tag, submission date</td>
+                  <td class="px-4 py-3.5">Review and adjudication of pardon requests by server moderation staff.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Leveling & XP Activity</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">XP points, current level, messages-sent counter, leaderboard position</td>
-                  <td class="p-3.5">Calculating gamification milestones, level-up notifications, and public web rankings.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Leveling & XP Activity</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">XP points, current level, messages-sent counter, leaderboard position</td>
+                  <td class="px-4 py-3.5">Calculating gamification milestones, level-up notifications, and public web rankings.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Web Dashboard Session</td>
-                  <td class="p-3.5 font-mono text-[11px] text-neutral-400">Encrypted token (<span class="font-mono text-indigo-400">orbit_session</span>), selected language, timezone</td>
-                  <td class="p-3.5">Managing active browser login state and localized timestamp rendering.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Web Dashboard Session</td>
+                  <td class="px-4 py-3.5 font-mono text-xs text-neutral-400">Encrypted token (<span class="font-mono text-indigo-400">orbit_session</span>), selected language, timezone</td>
+                  <td class="px-4 py-3.5">Managing active browser login state and localized timestamp rendering.</td>
                 </tr>
               </tbody>
             </table>
@@ -1187,45 +1257,45 @@
         content: `
           <p class="mb-4">Data is retained exclusively for as long as needed to fulfill operational requirements or satisfy legal compliance standards:</p>
           
-          <div class="overflow-x-auto my-4 border border-neutral-800 rounded-2xl bg-neutral-950">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-neutral-900/80 text-neutral-400 border-b border-neutral-800 font-semibold">
+          <div class="overflow-x-auto my-5 border border-neutral-800 rounded-xl bg-neutral-900/30">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-neutral-900/90 text-neutral-300 border-b border-neutral-800 font-semibold uppercase tracking-wider text-xs">
                 <tr>
-                  <th class="p-3.5">Data Record</th>
-                  <th class="p-3.5">Standard Retention Duration</th>
-                  <th class="p-3.5">Purge Trigger / Mechanism</th>
+                  <th class="px-4 py-3.5">Data Record</th>
+                  <th class="px-4 py-3.5">Standard Retention Duration</th>
+                  <th class="px-4 py-3.5">Purge Trigger / Mechanism</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-neutral-900 text-neutral-300">
+              <tbody class="divide-y divide-neutral-800/60 text-neutral-300">
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Guild Configurations</td>
-                  <td class="p-3.5">Active life of the guild with bot</td>
-                  <td class="p-3.5">Automatically purged <strong>30 days</strong> following bot removal from the server.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Guild Configurations</td>
+                  <td class="px-4 py-3.5">Active life of the guild with bot</td>
+                  <td class="px-4 py-3.5">Automatically purged <strong>30 days</strong> following bot removal from the server.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">User XP & Progression</td>
-                  <td class="p-3.5">Duration of user presence in guild</td>
-                  <td class="p-3.5">Purged upon server data reset or verified request to our support team.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">User XP & Progression</td>
+                  <td class="px-4 py-3.5">Duration of user presence in guild</td>
+                  <td class="px-4 py-3.5">Purged upon server data reset or verified request to our support team.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Moderation Case Logs</td>
-                  <td class="p-3.5">Guild audit retention window</td>
-                  <td class="p-3.5">Deletable by guild managers or purged during guild data wipes.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Moderation Case Logs</td>
+                  <td class="px-4 py-3.5">Guild audit retention window</td>
+                  <td class="px-4 py-3.5">Deletable by guild managers or purged during guild data wipes.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Ban Appeal Records</td>
-                  <td class="p-3.5">Up to 90 days following decision</td>
-                  <td class="p-3.5">Automatically rotated and purged 90 days after review.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Ban Appeal Records</td>
+                  <td class="px-4 py-3.5">Up to 90 days following decision</td>
+                  <td class="px-4 py-3.5">Automatically rotated and purged 90 days after review.</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Dashboard Sessions</td>
-                  <td class="p-3.5">7 days</td>
-                  <td class="p-3.5">Expires automatically after 7 days or immediately upon clicking "Sign out".</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Dashboard Sessions</td>
+                  <td class="px-4 py-3.5">7 days</td>
+                  <td class="px-4 py-3.5">Expires automatically after 7 days or immediately upon clicking "Sign out".</td>
                 </tr>
                 <tr>
-                  <td class="p-3.5 font-bold text-white">Access Logs (IPs)</td>
-                  <td class="p-3.5">7 to 14 days</td>
-                  <td class="p-3.5">Rotated and permanently destroyed for DDoS and rate-limit defense.</td>
+                  <td class="px-4 py-3.5 font-bold text-white">Access Logs (IPs)</td>
+                  <td class="px-4 py-3.5">7 to 14 days</td>
+                  <td class="px-4 py-3.5">Rotated and permanently destroyed for DDoS and rate-limit defense.</td>
                 </tr>
               </tbody>
             </table>
@@ -1240,7 +1310,7 @@
         content: `
           <p class="mb-4"><strong>Orbit will never sell, rent, monetize, or trade your personal data to advertisers or data brokers.</strong></p>
           <p class="mb-4">To deliver our high-speed, 24/7 service, we engage trusted technical sub-processors under rigorous Data Processing Agreements (DPAs):</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li><strong>Discord Inc. (United States):</strong> Platform API provider for Gateway connection, command routing, and OAuth2 login authentication.</li>
             <li><strong>MongoDB Inc. (Atlas Cloud Datacenters):</strong> Managed cloud database infrastructure with end-to-end encryption for guild settings and session persistence.</li>
             <li><strong>Cloudflare Inc. / Datacenter Providers:</strong> DNS routing, SSL/TLS security termination, and DDoS mitigation.</li>
@@ -1254,18 +1324,18 @@
         badge: 'Cookies',
         content: `
           <p class="mb-4">Orbit employs strictly essential cookies and local storage tokens. We do not use third-party analytics trackers, advertising beacons, or profiling cookies.</p>
-          <div class="space-y-2 text-xs mb-4">
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+          <div class="space-y-2.5 text-xs sm:text-sm mb-4">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-mono text-indigo-400 font-bold">orbit_session</span>
-              <p class="text-neutral-400 mt-1">Encrypted HTTP-only cookie maintaining your dashboard session. Automatically expires after 7 days.</p>
+              <p class="text-neutral-400 mt-1 leading-relaxed">Encrypted HTTP-only cookie maintaining your dashboard session. Automatically expires after 7 days.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-mono text-indigo-400 font-bold">orbit_cookie_consent</span>
-              <p class="text-neutral-400 mt-1">Remembers your acknowledgment of our essential cookie notice.</p>
+              <p class="text-neutral-400 mt-1 leading-relaxed">Remembers your acknowledgment of our essential cookie notice.</p>
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-mono text-indigo-400 font-bold">orbit_lang & orbit_tz</span>
-              <p class="text-neutral-400 mt-1">Stores your preferred UI language and detected/selected timezone for accurate timestamps.</p>
+              <p class="text-neutral-400 mt-1 leading-relaxed">Stores your preferred UI language and detected/selected timezone for accurate timestamps.</p>
             </div>
           </div>
         `
@@ -1277,7 +1347,7 @@
         badge: 'Security',
         content: `
           <p class="mb-4">In accordance with GDPR Article 32, Orbit implements robust technical safeguards to ensure data integrity:</p>
-          <ul class="list-disc pl-5 space-y-2 mb-4 text-xs text-neutral-300">
+          <ul class="list-disc pl-5 space-y-2 mb-4 text-sm text-neutral-300">
             <li><strong>End-to-End Transport Encryption:</strong> All HTTP traffic is protected by TLS 1.3 encryption.</li>
             <li><strong>Network Isolation:</strong> MongoDB clusters run inside secured private networks with strict IP whitelisting.</li>
             <li><strong>Role-Based Access Control (RBAC):</strong> Dashboard access is strictly gated; guild settings can only be accessed by authenticated guild administrators.</li>
@@ -1292,28 +1362,28 @@
         badge: 'Your Rights',
         content: `
           <p class="mb-4">As a data subject located in the EEA or UK, you possess explicit legal rights under GDPR:</p>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mb-4">
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs sm:text-sm mb-4">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Right to Access (Art. 15 GDPR)</strong>
               You may request a complete report of all personal data maintained by Orbit regarding your account.
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Right to Rectification (Art. 16 GDPR)</strong>
               You have the right to correct any inaccurate or incomplete personal records.
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Right to Erasure (Art. 17 GDPR)</strong>
               You can demand the complete, permanent deletion of your personal data („Right to be Forgotten“).
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Right to Data Portability (Art. 20)</strong>
               Obtain your data in a structured, machine-readable JSON format for transfer to another service.
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Restriction of Processing (Art. 18)</strong>
               Temporarily halt processing of your data during dispute reviews.
             </div>
-            <div class="p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <strong class="text-white block mb-1">Right to Lodge a Complaint (Art. 77)</strong>
               File an official grievance with your national Data Protection Supervisory Authority (e.g., ICO in the UK, BfDI in Germany).
             </div>
@@ -1327,10 +1397,7 @@
         badge: 'CCPA / CPRA',
         content: `
           <p class="mb-4">California consumers are afforded specific rights regarding their personal information:</p>
-          <div class="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 mb-4">
-            <strong>Do Not Sell My Personal Information:</strong> Orbit has not sold and will never sell consumer personal information. We do not share personal information with third parties for cross-context behavioral advertising.
-          </div>
-          <p>You have the right not to receive discriminatory treatment for the exercise of privacy rights conferred by the CCPA.</p>
+          ${renderCallout('security', 'Do Not Sell My Personal Information:', 'Orbit has not sold and will never sell consumer personal information. We do not share personal information with third parties for cross-context behavioral advertising. You have the right not to receive discriminatory treatment for the exercise of privacy rights conferred by the CCPA.')}
         `
       },
       {
@@ -1350,18 +1417,18 @@
         badge: 'Data Deletion',
         content: `
           <p class="mb-4">We believe exercising your data privacy rights should be effortless:</p>
-          <div class="space-y-3 text-xs mb-4">
-            <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+          <div class="space-y-3.5 text-xs sm:text-sm mb-4">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-bold text-white block mb-1">Method 1: Support Server Deletion Ticket</span>
-              <p class="text-neutral-400 mb-2">Join our official <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline">Support Server</a> and open a Data Protection Ticket with your 18-digit Discord Snowflake ID.</p>
+              <p class="text-neutral-400 leading-relaxed">Join our official <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="text-indigo-400 underline">Support Server</a> and open a Data Protection Ticket with your 18-digit Discord Snowflake ID.</p>
             </div>
-            <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-bold text-white block mb-1">Method 2: Guild Management / Dashboard</span>
-              <p class="text-neutral-400 mb-2">Server owners can reset guild data directly via the Web Dashboard or remove the bot (all configurations are purged within 30 days).</p>
+              <p class="text-neutral-400 leading-relaxed">Server owners can reset guild data directly via the Web Dashboard or remove the bot (all configurations are purged within 30 days).</p>
             </div>
-            <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+            <div class="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
               <span class="font-bold text-white block mb-1">Execution SLA</span>
-              <p class="text-neutral-400">Pursuant to GDPR Article 12(3), all verified deletion and data export requests are executed within <strong>30 days</strong> of receipt.</p>
+              <p class="text-neutral-400 leading-relaxed">Pursuant to GDPR Article 12(3), all verified deletion and data export requests are executed within <strong>30 days</strong> of receipt.</p>
             </div>
           </div>
         `
@@ -1383,12 +1450,12 @@
         badge: 'Contact',
         content: `
           <p class="mb-4">For any inquiries, data deletion requests, or formal communications regarding this Privacy Policy, please contact our team:</p>
-          <div class="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-300">
-            <p class="font-bold text-white mb-1">Orbit Privacy & Data Protection Team</p>
-            <p class="mb-3">Accessible directly via our official Discord community server:</p>
-            <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors">
+          <div class="p-5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-sm text-neutral-300">
+            <p class="font-bold text-white mb-1.5">Orbit Privacy & Data Protection Team</p>
+            <p class="mb-4 text-neutral-400">Accessible directly via our official Discord community server:</p>
+            <a href="https://discord.gg/orbit" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-colors text-xs sm:text-sm">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-              Open Privacy Support Ticket on Discord
+              <span>Open Privacy Support Ticket on Discord</span>
             </a>
           </div>
         `
@@ -1399,12 +1466,12 @@
       <div class="min-h-screen bg-neutral-950 text-neutral-100 font-sans">
         ${getLegalHeader('privacy')}
 
-        <div class="max-w-7xl mx-auto px-6 py-12">
+        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            <!-- Table of Contents Sidebar (Sticky) -->
-            <aside class="hidden lg:block lg:col-span-4 sticky top-28 space-y-4">
-              <div class="p-5 rounded-2xl bg-neutral-900/60 border border-neutral-800 backdrop-blur-md">
+            <!-- Table of Contents Sidebar (3 Cols / 25%) -->
+            <aside class="hidden lg:block lg:col-span-3 sticky top-28 space-y-4">
+              <div class="p-5 rounded-2xl bg-neutral-900/60 border border-neutral-800 backdrop-blur-md shadow-sm">
                 <div class="flex items-center justify-between mb-4">
                   <h3 class="text-xs uppercase tracking-wider text-neutral-400 font-bold">
                     ${isDe ? 'Inhaltsverzeichnis' : 'Table of Contents'}
@@ -1413,7 +1480,7 @@
                 </div>
                 <nav class="space-y-1 max-h-[calc(100vh-220px)] overflow-y-auto pr-1" style="scrollbar-width: thin;">
                   ${sections.map(s => `
-                    <a href="#${s.id}" data-target="${s.id}" class="toc-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-neutral-400 hover:text-white hover:bg-white/[0.04] transition-all group">
+                    <a href="#${s.id}" data-target="${s.id}" class="toc-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-neutral-400 hover:text-white hover:bg-neutral-800/60 transition-all group">
                       <span class="w-5 text-[10px] font-mono text-neutral-500 group-hover:text-indigo-400 font-bold">${s.num}</span>
                       <span class="truncate flex-1">${s.title}</span>
                     </a>
@@ -1421,49 +1488,50 @@
                 </nav>
               </div>
 
-              <!-- Quick Deletion Action Box -->
-              <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-neutral-900 to-neutral-900 border border-emerald-500/20 text-xs">
-                <div class="flex items-center gap-2 text-emerald-400 font-bold mb-1">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              <!-- Quick Deletion Action Box (Docs Style) -->
+              <div class="p-5 rounded-2xl bg-neutral-900/60 border border-neutral-800 text-xs shadow-sm">
+                <div class="flex items-center gap-2 text-emerald-400 font-bold mb-1.5">
+                  <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
                   <span>${isDe ? 'Ihre Daten, Ihre Kontrolle' : 'Your Data, Your Control'}</span>
                 </div>
                 <p class="text-neutral-400 mb-3 leading-relaxed">${isDe ? 'Sie möchten Ihre Daten löschen oder exportieren? Öffnen Sie ein Ticket in unserem Support-Server.' : 'Want to erase or export your stored data? Open a ticket in our support server.'}</p>
                 <a href="#priv-sec-11" class="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-semibold">
-                  ${isDe ? 'Zur Löschanleitung' : 'View Deletion Guide'} &rarr;
+                  <span>${isDe ? 'Zur Löschanleitung' : 'View Deletion Guide'}</span>
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </a>
               </div>
             </aside>
 
-            <!-- Main Sections List -->
-            <main class="lg:col-span-8 space-y-6">
+            <!-- Main Sections List (9 Cols / 75% - Spacious Reading Width) -->
+            <main class="lg:col-span-9 space-y-6 min-w-0">
               
-              <!-- Quick Overview Card -->
-              <div class="p-6 sm:p-8 rounded-3xl bg-neutral-900/40 border border-neutral-800 text-xs text-neutral-300 space-y-3 leading-relaxed">
+              <!-- Quick Overview Card (Fumadocs Card Style) -->
+              <div class="p-6 sm:p-8 rounded-2xl bg-neutral-900/40 border border-neutral-800 text-sm text-neutral-300 space-y-4 leading-relaxed shadow-sm">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-                    🛡️
+                  <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
                   </div>
                   <div>
-                    <h3 class="text-sm font-bold text-white">${isDe ? 'Datenschutz auf einen Blick (DSGVO-Transparenz)' : 'Privacy at a Glance (GDPR Transparency)'}</h3>
-                    <p class="text-[11px] text-neutral-400">${isDe ? 'Die wichtigsten Garantien verständlich zusammengefasst' : 'Essential privacy commitments summarized'}</p>
+                    <h3 class="text-base font-bold text-white">${isDe ? 'Datenschutz auf einen Blick (DSGVO-Transparenz)' : 'Privacy at a Glance (GDPR Transparency)'}</h3>
+                    <p class="text-xs text-neutral-400">${isDe ? 'Die wichtigsten Garantien verständlich zusammengefasst' : 'Essential privacy commitments summarized'}</p>
                   </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
-                    <span class="text-white font-semibold block mb-0.5">${isDe ? '1. Kein Verkauf von Daten' : '1. Zero Data Selling'}</span>
-                    <span class="text-neutral-400">${isDe ? 'Wir verkaufen Ihre Daten niemals an Werbetreibende oder Datenhändler.' : 'We never sell, monetize, or broker personal information to advertisers.'}</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                  <div class="p-4 rounded-xl bg-neutral-950/70 border border-neutral-800/80">
+                    <span class="text-white font-semibold block mb-1 text-sm">${isDe ? '1. Kein Verkauf von Daten' : '1. Zero Data Selling'}</span>
+                    <span class="text-neutral-400 text-xs sm:text-sm leading-relaxed">${isDe ? 'Wir verkaufen Ihre Daten niemals an Werbetreibende oder Datenhändler.' : 'We never sell, monetize, or broker personal information to advertisers.'}</span>
                   </div>
-                  <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
-                    <span class="text-white font-semibold block mb-0.5">${isDe ? '2. Keine dauerhafte Chat-Speicherung' : '2. No Chat Logging'}</span>
-                    <span class="text-neutral-400">${isDe ? 'Nachrichten werden flüchtig im RAM auf Auto-Mod-Regeln geprüft und sofort verworfen.' : 'Chat messages are evaluated in RAM for auto-mod rules and discarded immediately.'}</span>
+                  <div class="p-4 rounded-xl bg-neutral-950/70 border border-neutral-800/80">
+                    <span class="text-white font-semibold block mb-1 text-sm">${isDe ? '2. Keine dauerhafte Chat-Speicherung' : '2. No Chat Logging'}</span>
+                    <span class="text-neutral-400 text-xs sm:text-sm leading-relaxed">${isDe ? 'Nachrichten werden flüchtig im RAM auf Auto-Mod-Regeln geprüft und sofort verworfen.' : 'Chat messages are evaluated in RAM for auto-mod rules and discarded immediately.'}</span>
                   </div>
-                  <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
-                    <span class="text-white font-semibold block mb-0.5">${isDe ? '3. Keine Tracking-Cookies' : '3. No Tracking Cookies'}</span>
-                    <span class="text-neutral-400">${isDe ? 'Ausschließlich technisch notwendige Session-Cookies für den Dashboard-Login.' : 'Only essential session cookies for authentication, zero marketing tracking.'}</span>
+                  <div class="p-4 rounded-xl bg-neutral-950/70 border border-neutral-800/80">
+                    <span class="text-white font-semibold block mb-1 text-sm">${isDe ? '3. Keine Tracking-Cookies' : '3. No Tracking Cookies'}</span>
+                    <span class="text-neutral-400 text-xs sm:text-sm leading-relaxed">${isDe ? 'Ausschließlich technisch notwendige Session-Cookies für den Dashboard-Login.' : 'Only essential session cookies for authentication, zero marketing tracking.'}</span>
                   </div>
-                  <div class="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
-                    <span class="text-white font-semibold block mb-0.5">${isDe ? '4. Recht auf Löschung jederzeit' : '4. Right to Erasure Anytime'}</span>
-                    <span class="text-neutral-400">${isDe ? 'Fordern Sie die vollständige Löschung Ihrer Daten unkompliziert per Support-Ticket an.' : 'Request complete deletion of your data easily via our support ticket system.'}</span>
+                  <div class="p-4 rounded-xl bg-neutral-950/70 border border-neutral-800/80">
+                    <span class="text-white font-semibold block mb-1 text-sm">${isDe ? '4. Recht auf Löschung jederzeit' : '4. Right to Erasure Anytime'}</span>
+                    <span class="text-neutral-400 text-xs sm:text-sm leading-relaxed">${isDe ? 'Fordern Sie die vollständige Löschung Ihrer Daten unkompliziert per Support-Ticket an.' : 'Request complete deletion of your data easily via our support ticket system.'}</span>
                   </div>
                 </div>
               </div>
@@ -1474,24 +1542,24 @@
                 ${isDe ? 'Keine Abschnitte passend zu Ihrem Suchbegriff gefunden.' : 'No clauses match your search query.'}
               </div>
 
-              <!-- Clause Cards -->
+              <!-- Clause Cards (Spacious, Beautiful Docs Typography) -->
               ${sections.map(s => `
-                <section id="${s.id}" class="legal-section p-6 sm:p-8 rounded-3xl bg-neutral-900/50 border border-neutral-800/80 hover:border-neutral-700/80 transition-all scroll-mt-32">
+                <section id="${s.id}" class="legal-section p-6 sm:p-8 rounded-2xl bg-neutral-900/40 border border-neutral-800/80 hover:border-neutral-700/80 transition-all scroll-mt-28 shadow-sm">
                   <div class="flex items-start justify-between gap-4 mb-4">
                     <div class="flex items-center gap-3">
-                      <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-neutral-800 border border-neutral-700/60 text-xs font-mono font-bold text-emerald-400">
+                      <span class="flex items-center justify-center w-8 h-8 rounded-xl bg-neutral-800 border border-neutral-700/60 text-xs font-mono font-bold text-emerald-400 shrink-0">
                         ${s.num}
                       </span>
                       <div>
-                        <h2 class="text-base sm:text-lg font-bold text-white">${s.title}</h2>
+                        <h2 class="text-base sm:text-xl font-bold text-white tracking-tight">${s.title}</h2>
                         <span class="inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">${s.badge}</span>
                       </div>
                     </div>
-                    <button type="button" onclick="copySectionLink('${s.id}')" class="p-2 text-neutral-500 hover:text-white rounded-lg hover:bg-neutral-800 transition-colors" title="${isDe ? 'Link zu diesem Abschnitt kopieren' : 'Copy link to this section'}">
+                    <button type="button" onclick="copySectionLink('${s.id}')" class="p-2 text-neutral-500 hover:text-white rounded-lg hover:bg-neutral-800 transition-colors shrink-0 cursor-pointer" title="${isDe ? 'Link zu diesem Abschnitt kopieren' : 'Copy link to this section'}">
                       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                     </button>
                   </div>
-                  <div class="text-xs sm:text-sm text-neutral-300 leading-relaxed pt-2">
+                  <div class="text-sm sm:text-[15px] text-neutral-300 leading-relaxed pt-2">
                     ${s.content}
                   </div>
                 </section>
