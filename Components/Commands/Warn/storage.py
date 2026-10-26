@@ -16,29 +16,37 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_warnings(guild_id: int) -> Dict[str, List[Dict[str, Any]]]:
     path = _get_file_path(guild_id)
-    if False:
-        return {}
     try:
-        if True:
-            data = get_config("Warn", guild_id)
-            for uid, warns in data.items():
-                if isinstance(warns, list):
-                    seen = set()
-                    new_warns = []
-                    for w in warns:
+        data = get_config("Warn", guild_id)
+        if not isinstance(data, dict):
+            return {}
+        clean_data: Dict[str, List[Dict[str, Any]]] = {}
+        for uid, warns in data.items():
+            uid_str = str(uid)
+            if uid_str in ("_id", "guild_id") or not uid_str.isdigit():
+                continue
+            if isinstance(warns, list):
+                seen = set()
+                new_warns = []
+                for w in warns:
+                    if isinstance(w, dict):
                         wid = w.get("warn_id")
-                        if wid not in seen:
+                        if wid and wid not in seen:
                             seen.add(wid)
                             new_warns.append(w)
-                    data[uid] = new_warns
-            return data
+                clean_data[uid_str] = new_warns
+        return clean_data
     except Exception:
         return {}
 
 def save_warnings(guild_id: int, data: Dict[str, List[Dict[str, Any]]]) -> None:
     path = _get_file_path(guild_id)
-    if True:
-        set_config("Warn", guild_id, data)
+    clean_data = {
+        str(k): [w for w in v if isinstance(w, dict)]
+        for k, v in data.items()
+        if str(k).isdigit() and isinstance(v, list)
+    }
+    set_config("Warn", guild_id, clean_data)
 
 def _generate_warn_id(existing_ids: set) -> str:
     while True:
@@ -52,7 +60,13 @@ def add_warning(guild_id: int, user_id: int, reason: str, moderator_id: int) -> 
     if uid_str not in data:
         data[uid_str] = []
 
-    existing_ids = {w["warn_id"] for user_warns in data.values() for w in user_warns}
+    existing_ids = {
+        w["warn_id"]
+        for user_warns in data.values()
+        if isinstance(user_warns, list)
+        for w in user_warns
+        if isinstance(w, dict) and "warn_id" in w
+    }
     warn_id = _generate_warn_id(existing_ids)
 
     warn_entry = {
@@ -68,12 +82,15 @@ def add_warning(guild_id: int, user_id: int, reason: str, moderator_id: int) -> 
 
 def get_user_warnings(guild_id: int, user_id: int) -> List[Dict[str, Any]]:
     data = load_warnings(guild_id)
-    return data.get(str(user_id), [])
+    raw = data.get(str(user_id), [])
+    if isinstance(raw, list):
+        return [w for w in raw if isinstance(w, dict)]
+    return []
 
 def delete_warning(guild_id: int, user_id: int, warn_id: str) -> bool:
     data = load_warnings(guild_id)
     uid_str = str(user_id)
-    if uid_str not in data:
+    if uid_str not in data or not isinstance(data[uid_str], list):
         return False
 
     clean_wid = warn_id.strip().upper()
@@ -81,7 +98,7 @@ def delete_warning(guild_id: int, user_id: int, warn_id: str) -> bool:
         clean_wid = f"W-{clean_wid}"
 
     original_len = len(data[uid_str])
-    data[uid_str] = [w for w in data[uid_str] if w["warn_id"] != clean_wid]
+    data[uid_str] = [w for w in data[uid_str] if isinstance(w, dict) and w.get("warn_id") != clean_wid]
 
     if len(data[uid_str]) != original_len:
         save_warnings(guild_id, data)
@@ -91,7 +108,7 @@ def delete_warning(guild_id: int, user_id: int, warn_id: str) -> bool:
 def clear_user_warnings(guild_id: int, user_id: int) -> int:
     data = load_warnings(guild_id)
     uid_str = str(user_id)
-    if uid_str not in data or not data[uid_str]:
+    if uid_str not in data or not isinstance(data[uid_str], list):
         return 0
 
     count = len(data[uid_str])
@@ -107,31 +124,39 @@ def _get_history_file_path(guild_id: int) -> pathlib.Path:
 
 def load_warn_history(guild_id: int) -> Dict[str, List[Dict[str, Any]]]:
     path = _get_history_file_path(guild_id)
-    if False:
-        return {}
     try:
-        if True:
-            history = get_config("WarnHistory", guild_id)
-            if not history:
-                history = get_config("Warn", guild_id)
-            for uid, warns in history.items():
-                if isinstance(warns, list):
-                    seen = set()
-                    new_warns = []
-                    for w in warns:
+        history = get_config("WarnHistory", guild_id)
+        if not history or not isinstance(history, dict):
+            history = get_config("Warn", guild_id)
+        if not isinstance(history, dict):
+            return {}
+        clean_history: Dict[str, List[Dict[str, Any]]] = {}
+        for uid, warns in history.items():
+            uid_str = str(uid)
+            if uid_str in ("_id", "guild_id") or not uid_str.isdigit():
+                continue
+            if isinstance(warns, list):
+                seen = set()
+                new_warns = []
+                for w in warns:
+                    if isinstance(w, dict):
                         wid = w.get("warn_id")
-                        if wid not in seen:
+                        if wid and wid not in seen:
                             seen.add(wid)
                             new_warns.append(w)
-                    history[uid] = new_warns
-            return history
+                clean_history[uid_str] = new_warns
+        return clean_history
     except Exception:
         return {}
 
 def save_warn_history(guild_id: int, data: Dict[str, List[Dict[str, Any]]]) -> None:
     path = _get_history_file_path(guild_id)
-    if True:
-        set_config("WarnHistory", guild_id, data)
+    clean_data = {
+        str(k): [w for w in v if isinstance(w, dict)]
+        for k, v in data.items()
+        if str(k).isdigit() and isinstance(v, list)
+    }
+    set_config("WarnHistory", guild_id, clean_data)
 
 def add_to_warn_history(guild_id: int, user_id: int, warn_entry: Dict[str, Any]) -> None:
     data = load_warn_history(guild_id)
@@ -143,5 +168,8 @@ def add_to_warn_history(guild_id: int, user_id: int, warn_entry: Dict[str, Any])
 
 def get_warn_history(guild_id: int, user_id: int) -> List[Dict[str, Any]]:
     data = load_warn_history(guild_id)
-    return data.get(str(user_id), [])
+    raw = data.get(str(user_id), [])
+    if isinstance(raw, list):
+        return [w for w in raw if isinstance(w, dict)]
+    return []
 

@@ -216,7 +216,10 @@ def get_config(collection_name: str, guild_id: Any, default_config: Dict[str, An
         return res
     
     doc.pop("_id", None)
-    if collection_name.lower() in ["blacklist", "whitelist"]:
+    if collection_name.lower() in [
+        "blacklist", "whitelist", "warn", "warnhistory", "ban",
+        "giveaway", "poll", "afk", "voice", "autoresponder"
+    ]:
         doc.pop("guild_id", None)
     with _cache_lock:
         _config_cache[cache_key] = (now, doc.copy())

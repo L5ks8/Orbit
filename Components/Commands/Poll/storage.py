@@ -19,26 +19,29 @@ def load_polls(guild_id: int) -> Dict[str, Dict[str, Any]]:
     try:
         data = get_config("Poll", guild_id)
         if isinstance(data, dict):
-            return data
+            return {str(k): v for k, v in data.items() if str(k) not in ("_id", "guild_id") and isinstance(v, dict)}
     except Exception:
         pass
     if path.exists():
         try:
             with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                raw = json.load(f)
+                if isinstance(raw, dict):
+                    return {str(k): v for k, v in raw.items() if str(k) not in ("_id", "guild_id") and isinstance(v, dict)}
         except Exception:
             pass
     return {}
 
 def save_polls(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
+    clean_data = {str(k): v for k, v in data.items() if str(k) not in ("_id", "guild_id") and isinstance(v, dict)}
     try:
-        set_config("Poll", guild_id, data)
+        set_config("Poll", guild_id, clean_data)
     except Exception:
         pass
     path = _get_file_path(guild_id)
     try:
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
+            json.dump(clean_data, f, indent=4)
     except Exception:
         pass
 
@@ -113,7 +116,7 @@ def get_poll_entry(guild_id: int, poll_id: str) -> Dict[str, Any] | None:
 def get_poll_by_message_id(guild_id: int, message_id: int) -> Dict[str, Any] | None:
     data = load_polls(guild_id)
     for entry in data.values():
-        if entry.get("message_id") == message_id:
+        if isinstance(entry, dict) and entry.get("message_id") == message_id:
             return entry
     return None
 

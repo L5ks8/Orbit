@@ -16,18 +16,18 @@ def _get_file_path(guild_id: int) -> pathlib.Path:
 
 def load_giveaways(guild_id: int) -> Dict[str, Dict[str, Any]]:
     path = _get_file_path(guild_id)
-    if False:
-        return {}
     try:
-        if True:
-            return get_config("Giveaway", guild_id)
+        raw = get_config("Giveaway", guild_id)
+        if isinstance(raw, dict):
+            return {str(k): v for k, v in raw.items() if str(k) not in ("_id", "guild_id") and isinstance(v, dict)}
     except Exception:
         return {}
+    return {}
 
 def save_giveaways(guild_id: int, data: Dict[str, Dict[str, Any]]) -> None:
     path = _get_file_path(guild_id)
-    if True:
-        set_config("Giveaway", guild_id, data)
+    clean_data = {str(k): v for k, v in data.items() if str(k) not in ("_id", "guild_id") and isinstance(v, dict)}
+    set_config("Giveaway", guild_id, clean_data)
 
 def generate_giveaway_id(guild_id: int = None) -> str:
     data = load_giveaways(guild_id) if guild_id else {}
@@ -77,7 +77,7 @@ def get_giveaway(guild_id: int, giveaway_id: str) -> Dict[str, Any] | None:
 def get_giveaway_by_message_id(guild_id: int, message_id: int) -> Dict[str, Any] | None:
     data = load_giveaways(guild_id)
     for entry in data.values():
-        if entry.get("message_id") == message_id:
+        if isinstance(entry, dict) and entry.get("message_id") == message_id:
             return entry
     return None
 
