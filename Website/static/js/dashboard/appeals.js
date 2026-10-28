@@ -61,7 +61,7 @@
     let textChannels = [];
     let cfg = {
       enabled: false,
-      custom_url: 'orbit',
+      custom_url: '',
       channel_id: null,
       mod_roles: [],
       allowed_punishments: ['ban', 'timeout'],
@@ -79,11 +79,11 @@
     let appealsHistory = [];
     let activeTab = 'queue'; // 'queue' | 'history'
 
-    // Fetch Initial Data
+    // Fetch Initial Data (always force fresh config for this server to avoid cross-server bleed)
     try {
       const [guildConfig, appealsCfgRes, recentAppeals, historyRes] = await Promise.all([
         API.getConfig(guildId).catch(() => ({})),
-        API.getAppealsConfig(guildId).catch(() => null),
+        API.getAppealsConfig(guildId, true).catch(() => null),
         API.request(`/api/server/${guildId}/appeals`).catch(() => []),
         API.request(`/api/server/${guildId}/appeals/history`).catch(() => [])
       ]);
@@ -92,11 +92,14 @@
       const allChannels = Array.isArray(guildConfig?.channels) ? guildConfig.channels : [];
       textChannels = allChannels.filter(c => c && (c.type === 0 || c.type === 'text' || !c.type));
 
-      if (appealsCfgRes && appealsCfgRes.config) {
-        cfg = { ...cfg, ...appealsCfgRes.config };
-      } else if (guildConfig?.appeals) {
-        cfg = { ...cfg, ...guildConfig.appeals };
+      const loadedAppeals = (appealsCfgRes && typeof appealsCfgRes === 'object')
+        ? (appealsCfgRes.config || appealsCfgRes)
+        : (guildConfig?.appeals || {});
+
+      if (loadedAppeals && typeof loadedAppeals === 'object') {
+        cfg = { ...cfg, ...loadedAppeals };
       }
+      if (typeof cfg.custom_url !== 'string') cfg.custom_url = '';
       if (!Array.isArray(cfg.custom_questions) || cfg.custom_questions.length === 0) {
         cfg.custom_questions = [
           { id: 'q_why', label: 'Why was the sanction issued?', placeholder: 'Explain what happened...', required: true },
@@ -109,11 +112,23 @@
       console.error('[Appeals] Error loading initial data:', err);
     }
 
+    const origin = (typeof window !== 'undefined' && window.location?.origin) ? window.location.origin : '';
+
+    function computePortalUrl() {
+      const slug = (cfg.custom_url || '').trim();
+      return slug ? `${origin}/appeal/${encodeURIComponent(slug)}` : `${origin}/appeal/${encodeURIComponent(guildId)}`;
+    }
+
     // Save helper
     async function saveAppealsSettings() {
+      // Guard against saving to the wrong guild if user switched servers
+      if (window.__currentDashboardGuildId && String(window.__currentDashboardGuildId) !== String(guildId)) {
+        return;
+      }
+      const cleanSlug = (cfg.custom_url || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
       const payload = {
         enabled: cfg.enabled,
-        custom_url: cfg.custom_url || 'orbit',
+        custom_url: cleanSlug,
         channel_id: cfg.channel_id,
         mod_roles: cfg.mod_roles || [],
         allowed_punishments: cfg.allowed_punishments || ['ban', 'timeout'],
@@ -133,8 +148,7 @@
 
     if (window.AutoSave) AutoSave.register(saveAppealsSettings);
 
-    const origin = (typeof window !== 'undefined' && window.location?.origin) ? window.location.origin : '';
-    const portalUrl = `${origin}/appeal/${encodeURIComponent(cfg.custom_url || 'orbit')}`;
+    const portalUrl = computePortalUrl();
 
     function getSelectedChannelName() {
       const found = textChannels.find(c => String(c.id) === String(cfg.channel_id));
@@ -214,13 +228,14 @@
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
             <div class="flex-1 flex items-center rounded-xl bg-neutral-800 border border-neutral-700 hover:border-neutral-600 focus-within:border-indigo-500/80 transition-colors overflow-hidden">
               <span class="px-3.5 py-2.5 bg-neutral-800/80 border-r border-neutral-700 text-xs text-neutral-400 font-mono select-none">${origin}/appeal/</span>
-              <input type="text" id="inp-custom-url" value="${escapeHtml(cfg.custom_url || '')}" placeholder="orbit" class="flex-1 px-3 py-2 bg-transparent text-white text-xs font-mono focus:outline-none">
+              <input type="text" id="inp-custom-url" value="${escapeHtml(cfg.custom_url || '')}" placeholder="${guildId}" class="flex-1 px-3 py-2 bg-transparent text-white text-xs font-mono focus:outline-none">
             </div>
-            <a href="${portalUrl}" target="_blank" id="btn-open-portal" class="px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-semibold flex items-center justify-center gap-2 border border-neutral-700 transition-colors shrink-0">
+            <a href="${computePortalUrl()}" target="_blank" id="btn-open-portal" class="px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-semibold flex items-center justify-center gap-2 border border-neutral-700 transition-colors shrink-0">
               ${SVGS.externalLink}
               <span>Open Portal</span>
             </a>
           </div>
+          <div id="url-validation-status" class="text-[11px] font-medium min-h-[16px]"></div>
         </div>
 
         <!-- Staff Routing & Review Configuration -->
@@ -1064,17 +1079,57 @@
       }
     });
 
-    // 10. Custom URL Input
+    // 10. Custom URL Input with Live Uniqueness Validation
     const inpCustomUrl = container.querySelector('#inp-custom-url');
+    const urlStatus = container.querySelector('#url-validation-status');
+    let urlCheckDebounce = null;
+
+    function updatePortalButtons() {
+      const pUrl = computePortalUrl();
+      const btnOpen = container.querySelector('#btn-open-portal');
+      const btnPrev = container.querySelector('#btn-preview-portal');
+      if (btnOpen) btnOpen.href = pUrl;
+      if (btnPrev) btnPrev.href = pUrl;
+    }
+
     if (inpCustomUrl) {
       inpCustomUrl.oninput = (e) => {
-        cfg.custom_url = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
-        const newUrl = `${origin}/appeal/${encodeURIComponent(cfg.custom_url || 'orbit')}`;
-        const btnOpen = container.querySelector('#btn-open-portal');
-        const btnPrev = container.querySelector('#btn-preview-portal');
-        if (btnOpen) btnOpen.href = newUrl;
-        if (btnPrev) btnPrev.href = newUrl;
-        if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 700);
+        const raw = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        e.target.value = raw;
+        cfg.custom_url = raw;
+        updatePortalButtons();
+
+        if (urlCheckDebounce) clearTimeout(urlCheckDebounce);
+
+        if (!raw) {
+          if (urlStatus) {
+            urlStatus.innerHTML = `<span class="text-neutral-400">Defaulting to server ID: <code>${guildId}</code></span>`;
+          }
+          if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 700);
+          return;
+        }
+
+        if (urlStatus) {
+          urlStatus.innerHTML = `<span class="text-neutral-400 animate-pulse">Checking availability...</span>`;
+        }
+
+        urlCheckDebounce = setTimeout(async () => {
+          try {
+            const check = await API.checkAppealUrl(guildId, raw);
+            if (check && check.available) {
+              if (urlStatus) {
+                urlStatus.innerHTML = `<span class="text-emerald-400 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"></path></svg> <b>/appeal/${escapeHtml(raw)}</b> is available for your server!</span>`;
+              }
+              if (window.AutoSave) AutoSave.trigger(saveAppealsSettings, 400);
+            } else {
+              if (urlStatus) {
+                urlStatus.innerHTML = `<span class="text-rose-400 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg> <b>/appeal/${escapeHtml(raw)}</b> is already taken by another server. Please choose a different URL.</span>`;
+              }
+            }
+          } catch (err) {
+            console.warn('[Appeals] URL check error:', err);
+          }
+        }, 350);
       };
     }
 
@@ -1082,7 +1137,7 @@
     const btnCopy = container.querySelector('#btn-copy-portal-link');
     if (btnCopy) {
       btnCopy.onclick = () => {
-        const urlToCopy = `${origin}/appeal/${encodeURIComponent(cfg.custom_url || 'orbit')}`;
+        const urlToCopy = computePortalUrl();
         navigator.clipboard.writeText(urlToCopy).then(() => {
           const copyTxt = container.querySelector('#copy-text');
           if (copyTxt) copyTxt.textContent = 'Copied!';

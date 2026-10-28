@@ -1,5 +1,36 @@
+import re
 from typing import Dict, Any, List
 from Components.Database.mongodb import get_db
+
+RESERVED_SLUGS = {
+    "api", "dashboard", "appeal", "appeals", "docs", "login", "logout",
+    "admin", "settings", "leaderboard", "invite", "bot", "static", "orbit"
+}
+
+def is_custom_url_available(custom_url: str, guild_id: int) -> bool:
+    if not custom_url:
+        return True
+    db = get_db()
+    if db is None:
+        return True
+    clean_url = str(custom_url).strip().lower()
+    clean_url = re.sub(r"[^a-z0-9_-]", "", clean_url)
+    if not clean_url or clean_url in RESERVED_SLUGS:
+        return False
+
+    gid_str = str(guild_id)
+    gid_num = int(guild_id) if gid_str.isdigit() else None
+    id_list = [gid_str]
+    if gid_num is not None:
+        id_list.append(gid_num)
+
+    query = {
+        "custom_url": {"$regex": f"^{re.escape(clean_url)}$", "$options": "i"},
+        "_id": {"$nin": id_list},
+        "guild_id": {"$nin": [str(gid_str)]}
+    }
+    existing = db["Appeals"].find_one(query)
+    return existing is None
 
 def load_appeals_config(guild_id: int) -> Dict[str, Any]:
     default_cfg = {
@@ -33,6 +64,20 @@ def load_appeals_config(guild_id: int) -> Dict[str, Any]:
 
     doc.pop("_id", None)
     merged = {**default_cfg, **doc}
+
+    # Auto-clean legacy or duplicate custom_url to prevent cross-server bleed
+    cur_url = str(merged.get("custom_url") or "").strip().lower()
+    if cur_url:
+        if cur_url in RESERVED_SLUGS or not is_custom_url_available(cur_url, guild_id):
+            merged["custom_url"] = ""
+            try:
+                db["Appeals"].update_one(
+                    {"$or": [{"_id": gid_str}, {"_id": int(gid_str)} if gid_str.isdigit() else {"_id": gid_str}]},
+                    {"$set": {"custom_url": ""}}
+                )
+            except Exception:
+                pass
+
     return merged
 
 def save_appeals_config(guild_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -41,8 +86,28 @@ def save_appeals_config(guild_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
         clean = dict(data)
         clean.pop("_id", None)
         clean["guild_id"] = str(guild_id)
+
+        # Enforce unique custom_url
+        raw_url = str(clean.get("custom_url") or "").strip().lower()
+        if raw_url:
+            clean_url = re.sub(r"[^a-z0-9_-]", "", raw_url)
+            if not is_custom_url_available(clean_url, guild_id):
+                existing = load_appeals_config(guild_id)
+                clean["custom_url"] = existing.get("custom_url", "")
+            else:
+                clean["custom_url"] = clean_url
+        else:
+            clean["custom_url"] = ""
+
+        gid_str = str(guild_id)
+        filter_q = {"$or": [{"_id": gid_str}]}
+        if gid_str.isdigit():
+            filter_q["$or"].append({"_id": int(gid_str)})
+
+        existing = db["Appeals"].find_one(filter_q)
+        target_id = existing["_id"] if existing else gid_str
         db["Appeals"].update_one(
-            {"_id": str(guild_id)},
+            {"_id": target_id},
             {"$set": clean},
             upsert=True
         )
@@ -52,9 +117,20 @@ def get_appeals_config_by_url(custom_url: str) -> Dict[str, Any]:
     db = get_db()
     if db is None or not custom_url:
         return None
-    url_clean = str(custom_url).strip()
+    url_clean = str(custom_url).strip().lower()
+
+    # Match by vanity slug (case-insensitive) OR direct guild_id
+    query_or = [
+        {"custom_url": {"$regex": f"^{re.escape(url_clean)}$", "$options": "i"}},
+        {"_id": url_clean},
+        {"guild_id": url_clean}
+    ]
+    if url_clean.isdigit():
+        query_or.append({"_id": int(url_clean)})
+        query_or.append({"guild_id": int(url_clean)})
+
     return db["Appeals"].find_one({
-        "custom_url": {"$regex": f"^{url_clean}$", "$options": "i"},
+        "$or": query_or,
         "enabled": True
     })
 

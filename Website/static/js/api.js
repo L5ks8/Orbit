@@ -703,6 +703,10 @@ const API = {
     return await this.cachedRequest(`appeals_cfg_${guildId}`, () => this.request(`/api/server/${guildId}/appeals/config`), force, 30000);
   },
 
+  async checkAppealUrl(guildId, url) {
+    return await this.request(`/api/server/${guildId}/appeals/check_url?url=${encodeURIComponent(url || '')}`);
+  },
+
   async saveAppealsConfig(guildId, payload, silent = false) {
     const doSave = async () => {
       const res = await this.request(`/api/server/${guildId}/appeals/config`, {
@@ -710,6 +714,7 @@ const API = {
         body: payload
       });
       this.invalidateCache(`appeals_cfg_${guildId}`);
+      this.invalidateCache(`config_${guildId}`);
       return res;
     };
     if (silent) return await doSave();

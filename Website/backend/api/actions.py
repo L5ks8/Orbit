@@ -1401,9 +1401,29 @@ class ActionsMixin:
             cfg = load_appeals_config(guild_id)
             if "_id" in cfg:
                 cfg["_id"] = str(cfg["_id"])
-            return web.json_response(cfg)
+            return web.json_response({"success": True, "config": cfg})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
+    async def api_check_appeal_url(self, request: web.Request):
+        guild_id_str = request.match_info.get("id")
+        if not guild_id_str or not guild_id_str.isdigit():
+            return web.json_response({"error": "Invalid guild ID"}, status=400)
+        guild_id = int(guild_id_str)
+
+        custom_url = request.query.get("url", "").strip().lower()
+        import re
+        clean_url = re.sub(r"[^a-z0-9_-]", "", custom_url)
+        if not clean_url:
+            return web.json_response({"available": True, "url": "", "is_default": True})
+
+        from Components.Systems.BanAppeals._storage import is_custom_url_available
+        available = is_custom_url_available(clean_url, guild_id)
+        return web.json_response({
+            "available": available,
+            "url": clean_url,
+            "message": "URL is available" if available else "This URL is already taken by another server."
+        })
 
     async def api_save_appeals_config(self, request: web.Request):
         gid_inv = request.match_info.get("id")
@@ -1416,6 +1436,20 @@ class ActionsMixin:
             
         try:
             data = await request.json()
+            custom_url = str(data.get("custom_url", "")).strip().lower()
+            if custom_url:
+                import re
+                clean_url = re.sub(r"[^a-z0-9_-]", "", custom_url)
+                from Components.Systems.BanAppeals._storage import is_custom_url_available
+                if not is_custom_url_available(clean_url, guild_id):
+                    return web.json_response({
+                        "error": f"The URL '/appeal/{clean_url}' is already taken by another server. Please choose a different URL.",
+                        "code": "URL_TAKEN"
+                    }, status=409)
+                data["custom_url"] = clean_url
+            else:
+                data["custom_url"] = ""
+
             from Components.Systems.BanAppeals._storage import save_appeals_config, load_appeals_config
             saved = save_appeals_config(guild_id, data)
             if not saved or not isinstance(saved, dict):
@@ -1423,6 +1457,8 @@ class ActionsMixin:
             if isinstance(saved, dict) and "_id" in saved:
                 saved["_id"] = str(saved["_id"])
             return web.json_response({"success": True, "config": saved or {}})
+        except web.HTTPException:
+            raise
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
 
@@ -2062,7 +2098,8 @@ class ActionsMixin:
         if not cfg:
             return web.json_response({"error": "Not found"}, status=404)
         
-        guild = self.bot.get_guild(int(cfg["_id"]))
+        target_gid = cfg.get("guild_id") or cfg.get("_id")
+        guild = self.bot.get_guild(int(target_gid)) if target_gid and str(target_gid).isdigit() else None
         if not guild:
             return web.json_response({"error": "Server not found"}, status=404)
 
@@ -2113,7 +2150,8 @@ class ActionsMixin:
                 full_reason = reason or "No details provided."
             
             from Components.Systems.BanAppeals.appeals import process_new_appeal
-            success, msg = await process_new_appeal(self.bot, int(cfg["_id"]), int(session["id"]), full_reason, cfg)
+            target_gid = cfg.get("guild_id") or cfg.get("_id")
+            success, msg = await process_new_appeal(self.bot, int(target_gid), int(session["id"]), full_reason, cfg)
             
             if success:
                 return web.json_response({"success": True})
