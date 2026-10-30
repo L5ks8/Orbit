@@ -51,18 +51,374 @@ DashboardTabs.Builder = async function(container, guildId) {
     return text;
   }
 
-  function formatMarkdown(text) {
+  function formatInlineMarkdown(text) {
     if (!text) return '';
-    text = sanitizeMessageContent(text);
     let html = escapeHtml(text);
-    html = html.replace(/^### (.*$)/gim, '<h4 class="text-white font-semibold text-sm mt-3 mb-1">$1</h4>');
-    html = html.replace(/^## (.*$)/gim, '<h3 class="text-white font-bold text-base mt-4 mb-2 pb-1 border-b border-white/10">$1</h3>');
-    html = html.replace(/^# (.*$)/gim, '<h2 class="text-white font-bold text-lg mt-4 mb-2 pb-1 border-b border-white/10">$1</h2>');
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
     html = html.replace(/\*([^*]+)\*/g, '<em class="text-neutral-200">$1</em>');
     html = html.replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-white/[0.08] text-cyan-300 font-mono text-[12.5px]">$1</code>');
-    html = html.replace(/\n/g, '<br>');
     return html;
+  }
+
+  function formatMarkdown(text) {
+    if (!text) return '';
+    text = sanitizeMessageContent(text);
+    
+    // Remove embedded ```widget or ```json blocks from message text
+    text = text.replace(/```(?:widget|json)?\s*\{[\s\S]*?"type"\s*:\s*"(?:activity_chart|bar_chart|circular_stats|circle_percentages|donut_chart)"[\s\S]*?\}\s*```/gi, '').trim();
+
+    const normalized = text.replace(/\r\n/g, '\n').trim();
+    if (!normalized) return '';
+
+    // Split into distinct paragraphs on double newlines
+    const blocks = normalized.split(/\n{2,}/);
+
+    const rendered = blocks.map(block => {
+      block = block.trim();
+      if (!block) return '';
+
+      // Headings
+      if (/^###\s+(.*$)/m.test(block)) {
+        return block.replace(/^###\s+(.*$)/gm, '<h4 class="text-white font-semibold text-sm mt-3 mb-1.5">$1</h4>');
+      }
+      if (/^##\s+(.*$)/m.test(block)) {
+        return block.replace(/^##\s+(.*$)/gm, '<h3 class="text-white font-bold text-base mt-4 mb-2 pb-1 border-b border-white/10">$1</h3>');
+      }
+      if (/^#\s+(.*$)/m.test(block)) {
+        return block.replace(/^#\s+(.*$)/gm, '<h2 class="text-white font-bold text-lg mt-4 mb-2 pb-1 border-b border-white/10">$1</h2>');
+      }
+
+      // Bullet lists (- or * or •)
+      if (/^[\*\-•]\s+/m.test(block)) {
+        const lines = block.split('\n');
+        const items = lines.map(line => {
+          const m = line.match(/^[\*\-•]\s+(.*)$/);
+          if (m) {
+            return `<li class="flex items-start gap-2.5 text-neutral-200 text-[14.5px] leading-relaxed my-1"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 flex-shrink-0 shadow-[0_0_6px_rgba(34,211,238,0.5)]"></span><span>${formatInlineMarkdown(m[1])}</span></li>`;
+          }
+          return `<div class="text-neutral-300 text-[14px] ml-4">${formatInlineMarkdown(line)}</div>`;
+        }).join('');
+        return `<ul class="my-2 space-y-1">${items}</ul>`;
+      }
+
+      // Numbered lists (1. 2. etc.)
+      if (/^\d+\.\s+/m.test(block)) {
+        const lines = block.split('\n');
+        const items = lines.map(line => {
+          const m = line.match(/^(\d+)\.\s+(.*)$/);
+          if (m) {
+            return `<li class="flex items-start gap-2.5 text-neutral-200 text-[14.5px] leading-relaxed my-1"><span class="text-[11px] font-mono font-bold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-1.5 py-0.5 rounded mt-0.5 flex-shrink-0">${m[1]}</span><span>${formatInlineMarkdown(m[2])}</span></li>`;
+          }
+          return `<div class="text-neutral-300 text-[14px] ml-6">${formatInlineMarkdown(line)}</div>`;
+        }).join('');
+        return `<ol class="my-2 space-y-1">${items}</ol>`;
+      }
+
+      // Regular Paragraph with generous leading and bottom spacing
+      const inlineFormatted = block.split('\n').map(l => formatInlineMarkdown(l)).join('<br>');
+      return `<p class="text-[14.5px] text-neutral-200 leading-relaxed mb-3 last:mb-0">${inlineFormatted}</p>`;
+    });
+
+    return rendered.filter(Boolean).join('');
+  }
+
+  function formatNumber(n) {
+    if (n === null || n === undefined) return '0';
+    return Number(n).toLocaleString('en-US');
+  }
+
+  function extractWidgetsFromContent(text) {
+    if (!text || typeof text !== 'string') return { cleanContent: text, widgets: [] };
+    const m = text.match(/```(?:widget|json)?\s*(\{[\s\S]*?"type"\s*:\s*"(?:activity_chart|bar_chart|circular_stats|circle_percentages|donut_chart)"[\s\S]*?\})\s*```/i);
+    if (m) {
+      try {
+        const parsed = JSON.parse(m[1]);
+        const clean = text.replace(m[0], '').trim();
+        return { cleanContent: clean, widgets: [parsed] };
+      } catch (_) {}
+    }
+    return { cleanContent: text, widgets: [] };
+  }
+
+  function renderBarsHtml(bars, maxY) {
+    if (!Array.isArray(bars) || bars.length === 0) return '';
+    const safeMax = Math.max(1, maxY || Math.max(...bars.map(b => Number(b.value) || 0)) || 1);
+
+    return bars.map(b => {
+      const val = Number(b.value) || 0;
+      const pct = Math.max(4, Math.min(100, Math.round((val / safeMax) * 100)));
+      return `
+        <div class="relative group/bar flex-1 flex flex-col justify-end items-center h-full min-w-[3px] sm:min-w-[6px] max-w-[22px] cursor-pointer" data-bar-date="${escapeHtml(b.date)}" data-bar-val="${val}">
+          <div class="w-full rounded-t-[3px] transition-all duration-300 ease-out group-hover/bar:brightness-125 group-hover/bar:scale-y-[1.03] origin-bottom shadow-[0_0_8px_rgba(34,211,238,0.35)]"
+               style="height: ${pct}%; background: linear-gradient(180deg, #22d3ee 0%, #06b6d4 45%, #0891b2 85%, rgba(8,145,178,0.7) 100%);">
+          </div>
+          <!-- Tooltip -->
+          <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/bar:flex flex-col items-center z-30 pointer-events-none">
+            <div class="bg-neutral-900 border border-neutral-700/80 px-2.5 py-1 rounded-lg shadow-xl text-center whitespace-nowrap">
+              <span class="text-[11px] font-bold text-cyan-300 tabular-nums">${formatNumber(val)} msgs</span>
+              <div class="text-[9.5px] text-neutral-400 font-medium">${escapeHtml(b.date)}</div>
+            </div>
+            <div class="w-1.5 h-1.5 bg-neutral-900 border-r border-b border-neutral-700/80 rotate-45 -mt-1"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderWidgetHtml(widget, msgId, wIdx, msgContent) {
+    if (!widget || typeof widget !== 'object') return '';
+    const widgetKey = `w_${msgId}_${wIdx}`;
+    window.__orbitWidgets = window.__orbitWidgets || {};
+    window.__orbitWidgets[widgetKey] = widget;
+
+    const wType = String(widget.type || '').toLowerCase();
+
+    // 1. Activity Bar Chart Widget (1:1 with Screenshot)
+    if (wType === 'activity_chart' || wType === 'bar_chart') {
+      const activeRange = widget.active_range || '30d';
+      const ranges = widget.ranges || {};
+      const currentRangeData = ranges[activeRange] || {
+        total: widget.current_stat || '151,138',
+        label: widget.current_label || 'messages · last 30 days',
+        max_y: 8000,
+        y_ticks: ['8K', '6K', '4K', '2K', '0'],
+        x_labels: ['Jun 30', 'Jul 2', 'Jul 4', 'Jul 6', 'Jul 7'],
+        bars: []
+      };
+
+      const yTicks = currentRangeData.y_ticks || ['8K', '6K', '4K', '2K', '0'];
+      const xLabels = currentRangeData.x_labels || ['Jun 30', 'Jul 2', 'Jul 4', 'Jul 6', 'Jul 7'];
+      const bars = Array.isArray(currentRangeData.bars) ? currentRangeData.bars : [];
+
+      return `
+        <div class="rounded-2xl border border-white/[0.08] bg-neutral-950/85 p-4 sm:p-5 shadow-2xl relative overflow-hidden backdrop-blur-md mt-2">
+          <!-- Ambient gradient behind chart -->
+          <div class="absolute -top-16 -right-16 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <!-- Header Row -->
+          <div class="flex items-center justify-between mb-4 relative z-10">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-cyan-400">
+                  <line x1="18" x2="18" y1="20" y2="10"></line>
+                  <line x1="12" x2="12" y1="20" y2="4"></line>
+                  <line x1="6" x2="6" y1="20" y2="14"></line>
+                </svg>
+              </div>
+              <span class="text-[13.5px] font-semibold text-neutral-200 tracking-tight">${escapeHtml(widget.title || 'Read analytics · Activity')}</span>
+            </div>
+
+            <!-- Audio TTS Play Button -->
+            <button type="button" data-play-speech="${escapeHtml(msgId)}" data-speech-text="${escapeHtml(msgContent || '')}" class="w-7 h-7 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] flex items-center justify-center text-neutral-400 hover:text-white transition-all cursor-pointer group active:scale-95" title="Vorlesen / Read analytics aloud">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 ml-0.5 text-neutral-300 group-hover:text-white transition-colors">
+                <polygon points="6 3 20 12 6 21 6 3"></polygon>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Metric & Segmented Range Filter Row -->
+          <div class="flex items-baseline justify-between mb-4 relative z-10">
+            <div>
+              <div id="chart-stat-${widgetKey}" class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight tabular-nums">${escapeHtml(currentRangeData.total)}</div>
+              <div id="chart-label-${widgetKey}" class="text-[11.5px] text-neutral-500 font-normal mt-0.5">${escapeHtml(currentRangeData.label)}</div>
+            </div>
+
+            <!-- Range Filter Pills -->
+            <div data-widget-ranges class="inline-flex items-center p-0.5 rounded-lg bg-neutral-900/90 border border-white/[0.08]">
+              <button type="button" data-widget-range-btn="true" data-widget-key="${widgetKey}" data-range="7d" class="px-2.5 py-1 rounded-md text-xs font-semibold ${activeRange === '7d' ? 'bg-cyan-950/70 text-cyan-300 border border-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.25)]' : 'text-neutral-400 hover:text-neutral-200'} transition-all cursor-pointer">7d</button>
+              <button type="button" data-widget-range-btn="true" data-widget-key="${widgetKey}" data-range="30d" class="px-2.5 py-1 rounded-md text-xs font-semibold ${activeRange === '30d' ? 'bg-cyan-950/70 text-cyan-300 border border-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.25)]' : 'text-neutral-400 hover:text-neutral-200'} transition-all cursor-pointer">30d</button>
+              <button type="button" data-widget-range-btn="true" data-widget-key="${widgetKey}" data-range="90d" class="px-2.5 py-1 rounded-md text-xs font-semibold ${activeRange === '90d' ? 'bg-cyan-950/70 text-cyan-300 border border-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.25)]' : 'text-neutral-400 hover:text-neutral-200'} transition-all cursor-pointer">90d</button>
+            </div>
+          </div>
+
+          <!-- Bar Chart Area -->
+          <div class="relative pt-2 pb-1 select-none">
+            <div class="flex items-end h-[145px]">
+              <!-- Y-Axis Ticks -->
+              <div id="chart-yticks-${widgetKey}" class="flex flex-col justify-between text-[11px] font-mono text-neutral-500 pr-2 select-none h-full py-0.5 text-right w-8 flex-shrink-0">
+                ${yTicks.map(t => `<span>${escapeHtml(t)}</span>`).join('')}
+              </div>
+
+              <!-- Bars Container with Grid Lines -->
+              <div class="relative flex-1 h-full border-b border-white/[0.08]">
+                <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-40">
+                  <div class="border-b border-white/[0.04] w-full"></div>
+                  <div class="border-b border-white/[0.04] w-full"></div>
+                  <div class="border-b border-white/[0.04] w-full"></div>
+                  <div class="border-b border-white/[0.04] w-full"></div>
+                </div>
+
+                <div id="chart-bars-${widgetKey}" class="relative h-full flex items-end justify-between gap-[2px] sm:gap-1 px-1 z-10">
+                  ${renderBarsHtml(bars, currentRangeData.max_y)}
+                </div>
+              </div>
+            </div>
+
+            <!-- X-Axis Date Labels -->
+            <div id="chart-xlabels-${widgetKey}" class="flex justify-between items-center text-[10.5px] font-medium text-neutral-400 pt-2 pl-9 pr-1 select-none">
+              ${xLabels.map(l => `<span>${escapeHtml(l)}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. Circular Stats Widget ("Kreise mit Prozenten")
+    if (wType === 'circular_stats' || wType === 'circle_percentages') {
+      const items = Array.isArray(widget.items) ? widget.items : [];
+      return `
+        <div class="rounded-2xl border border-white/[0.08] bg-neutral-950/85 p-4 sm:p-5 shadow-2xl relative overflow-hidden backdrop-blur-md mt-2">
+          <!-- Ambient Glow -->
+          <div class="absolute -top-16 -left-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <!-- Header Row -->
+          <div class="flex items-center justify-between mb-4 relative z-10">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-lg bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-emerald-400">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </div>
+              <span class="text-[13.5px] font-semibold text-neutral-200 tracking-tight">${escapeHtml(widget.title || 'Community Health & Distribution')}</span>
+            </div>
+            <span class="text-[11px] font-medium text-neutral-500">Real-time Metrics</span>
+          </div>
+
+          <!-- Circular Percentage Items Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
+            ${items.map(item => {
+              const pct = Math.min(100, Math.max(0, Number(item.percentage) || 0));
+              const color = item.color || '#22d3ee';
+              const circumference = 100.53;
+              const dashoffset = (circumference - (pct / 100) * circumference).toFixed(2);
+              return `
+                <div class="flex items-center gap-3.5 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] transition-colors">
+                  <!-- Circular SVG Ring -->
+                  <div class="relative w-12 h-12 sm:w-13 sm:h-13 flex-shrink-0 flex items-center justify-center">
+                    <svg viewBox="0 0 40 40" class="w-full h-full -rotate-90">
+                      <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-width="3.5" class="text-neutral-800/80"></circle>
+                      <circle data-circle-ring="${dashoffset}" cx="20" cy="20" r="16" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}" style="transition: stroke-dashoffset 800ms cubic-bezier(0.22, 1, 0.36, 1); filter: drop-shadow(0 0 4px ${color});"></circle>
+                    </svg>
+                    <span class="absolute inset-0 flex items-center justify-center text-[12.5px] font-bold text-white tabular-nums">${pct}%</span>
+                  </div>
+
+                  <!-- Details -->
+                  <div class="min-w-0 flex-1">
+                    <div class="text-[13px] font-semibold text-white truncate leading-tight">${escapeHtml(item.label)}</div>
+                    <div class="text-[12px] font-medium text-neutral-300 mt-0.5 tabular-nums">${escapeHtml(item.value)}</div>
+                    ${item.subtext ? `<div class="text-[10.5px] text-neutral-500 mt-0.5 truncate">${escapeHtml(item.subtext)}</div>` : ''}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. Donut Breakdown Widget
+    if (wType === 'donut_chart') {
+      const items = Array.isArray(widget.items) ? widget.items : [];
+      let accumulated = 0;
+      const circumference = 100.53;
+      return `
+        <div class="rounded-2xl border border-white/[0.08] bg-neutral-950/85 p-4 sm:p-5 shadow-2xl relative overflow-hidden backdrop-blur-md mt-2">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-7 h-7 rounded-lg bg-indigo-950/60 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-indigo-400">
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+              </svg>
+            </div>
+            <span class="text-[13.5px] font-semibold text-neutral-200 tracking-tight">${escapeHtml(widget.title || 'Channel Activity Breakdown')}</span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-5">
+            <div class="relative w-28 h-28 flex-shrink-0 flex items-center justify-center">
+              <svg viewBox="0 0 40 40" class="w-full h-full -rotate-90">
+                <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-width="4.5" class="text-neutral-800"></circle>
+                ${items.map(item => {
+                  const pct = Math.min(100, Math.max(0, Number(item.percentage) || 0));
+                  const strokeLen = (pct / 100) * circumference;
+                  const offset = -(accumulated / 100) * circumference;
+                  accumulated += pct;
+                  return `
+                    <circle cx="20" cy="20" r="16" fill="none" stroke="${item.color || '#22d3ee'}" stroke-width="4.5" stroke-dasharray="${strokeLen} ${circumference - strokeLen}" stroke-dashoffset="${offset}" class="transition-all duration-700"></circle>
+                  `;
+                }).join('')}
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span class="text-xs font-bold text-white tabular-nums">${escapeHtml(widget.total_label || '100%')}</span>
+                <span class="text-[9px] text-neutral-500 uppercase tracking-widest font-semibold">Total</span>
+              </div>
+            </div>
+
+            <div class="flex-1 w-full space-y-2">
+              ${items.map(item => `
+                <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${item.color || '#22d3ee'};"></span>
+                    <span class="text-neutral-200 font-medium truncate">${escapeHtml(item.label)}</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-neutral-400 tabular-nums">${escapeHtml(item.value || '')}</span>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 tabular-nums">${item.percentage}%</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    return '';
+  }
+
+  function handlePlaySpeech(msgId, text) {
+    if (!('speechSynthesis' in window)) return;
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      document.querySelectorAll('[data-play-speech]').forEach(btn => {
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 ml-0.5 text-neutral-300 group-hover:text-white transition-colors"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>`;
+        btn.classList.remove('ring-2', 'ring-cyan-400', 'bg-cyan-950/50');
+      });
+      if (window.__orbitCurrentSpeakingMsgId === msgId) {
+        window.__orbitCurrentSpeakingMsgId = null;
+        return;
+      }
+    }
+
+    window.__orbitCurrentSpeakingMsgId = msgId;
+    const btn = document.querySelector(`[data-play-speech="${msgId}"]`);
+    if (btn) {
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-cyan-300 animate-pulse"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+      btn.classList.add('ring-2', 'ring-cyan-400', 'bg-cyan-950/50');
+    }
+
+    const clean = String(text || '').replace(/<[^>]+>/g, '').replace(/[\*#_`]/g, '').trim();
+    const utterance = new SpeechSynthesisUtterance(clean);
+    if (/[äöüß]|der|die|das|und|ist|nicht/i.test(clean)) {
+      utterance.lang = 'de-DE';
+    } else {
+      utterance.lang = 'en-US';
+    }
+    utterance.onend = () => {
+      window.__orbitCurrentSpeakingMsgId = null;
+      if (btn) {
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 ml-0.5 text-neutral-300 group-hover:text-white transition-colors"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>`;
+        btn.classList.remove('ring-2', 'ring-cyan-400', 'bg-cyan-950/50');
+      }
+    };
+    utterance.onerror = () => {
+      window.__orbitCurrentSpeakingMsgId = null;
+      if (btn) {
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 ml-0.5 text-neutral-300 group-hover:text-white transition-colors"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>`;
+        btn.classList.remove('ring-2', 'ring-cyan-400', 'bg-cyan-950/50');
+      }
+    };
+    window.speechSynthesis.speak(utterance);
   }
 
   function getGreeting(name) {
@@ -925,6 +1281,9 @@ DashboardTabs.Builder = async function(container, guildId) {
                 <div class="mt-2 text-center text-[11px] text-neutral-500">You are chatting with Peak, an AI assistant. AI can make mistakes – review changes before applying them.</div>
 
                 <div class="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-[680px]">
+                  <button type="button" data-prompt-chip="Erstelle mir eine Server-Aktivitätsanalyse mit Paragraphen, Aktivitäts-Balkendiagramm und Kreisen mit Prozenten wie im Screenshot." class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 hover:text-white transition-all cursor-pointer active:scale-95">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-1.5 shadow-[0_0_6px_rgba(34,211,238,0.6)]"></span>Activity Chart &amp; Percentages
+                  </button>
                   <button type="button" data-prompt-chip="Analyze my server overview and activity analytics, and tell me what needs improvement." class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-all cursor-pointer active:scale-95">
                     Analyze Server &amp; Analytics
                   </button>
@@ -981,6 +1340,17 @@ DashboardTabs.Builder = async function(container, guildId) {
             }
 
             const msgActions = Array.isArray(msg.actions) ? msg.actions : [];
+            let msgWidgets = Array.isArray(msg.widgets) ? msg.widgets : [];
+            let displayContent = msg.content || '';
+
+            if (msgWidgets.length === 0 && typeof displayContent === 'string') {
+              const extracted = extractWidgetsFromContent(displayContent);
+              if (extracted.widgets && extracted.widgets.length > 0) {
+                msgWidgets = extracted.widgets;
+                displayContent = extracted.cleanContent;
+              }
+            }
+
             return `
               <div class="flex items-start gap-3">
                 <div class="w-8 h-8 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/[0.08] mt-0.5">
@@ -988,8 +1358,13 @@ DashboardTabs.Builder = async function(container, guildId) {
                 </div>
                 <div class="flex-1 min-w-0 space-y-3">
                   <div class="rounded-2xl rounded-tl-md bg-neutral-950/60 border border-white/[0.06] px-4 py-3 text-[14.5px] text-neutral-200 leading-relaxed">
-                    ${formatMarkdown(msg.content)}
+                    ${formatMarkdown(displayContent)}
                   </div>
+                  ${msgWidgets.length > 0 ? `
+                    <div class="space-y-3 pt-1">
+                      ${msgWidgets.map((w, wIdx) => renderWidgetHtml(w, msg.id, wIdx, displayContent)).join('')}
+                    </div>
+                  ` : ''}
                   ${msgActions.length > 0 ? `
                     <div class="space-y-2">
                       ${msgActions.map(act => {
@@ -1998,6 +2373,65 @@ DashboardTabs.Builder = async function(container, guildId) {
         }
       });
     }
+
+    // Widget Interactive Range Switchers (7d, 30d, 90d)
+    container.querySelectorAll('[data-widget-range-btn]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const widgetKey = btn.getAttribute('data-widget-key');
+        const rangeKey = btn.getAttribute('data-range');
+        const widget = window.__orbitWidgets?.[widgetKey];
+        if (!widget || !widget.ranges || !widget.ranges[rangeKey]) return;
+
+        const parent = btn.closest('[data-widget-ranges]');
+        if (parent) {
+          parent.querySelectorAll('button').forEach(b => {
+            b.className = 'px-2.5 py-1 rounded-md text-xs font-semibold text-neutral-400 hover:text-neutral-200 transition-all cursor-pointer';
+          });
+          btn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold bg-cyan-950/70 text-cyan-300 border border-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.25)] transition-all cursor-pointer';
+        }
+
+        const rData = widget.ranges[rangeKey];
+        const statEl = document.getElementById(`chart-stat-${widgetKey}`);
+        const labelEl = document.getElementById(`chart-label-${widgetKey}`);
+        if (statEl) statEl.textContent = rData.total;
+        if (labelEl) labelEl.textContent = rData.label;
+
+        const barsWrapper = document.getElementById(`chart-bars-${widgetKey}`);
+        if (barsWrapper && Array.isArray(rData.bars)) {
+          barsWrapper.innerHTML = renderBarsHtml(rData.bars, rData.max_y);
+        }
+
+        const xWrapper = document.getElementById(`chart-xlabels-${widgetKey}`);
+        if (xWrapper && Array.isArray(rData.x_labels)) {
+          xWrapper.innerHTML = rData.x_labels.map(l => `<span>${escapeHtml(l)}</span>`).join('');
+        }
+
+        const yWrapper = document.getElementById(`chart-yticks-${widgetKey}`);
+        if (yWrapper && Array.isArray(rData.y_ticks)) {
+          yWrapper.innerHTML = rData.y_ticks.map(t => `<span>${escapeHtml(t)}</span>`).join('');
+        }
+
+        widget.active_range = rangeKey;
+      });
+    });
+
+    // Widget Audio Play Speech (SpeechSynthesis TTS)
+    container.querySelectorAll('[data-play-speech]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const msgId = btn.getAttribute('data-play-speech');
+        const text = btn.getAttribute('data-speech-text') || '';
+        handlePlaySpeech(msgId, text);
+      });
+    });
+
+    // Circular Rings Animation Trigger
+    requestAnimationFrame(() => {
+      container.querySelectorAll('circle[data-circle-ring]').forEach(c => {
+        c.style.strokeDashoffset = c.getAttribute('data-circle-ring');
+      });
+    });
   }
 
   if (window.__aiHelperOutsideClick) {
