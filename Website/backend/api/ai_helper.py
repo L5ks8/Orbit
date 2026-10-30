@@ -1171,6 +1171,22 @@ ALWAYS use real IDs from the server context above!"""
                         f"Activity has been consistently strong across the month, with several spikes in engagement. Your community is maintaining healthy daily participation and steady growth."
                     )
 
+        # Ensure all activity_chart and circular_stats widgets have complete data (bars, ranges, items)
+        for w in raw_widgets:
+            if isinstance(w, dict) and w.get("type") in ("activity_chart", "bar_chart"):
+                ranges = w.get("ranges")
+                if not isinstance(ranges, dict) or not ranges.get("30d", {}).get("bars"):
+                    def_act = self._build_default_analytics_widgets(guild, user_message)[0]
+                    w["ranges"] = def_act["ranges"]
+                    w.setdefault("current_stat", def_act["current_stat"])
+                    w.setdefault("current_label", def_act["current_label"])
+                    w.setdefault("active_range", "30d")
+            elif isinstance(w, dict) and w.get("type") in ("circular_stats", "circle_percentages"):
+                items = w.get("items")
+                if not isinstance(items, list) or len(items) == 0:
+                    def_circ = self._build_default_analytics_widgets(guild, user_message)[1]
+                    w["items"] = def_circ["items"]
+
         # Sanitize and assign IDs to actions
         clean_actions = []
         allowed_types = {
