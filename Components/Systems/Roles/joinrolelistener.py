@@ -437,6 +437,16 @@ class JoinRoleListener(commands.Cog):
     async def before_role_automations_loop(self):
         await self.bot.wait_until_ready()
 
+    @role_automations_loop.error
+    async def role_automations_loop_error(self, error):
+        print(f"[JoinRole] Internal error in role_automations_loop: {error}")
+        await asyncio.sleep(5)
+        if not self.role_automations_loop.is_running():
+            try:
+                self.role_automations_loop.restart()
+            except Exception:
+                pass
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(JoinRoleListener(bot))

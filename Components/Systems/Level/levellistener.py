@@ -375,6 +375,16 @@ class LevelListenerCog(commands.Cog):
     async def before_voice_xp_loop(self):
         await self.bot.wait_until_ready()
 
+    @voice_xp_loop.error
+    async def voice_xp_loop_error(self, error):
+        print(f"[Level] Internal error in voice_xp_loop: {error}")
+        await asyncio.sleep(5)
+        if not self.voice_xp_loop.is_running():
+            try:
+                self.voice_xp_loop.restart()
+            except Exception:
+                pass
+
     # ─── Reset on Leave / Ban ─────────────────────────────────────────────────
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
@@ -488,6 +498,16 @@ class LevelListenerCog(commands.Cog):
     @leaderboard_loop.before_loop
     async def before_leaderboard_loop(self):
         await self.bot.wait_until_ready()
+
+    @leaderboard_loop.error
+    async def leaderboard_loop_error(self, error):
+        print(f"[Level] Internal error in leaderboard_loop: {error}")
+        await asyncio.sleep(5)
+        if not self.leaderboard_loop.is_running():
+            try:
+                self.leaderboard_loop.restart()
+            except Exception:
+                pass
 
 
 async def setup(bot: commands.Bot):

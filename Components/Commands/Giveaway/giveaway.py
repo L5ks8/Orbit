@@ -462,6 +462,16 @@ class GiveawayCommand(commands.Cog):
     async def before_giveaway_check(self):
         await self.bot.wait_until_ready()
 
+    @giveaway_check_loop.error
+    async def giveaway_check_loop_error(self, error):
+        print(f"[GiveawayLoop] Internal error in giveaway_check_loop task: {error}")
+        await asyncio.sleep(5)
+        if not self.giveaway_check_loop.is_running():
+            try:
+                self.giveaway_check_loop.restart()
+            except Exception:
+                pass
+
     @app_commands.command(name="giveaway", description="Start an interactive giveaway in the current channel.")
     @app_commands.describe(
         prize="What is being given away",

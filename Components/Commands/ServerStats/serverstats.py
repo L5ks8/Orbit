@@ -225,6 +225,16 @@ class ServerStats(commands.Cog):
         # Wait 20 seconds after startup so Discord cache is settled
         await asyncio.sleep(20)
 
+    @update_loop.error
+    async def update_loop_error(self, error):
+        print(f"[ServerStats] Internal error in update_loop task: {error}")
+        await asyncio.sleep(5)
+        if not self.update_loop.is_running():
+            try:
+                self.update_loop.restart()
+            except Exception:
+                pass
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(ServerStats(bot))
 

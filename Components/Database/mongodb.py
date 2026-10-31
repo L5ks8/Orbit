@@ -38,9 +38,11 @@ def get_db():
             uri = os.environ.get("MONGODB_URI")
         
         mongo_kwargs = {
-            "serverSelectionTimeoutMS": 5000,
-            "connectTimeoutMS": 5000,
-            "socketTimeoutMS": 5000,
+            "serverSelectionTimeoutMS": 15000,
+            "connectTimeoutMS": 10000,
+            "socketTimeoutMS": 15000,
+            "retryWrites": True,
+            "retryReads": True,
             "maxPoolSize": 50
         }
         if not uri:
@@ -49,6 +51,7 @@ def get_db():
         else:
             _client = MongoClient(uri, **mongo_kwargs)
         
+    if _db is None and _client is not None:
         # Determine the database: check default database from URI, or check candidate names
         try:
             default_db = _client.get_default_database()

@@ -276,6 +276,16 @@ class OrbitBot(commands.Bot):
         except Exception as e:
             print(f"Stats loop error: {e}")
 
+    @live_stats_loop.error
+    async def live_stats_loop_error(self, error):
+        print(f"Internal error in live_stats_loop: {error}")
+        await asyncio.sleep(5)
+        if not self.live_stats_loop.is_running():
+            try:
+                self.live_stats_loop.restart()
+            except Exception:
+                pass
+
     @tasks.loop(minutes=5)
     async def uptime_loop(self):
         try:
@@ -305,6 +315,16 @@ class OrbitBot(commands.Bot):
             await asyncio.to_thread(_sync_uptime)
         except Exception as e:
             print(f"Uptime loop error: {e}")
+
+    @uptime_loop.error
+    async def uptime_loop_error(self, error):
+        print(f"Internal error in uptime_loop: {error}")
+        await asyncio.sleep(5)
+        if not self.uptime_loop.is_running():
+            try:
+                self.uptime_loop.restart()
+            except Exception:
+                pass
 
     async def setup_hook(self):
         try:

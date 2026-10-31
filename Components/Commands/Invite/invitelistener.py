@@ -111,50 +111,63 @@ class InviteTrackerListener(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def auto_post_loop(self):
-        now = time.time()
-        for guild in list(self.bot.guilds):
-            try:
-                inv_cfg = await asyncio.to_thread(get_config, "InviteConfig", guild.id)
-                if not inv_cfg or not inv_cfg.get("enabled", True):
-                    await asyncio.sleep(0.01)
-                    continue
-                auto_post = inv_cfg.get("auto_post") or {}
-                if not auto_post.get("enabled"):
-                    await asyncio.sleep(0.01)
-                    continue
-                cid = auto_post.get("channel_id")
-                if not cid or not str(cid).isdigit():
-                    await asyncio.sleep(0.01)
-                    continue
-                interval_str = str(auto_post.get("interval", "1h"))
-                interval_sec = INTERVAL_SECONDS.get(interval_str, 3600)
-                last_post = float(auto_post.get("last_posted_at", 0) or 0)
-                if now - last_post < interval_sec:
-                    await asyncio.sleep(0.01)
-                    continue
+        try:
+            now = time.time()
+            for guild in list(self.bot.guilds):
+                try:
+                    inv_cfg = await asyncio.to_thread(get_config, "InviteConfig", guild.id)
+                    if not inv_cfg or not inv_cfg.get("enabled", True):
+                        await asyncio.sleep(0.01)
+                        continue
+                    auto_post = inv_cfg.get("auto_post") or {}
+                    if not auto_post.get("enabled"):
+                        await asyncio.sleep(0.01)
+                        continue
+                    cid = auto_post.get("channel_id")
+                    if not cid or not str(cid).isdigit():
+                        await asyncio.sleep(0.01)
+                        continue
+                    interval_str = str(auto_post.get("interval", "1h"))
+                    interval_sec = INTERVAL_SECONDS.get(interval_str, 3600)
+                    last_post = float(auto_post.get("last_posted_at", 0) or 0)
+                    if now - last_post < interval_sec:
+                        await asyncio.sleep(0.01)
+                        continue
 
-                channel = guild.get_channel(int(cid))
-                if not channel:
-                    continue
+                    channel = guild.get_channel(int(cid))
+                    if not channel:
+                        continue
 
-                embed = build_invite_leaderboard_embed(
-                    guild,
-                    self.bot,
-                    auto_post,
-                    show_inviter_count=bool(inv_cfg.get("show_inviter_count", True))
-                )
-                msg = await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
-                auto_post["last_posted_at"] = now
-                auto_post["last_message_id"] = str(msg.id)
-                inv_cfg["auto_post"] = auto_post
-                await asyncio.to_thread(set_config, "InviteConfig", guild.id, inv_cfg)
-            except Exception:
-                pass
-            await asyncio.sleep(0.05)
+                    embed = build_invite_leaderboard_embed(
+                        guild,
+                        self.bot,
+                        auto_post,
+                        show_inviter_count=bool(inv_cfg.get("show_inviter_count", True))
+                    )
+                    msg = await channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                    auto_post["last_posted_at"] = now
+                    auto_post["last_message_id"] = str(msg.id)
+                    inv_cfg["auto_post"] = auto_post
+                    await asyncio.to_thread(set_config, "InviteConfig", guild.id, inv_cfg)
+                except Exception:
+                    pass
+                await asyncio.sleep(0.05)
+        except Exception as e:
+            print(f"[Invite] Error in auto_post_loop: {e}")
 
     @auto_post_loop.before_loop
     async def before_auto_post_loop(self):
         await self.bot.wait_until_ready()
+
+    @auto_post_loop.error
+    async def auto_post_loop_error(self, error):
+        print(f"[Invite] Internal error in auto_post_loop task: {error}")
+        await asyncio.sleep(5)
+        if not self.auto_post_loop.is_running():
+            try:
+                self.auto_post_loop.restart()
+            except Exception:
+                pass
 
     @commands.Cog.listener()
     async def on_ready(self):

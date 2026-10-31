@@ -404,6 +404,16 @@ class PollCommand(commands.Cog):
     async def before_poll_loop(self):
         await self.bot.wait_until_ready()
 
+    @poll_check_loop.error
+    async def poll_check_loop_error(self, error):
+        print(f"[PollLoop] Internal error in poll_check_loop task: {error}")
+        await asyncio.sleep(5)
+        if not self.poll_check_loop.is_running():
+            try:
+                self.poll_check_loop.restart()
+            except Exception:
+                pass
+
     @app_commands.command(
         name="poll",
         description="Creates a sleek, interactive community poll with visual progress bars."

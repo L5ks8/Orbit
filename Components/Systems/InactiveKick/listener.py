@@ -193,5 +193,15 @@ class InactiveKickListener(commands.Cog):
     async def before_check_loop(self):
         await self.bot.wait_until_ready()
 
+    @check_loop.error
+    async def check_loop_error(self, error):
+        print(f"[InactiveKick] Internal error in check_loop task: {error}")
+        await asyncio.sleep(5)
+        if not self.check_loop.is_running():
+            try:
+                self.check_loop.restart()
+            except Exception:
+                pass
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(InactiveKickListener(bot))

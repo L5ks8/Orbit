@@ -56,6 +56,16 @@ class TicketListenerCog(commands.Cog):
     async def before_ticket_auto_close_loop(self):
         await self.bot.wait_until_ready()
 
+    @ticket_auto_close_loop.error
+    async def ticket_auto_close_loop_error(self, error):
+        print(f"[Tickets] Internal error in ticket_auto_close_loop: {error}")
+        await asyncio.sleep(5)
+        if not self.ticket_auto_close_loop.is_running():
+            try:
+                self.ticket_auto_close_loop.restart()
+            except Exception:
+                pass
+
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
         if interaction.type != discord.InteractionType.component:

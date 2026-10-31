@@ -60,12 +60,15 @@ class TempBanCog(commands.Cog):
             
         db = get_db()
         if db is not None:
-            db["Tempbans"].insert_one({
-                "guild_id": str(ctx.guild.id),
-                "user_id": str(user.id),
-                "unban_time": unban_time,
-                "moderator_id": str(ctx.author.id)
-            })
+            try:
+                db["Tempbans"].insert_one({
+                    "guild_id": str(ctx.guild.id),
+                    "user_id": str(user.id),
+                    "unban_time": unban_time,
+                    "moderator_id": str(ctx.author.id)
+                })
+            except Exception as e:
+                print(f"[Tempbans] Failed to store tempban in DB: {e}")
             
         create_case(ctx.guild.id, user.id, ctx.author.id, "ban", f"[TEMPBAN {duration}] {reason}")
         add_modlog(ctx.guild.id, user.id, ctx.author.id, "Tempban", f"[{duration}] {reason}")
@@ -84,31 +87,48 @@ class TempBanCog(commands.Cog):
 
     @tasks.loop(minutes=1.0)
     async def check_tempbans(self):
-        db = get_db()
-        if db is None:
-            return
-            
-        current_time = int(time.time())
-        expired_bans = await asyncio.to_thread(lambda: list(db["Tempbans"].find({"unban_time": {"$lte": current_time}})))
-        
-        for record in expired_bans:
-            try:
-                guild = self.bot.get_guild(int(record["guild_id"]))
-                if guild:
-                    user = discord.Object(id=int(record["user_id"]))
-                    await guild.unban(user, reason="Tempban expired")
-                    
-                    create_case(guild.id, user.id, self.bot.user.id, "unban", "Tempban expired")
-                    add_modlog(guild.id, user.id, self.bot.user.id, "Unban", "Tempban expired")
-            except Exception:
-                pass
+        try:
+            db = get_db()
+            if db is None:
+                return
                 
-            await asyncio.to_thread(db["Tempbans"].delete_one, {"_id": record["_id"]})
-            await asyncio.sleep(0.05)
+            current_time = int(time.time())
+            expired_bans = await asyncio.to_thread(lambda: list(db["Tempbans"].find({"unban_time": {"$lte": current_time}})))
+            
+            for record in expired_bans:
+                try:
+                    guild = self.bot.get_guild(int(record["guild_id"]))
+                    if guild:
+                        user = discord.Object(id=int(record["user_id"]))
+                        await guild.unban(user, reason="Tempban expired")
+                        
+                        create_case(guild.id, user.id, self.bot.user.id, "unban", "Tempban expired")
+                        add_modlog(guild.id, user.id, self.bot.user.id, "Unban", "Tempban expired")
+                except Exception as e:
+                    print(f"[Tempbans] Error unbanning user {record.get('user_id')}: {e}")
+                    
+                try:
+                    await asyncio.to_thread(db["Tempbans"].delete_one, {"_id": record["_id"]})
+                except Exception as e:
+                    print(f"[Tempbans] Error deleting tempban record {record.get('_id')}: {e}")
+                await asyncio.sleep(0.05)
+        except Exception as e:
+            print(f"[Tempbans] Error in check_tempbans loop: {e}")
 
     @check_tempbans.before_loop
     async def before_check_tempbans(self):
         await self.bot.wait_until_ready()
+
+    @check_tempbans.error
+    async def check_tempbans_error(self, error):
+        print(f"[Tempbans] Internal error in check_tempbans task: {error}")
+        await asyncio.sleep(5)
+        if not self.check_tempbans.is_running():
+            try:
+                self.check_tempbans.restart()
+                print("[Tempbans] Successfully restarted check_tempbans loop.")
+            except Exception as restart_err:
+                print(f"[Tempbans] Failed to restart check_tempbans loop: {restart_err}")
 
     @tempban_cmd.error
     async def tempban_error(self, interaction: discord.Interaction, error):

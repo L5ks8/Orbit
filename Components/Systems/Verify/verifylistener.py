@@ -134,6 +134,16 @@ class VerifyListenerCog(commands.Cog):
     async def before_auto_kick(self):
         await self.bot.wait_until_ready()
 
+    @auto_kick_checker.error
+    async def auto_kick_checker_error(self, error):
+        print(f"[Verify] Internal error in auto_kick_checker: {error}")
+        await asyncio.sleep(5)
+        if not self.auto_kick_checker.is_running():
+            try:
+                self.auto_kick_checker.restart()
+            except Exception:
+                pass
+
 async def setup(bot: commands.Bot):
     from Components.Systems.Verify._views import PersistentVerifyLayout
     bot.add_view(PersistentVerifyLayout())

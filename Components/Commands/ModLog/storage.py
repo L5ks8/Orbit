@@ -13,7 +13,15 @@ modlogs_col = None
 
 if MONGODB_URI:
     try:
-        client = pymongo.MongoClient(MONGODB_URI)
+        client = pymongo.MongoClient(
+            MONGODB_URI,
+            serverSelectionTimeoutMS=15000,
+            connectTimeoutMS=10000,
+            socketTimeoutMS=15000,
+            retryWrites=True,
+            retryReads=True,
+            maxPoolSize=25
+        )
         db = client["orbit"]
         modlogs_col = db["modlogs"]
     except Exception as e:

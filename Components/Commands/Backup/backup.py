@@ -475,6 +475,16 @@ class BackupCommand(commands.Cog):
     async def before_auto_backup_loop(self):
         await self.bot.wait_until_ready()
 
+    @auto_backup_loop.error
+    async def auto_backup_loop_error(self, error):
+        print(f"[AutoBackup] Internal error in auto_backup_loop task: {error}")
+        await asyncio.sleep(5)
+        if not self.auto_backup_loop.is_running():
+            try:
+                self.auto_backup_loop.restart()
+            except Exception:
+                pass
+
     backup_group = app_commands.Group(name="backup", description="Server Backup Commands")
 
     async def save_new_backup(self, interaction: discord.Interaction, backup_data: dict):

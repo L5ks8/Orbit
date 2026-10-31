@@ -17,16 +17,32 @@ class ReminderListener(commands.Cog):
 
     @tasks.loop(seconds=10.0)
     async def reminder_loop(self):
-        now = int(time.time())
-        all_rems = await asyncio.to_thread(load_reminders)
-        for r in all_rems:
-            if now >= r.get("expires_at", 0):
-                await asyncio.to_thread(remove_reminder, r["id"])
-                await self._deliver_alert(r)
+        try:
+            now = int(time.time())
+            all_rems = await asyncio.to_thread(load_reminders)
+            for r in all_rems:
+                try:
+                    if now >= r.get("expires_at", 0):
+                        await asyncio.to_thread(remove_reminder, r["id"])
+                        await self._deliver_alert(r)
+                except Exception as rem_err:
+                    print(f"[Reminder] Error processing reminder {r.get('id')}: {rem_err}")
+        except Exception as e:
+            print(f"[Reminder] Error in reminder_loop: {e}")
 
     @reminder_loop.before_loop
     async def before_reminder_loop(self):
         await self.bot.wait_until_ready()
+
+    @reminder_loop.error
+    async def reminder_loop_error(self, error):
+        print(f"[Reminder] Internal error in reminder_loop task: {error}")
+        await asyncio.sleep(5)
+        if not self.reminder_loop.is_running():
+            try:
+                self.reminder_loop.restart()
+            except Exception:
+                pass
 
     async def _deliver_alert(self, entry: dict):
         body = (
